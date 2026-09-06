@@ -53,7 +53,7 @@
 - Consumes: Plan 1 的 `astro.config.mjs`(i18n 配置)
 - Produces: 5 个 collection 定义(给 Plan 3 页面 getCollection 用)
 
-- [ ] **Step 1: 创建 content.config.ts(文章 + 工程 collection)**
+- [x] **Step 1: 创建 content.config.ts(文章 + 工程 collection)**
 
 ```ts
 // src/content.config.ts
@@ -133,7 +133,7 @@ const projects = defineCollection({
 });
 ```
 
-- [ ] **Step 2: 追加 JSON collection(番剧/术曲/友链)**
+- [x] **Step 2: 追加 JSON collection(番剧/术曲/友链)**
 
 在同一文件追加:
 
@@ -202,7 +202,7 @@ const friends = defineCollection({
 export const collections = { articles, projects, anime, vocaloid, friends };
 ```
 
-- [ ] **Step 3: 创建测试 content 目录(验证 schema 编译)**
+- [x] **Step 3: 创建测试 content 目录(验证 schema 编译)**
 
 创建 `src/content/articles/zh/hello-world/index.md`:
 
@@ -232,12 +232,12 @@ excerpt: 第一篇测试文章
 }
 ```
 
-- [ ] **Step 4: 验证 astro check 通过**
+- [x] **Step 4: 验证 astro check 通过**
 
 Run: `pnpm check`
 Expected: 类型检查通过(无 schema 错误)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/content.config.ts src/content/
@@ -259,7 +259,7 @@ git commit -m "feat: add Content Layer API config with 5 collections"
 - Consumes: 环境变量 `CONTENT_REPO` / `CONTENT_GITHUB_TOKEN` / `FORCE_CONTENT_SYNC`
 - Produces: `src/content/` 目录(git clone 的 content repo)
 
-- [ ] **Step 1: 创建 pull-content.mjs**
+- [x] **Step 1: 创建 pull-content.mjs**
 
 ```js
 // src/scripts/pull-content.mjs
@@ -373,7 +373,7 @@ console.log(`::content-commit=${commitHash}`);
 console.log(`::content-updated=${commitDate}`);
 ```
 
-- [ ] **Step 2: 更新 .env.example**
+- [x] **Step 2: 更新 .env.example**
 
 在现有 `.env.example` 末尾追加:
 
@@ -388,7 +388,7 @@ PUBLIC_ASSETS_USER=YourUser
 PUBLIC_ASSETS_REPO=object920-assets
 ```
 
-- [ ] **Step 3: 更新 package.json scripts**
+- [x] **Step 3: 更新 package.json scripts**
 
 在 `scripts` 中添加:
 
@@ -409,7 +409,7 @@ PUBLIC_ASSETS_REPO=object920-assets
 }
 ```
 
-- [ ] **Step 4: 验证 pull-content 脚本(用测试 content)**
+- [x] **Step 4: 验证 pull-content 脚本(用测试 content)**
 
 先删除 Task 1 手动创建的 `src/content/`,然后:
 Run: `pnpm pull:content`
@@ -417,7 +417,7 @@ Expected: 如果 `CONTENT_REPO` 是真实仓库则 clone 成功;如果仓库不�
 
 > 注意:此步需要真实的 content repo。MVP 验证时可先创建一个空的 GitHub 仓库 `object920-content`,push Task 1 的测试内容到其中,然后设 `.env` 的 `CONTENT_REPO` 指向它。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/scripts/pull-content.mjs .env.example package.json
@@ -438,7 +438,7 @@ git commit -m "feat: add pull-content script with 3-mode sync + content repo val
 - Consumes: 环境变量(可选 `base_url` 用于多用户 OAuth)
 - Produces: `/admin/` Sveltia CMS SPA(给内容编辑用)
 
-- [ ] **Step 1: 创建 public/admin/index.html**
+- [x] **Step 1: 创建 public/admin/index.html**
 
 ```html
 <!DOCTYPE html>
@@ -457,7 +457,7 @@ git commit -m "feat: add pull-content script with 3-mode sync + content repo val
 
 > 注意:`@sveltia/cms@0.197.2` 是 pinned 版本(spec 1.1 要求)。实现前用 `npm view @sveltia/cms versions` 确认该版本存在;若不存在以实际稳定版本替换并同步 spec。
 
-- [ ] **Step 2: 创建 public/admin/config.yml(全局部分)**
+- [x] **Step 2: 创建 public/admin/config.yml(全局部分)**
 
 ```yaml
 # public/admin/config.yml
@@ -482,7 +482,7 @@ collections:
   # 见下方 Step 3-7
 ```
 
-- [ ] **Step 3: 追加 articles collection 到 config.yml**
+- [x] **Step 3: 追加 articles collection 到 config.yml**
 
 ```yaml
 - name: articles
@@ -526,7 +526,7 @@ collections:
     - { name: body, widget: markdown, i18n: true }
 ```
 
-- [ ] **Step 4: 追加 projects collection**
+- [x] **Step 4: 追加 projects collection**
 
 ```yaml
 - name: projects
@@ -613,7 +613,7 @@ collections:
     - { name: body, widget: markdown, i18n: true }
 ```
 
-- [ ] **Step 5: 追加 anime/vocaloid/friends file collection**
+- [x] **Step 5: 追加 anime/vocaloid/friends file collection**
 
 ```yaml
 - name: anime
@@ -732,12 +732,12 @@ collections:
             - { name: addedDate, widget: datetime, required: false }
 ```
 
-- [ ] **Step 6: 验证 admin 页面可访问**
+- [x] **Step 6: 验证 admin 页面可访问**
 
 Run: `pnpm dev`,访问 `http://localhost:4321/admin/index.html`
 Expected: Sveltia CMS 加载(登录页显示;因为 content repo 是占位名,登录会失败,但 SPA 加载成功)
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add public/admin/
@@ -758,7 +758,7 @@ git commit -m "feat: add Sveltia CMS admin with 5 collections config"
 - Consumes: 环境变量 `PUBLIC_ASSETS_USER` / `PUBLIC_ASSETS_REPO`
 - Produces: `buildDownloadUrls(datasheet)` 函数(给 Plan 3 DatasheetDownload 组件用)
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/lib/__tests__/assets.test.ts
@@ -835,12 +835,12 @@ describe('buildDownloadUrls', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/lib/__tests__/assets.test.ts`
 Expected: FAIL with "Cannot find module '../assets'"
 
-- [ ] **Step 3: 实现 assets.ts**
+- [x] **Step 3: 实现 assets.ts**
 
 ```ts
 // src/lib/assets.ts
@@ -884,12 +884,12 @@ export function buildDownloadUrls(datasheet: Datasheet): DownloadUrl[] {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/lib/__tests__/assets.test.ts`
 Expected: 所有测试 PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/assets.ts src/lib/__tests__/assets.test.ts
@@ -909,12 +909,12 @@ git commit -m "feat: add buildDownloadUrls for assets CDN links + tests"
 - Consumes: Task 4 的 `buildDownloadUrls`、Plan 1 的 `content.config.ts`(getCollection projects)
 - Produces: prebuild 校验(阻断构建如果 datasheet 文件不存在)
 
-- [ ] **Step 1: 安装 tsx(运行 TS 脚本)**
+- [x] **Step 1: 安装 tsx(运行 TS 脚本)**
 
 Run: `pnpm add -D tsx`
 Expected: tsx 安装成功
 
-- [ ] **Step 2: 创建 check-datasheets.ts**
+- [x] **Step 2: 创建 check-datasheets.ts**
 
 ```ts
 // src/scripts/check-datasheets.ts
@@ -957,12 +957,12 @@ async function checkDatasheets() {
 checkDatasheets();
 ```
 
-- [ ] **Step 3: 验证脚本可执行**
+- [x] **Step 3: 验证脚本可执行**
 
 Run: `pnpm check:datasheets`
 Expected: 如果没有 datasheet 或文件存在则通过;文件不存在则报错退出
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/scripts/check-datasheets.ts
