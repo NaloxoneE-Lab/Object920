@@ -1,0 +1,7 @@
+dist
+node_modules
+.astro
+.opencode
+docs
+pnpm-lock.yaml
+public/fonts
