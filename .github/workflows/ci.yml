@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [content-published] # content 仓推送 → validate-redirects 通过后触发(spec 8.7 的 ECS 版)
 
 jobs:
   ci:
@@ -30,6 +33,8 @@ jobs:
       - name: Build (trusted context)
         if: >-
           github.event_name == 'push' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.event_name == 'repository_dispatch' ||
           (github.event_name == 'pull_request' &&
            github.event.pull_request.head.repo.full_name == github.repository)
         run: pnpm build
@@ -44,6 +49,76 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: >-
           github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+           github.event.pull_request.head.repo.full_name == github.repository
         with:
           name: dist-preview
+
+  # ECS 部署:main push(代码更新)/ repository_dispatch(内容更新)/ 手动触发
+  # secrets 未配置时自动跳过(首次运行前需在仓库 Settings → Secrets 配置,见 deploy/cloudflare 同级的 ECS 说明)
+  deploy-ecs:
+    needs: ci
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'repository_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Check deploy secrets configured
+        id: guard
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+        run: |
+          if [ -n "$ECS_HOST" ] && [ -n "$ECS_SSH_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ECS deploy secrets not configured — skipping deploy"
+          fi
+      - run: pnpm install --frozen-lockfile
+        if: steps.guard.outputs.enabled == 'true'
+      - name: Build with deploy site URL
+        if: steps.guard.outputs.enabled == 'true'
+        run: pnpm build
+        env:
+          CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
+          CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
+          FORCE_CONTENT_SYNC: 'true'
+          PUBLIC_SEARCH_ENABLED: 'true'
+          PUBLIC_SEARCH_PROVIDER: 'pagefind'
+          PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
+      - name: Generate nginx configs
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          pnpm run generate:redirects
+          pnpm run generate:deploy-config -- --platform=nginx
+        env:
+          DEPLOY_PLATFORM: nginx
+          PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
+      - name: Rsync to ECS
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_USER: ${{ secrets.ECS_USER || 'root' }}
+          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null /tmp/deploy_key
+          echo "$ECS_SSH_KEY" > /tmp/deploy_key
+          SSH="ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no $ECS_USER@$ECS_HOST"
+          rsync -az --delete -e "ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no" \
+            dist/ $ECS_USER@$ECS_HOST:/var/www/object920/
+          scp -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            dist/nginx/object920.conf $ECS_USER@$ECS_HOST:/etc/nginx/sites-available/object920
+          scp -i /tmp/deploy_key -o StrictHostKeyChecking=no \
+            dist/nginx/object920-redirects.conf $ECS_USER@$ECS_HOST:/etc/nginx/conf.d/object920-redirects.conf
+          $SSH 'nginx -t && systemctl reload nginx'
+          rm -f /tmp/deploy_key
