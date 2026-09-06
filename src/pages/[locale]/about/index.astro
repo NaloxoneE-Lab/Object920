@@ -1,0 +1,56 @@
+---
+// src/pages/[locale]/about/index.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+export async function getStaticPaths() {
+  return locales.map((l) => ({ params: { locale: l } }));
+}
+const { locale } = Astro.params as { locale: Locale };
+const sections = [
+  { title: 'about.intro', text: 'about.introText' },
+  { title: 'about.techStack', text: 'about.techStackText' },
+  { title: 'about.author', text: null },
+  { title: 'about.contact', text: null },
+  { title: 'about.copyright', text: 'about.copyrightText' },
+];
+---
+
+<BaseLayout locale={locale} title={t(locale, 'about.title')}>
+  <div class="about">
+    <h1 class="about-title">{t(locale, 'about.title')}</h1>
+    {
+      sections.map((s) => (
+        <section class="about-section">
+          <h2>{t(locale, s.title)}</h2>
+          {s.text && <p>{t(locale, s.text)}</p>}
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+<style>
+  .about {
+    max-width: var(--container-prose);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  .about-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+  }
+  .about-section {
+    margin-top: var(--spacing-lg);
+  }
+  .about-section h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+  }
+  .about-section p {
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-prose);
+  }
+</style>

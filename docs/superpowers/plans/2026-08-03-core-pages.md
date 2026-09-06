@@ -120,7 +120,7 @@
   - `getLocalizedEntryPath(group, targetLocale, routeSegment): string | null` — 经 translationKey 取目标 slug;无目标 entry 返回占位 URL(用已有 entry slug)
   - `slugOf(entry): string` — 从 `entry.id` 取 slug
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/lib/__tests__/i18n-resolution.test.ts
@@ -219,12 +219,12 @@ describe('getLocalizedEntryPath', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/lib/__tests__/i18n-resolution.test.ts`
 Expected: FAIL(`@lib/i18n` 未导出函数)
 
-- [ ] **Step 3: 实现 lib/i18n.ts**
+- [x] **Step 3: 实现 lib/i18n.ts**
 
 ```ts
 // src/lib/i18n.ts
@@ -309,12 +309,12 @@ export function getLocalizedEntryPath<T extends { id: string }>(
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/lib/__tests__/i18n-resolution.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/i18n.ts src/lib/__tests__/i18n-resolution.test.ts
@@ -338,7 +338,7 @@ git commit -m "feat: add bilingual progressive resolution (resolveLocalizedEntry
   - `pickXDefault(alternates, defaultLocale): Locale | null` — defaultLocale 有 render 则用它,否则第一个 render locale
   - `buildHreflang(alternates, xDefaultLocale): string` — 输出 `<link rel="alternate">` HTML(只含 render 页 + x-default)
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/lib/__tests__/seo.test.ts
@@ -396,12 +396,12 @@ describe('buildHreflang', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/lib/__tests__/seo.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: 实现 lib/seo.ts**
+- [x] **Step 3: 实现 lib/seo.ts**
 
 ```ts
 // src/lib/seo.ts
@@ -446,12 +446,12 @@ export function buildHreflang(
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/lib/__tests__/seo.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/seo.ts src/lib/__tests__/seo.test.ts
@@ -472,7 +472,7 @@ git commit -m "feat: add hreflang/canonical SEO helpers"
 - Consumes: `tokens.css` 的 CSS 变量
 - Produces: `prose.css`(由 `ArticleProse.astro` 引入)、`image-broken.svg`(由 `ArticleImageEnhancer` onerror 引用)
 
-- [ ] **Step 1: 创建 image-broken 占位图**
+- [x] **Step 1: 创建 image-broken 占位图**
 
 ```xml
 <!-- public/images/image-broken.svg -->
@@ -487,7 +487,7 @@ git commit -m "feat: add hreflang/canonical SEO helpers"
 </svg>
 ```
 
-- [ ] **Step 2: 创建 prose.css**
+- [x] **Step 2: 创建 prose.css**
 
 ```css
 /* src/styles/prose.css — 文章 prose 排版微调(@tailwindcss/typography 基础之上) */
@@ -662,7 +662,7 @@ git commit -m "feat: add hreflang/canonical SEO helpers"
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/styles/prose.css public/images/image-broken.svg
@@ -683,7 +683,7 @@ git commit -m "feat: add prose.css typography + Shiki dual-theme + image-broken 
 - Consumes: hast(HTML AST,由 remark→rehype 生成)
 - Produces: `rehypeArticleImage(options?)` — rehype 插件函数;把独立图片段 `<p><img></p>` 包成 `<figure>`+`<figcaption>`(title→caption),注入 `data-article-image`/`data-lightbox`/`data-lightbox-group`;远程图保持 `<img loading="lazy">`;装饰图(`alt=""`)不包 caption。**不改 src/srcset(优化由 astro:assets 承担)**
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/lib/__tests__/rehype-article-image.test.ts
@@ -751,12 +751,12 @@ describe('rehypeArticleImage', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/lib/__tests__/rehype-article-image.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: 实现 rehype-article-image.ts**
+- [x] **Step 3: 实现 rehype-article-image.ts**
 
 ```ts
 // src/lib/rehype-article-image.ts
@@ -832,12 +832,12 @@ export function rehypeArticleImage(options: { groupId?: string } = {}) {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/lib/__tests__/rehype-article-image.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/rehype-article-image.ts src/lib/__tests__/rehype-article-image.test.ts
@@ -860,7 +860,7 @@ git commit -m "feat: add rehype-article-image plugin (figure/caption/data attrs)
 - Consumes: hast(`<pre><code>` 节点,Shiki 高亮前后均兼容)
 - Produces: `rehypeCodeblock()` — 把 `<pre><code>` 包进 `<div class="code-block" data-code-block>` + header(语言标签 + `<button data-copy-button data-code>`);astro.config 注册两个 rehype 插件 + Shiki 双主题
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/lib/__tests__/rehype-codeblock.test.ts
@@ -922,12 +922,12 @@ describe('rehypeCodeblock', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/lib/__tests__/rehype-codeblock.test.ts`
 Expected: FAIL
 
-- [ ] **Step 3: 实现 rehype-codeblock.ts**
+- [x] **Step 3: 实现 rehype-codeblock.ts**
 
 ```ts
 // src/lib/rehype-codeblock.ts
@@ -1014,17 +1014,17 @@ export function rehypeCodeblock() {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/lib/__tests__/rehype-codeblock.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: 安装 direct dependency**
+- [x] **Step 5: 安装 direct dependency**
 
 Run: `pnpm add @astrojs/markdown-remark@^7`
 Expected: 安装成功(提供 `unified` processor API;版本以 Astro 7 兼容为准)
 
-- [ ] **Step 6: 修改 astro.config.mjs 接入 rehype 插件**
+- [x] **Step 6: 修改 astro.config.mjs 接入 rehype 插件**
 
 把 Plan 1 的 `markdown: { processor: 'unified' }` 整块替换为:
 
@@ -1051,12 +1051,12 @@ export default defineConfig({
 
 > **顺序纪律(spec 7.2.2)**:rehype 插件按数组顺序执行,图片插件先于代码块插件;Shiki 高亮由 Astro 在 rehype 链中应用,`rehypeCodeblock` 提取的 `dataCode` 为原始文本(Shiki 前后均准确)。
 
-- [ ] **Step 7: 验证 dev 启动**
+- [x] **Step 7: 验证 dev 启动**
 
 Run: `pnpm dev`
 Expected: dev 启动无报错(若 fixture 文章含 `![Alt](./cover.webp "Caption")` 与代码块,确认渲染为 `<figure>` 与 `<div class="code-block">`;`pnpm test` 已覆盖单测)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/lib/rehype-codeblock.ts src/lib/__tests__/rehype-codeblock.test.ts astro.config.mjs package.json pnpm-lock.yaml
@@ -1076,7 +1076,7 @@ git commit -m "feat: add rehype-codeblock plugin + wire unified processor with d
 - Consumes: 无(监听 `open-lightbox` CustomEvent)
 - Produces: 全局 Lightbox 单例;`e.detail = { src, alt, srcset?, groupId }`;支持组内 prev/next、ESC、点击背景关闭、焦点到关闭按钮;`astro:after-swap` 关闭清状态;reduced-motion 无动画
 
-- [ ] **Step 1: 创建 Lightbox.astro**
+- [x] **Step 1: 创建 Lightbox.astro**
 
 ```astro
 ---
@@ -1268,7 +1268,7 @@ const { locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 2: 修改 BaseLayout 挂载 Lightbox + head-extras 槽**
+- [x] **Step 2: 修改 BaseLayout 挂载 Lightbox + head-extras 槽**
 
 在 `src/components/layout/BaseLayout.astro` 的 import 区加:
 
@@ -1288,7 +1288,7 @@ import Lightbox from '@components/ui/Lightbox.astro';
 <Lightbox locale={locale} />
 ```
 
-- [ ] **Step 3: 补 i18n 文案**
+- [x] **Step 3: 补 i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 的 common 相关 key 区追加:
 
@@ -1312,12 +1312,12 @@ import Lightbox from '@components/ui/Lightbox.astro';
   'common.copied': 'Copied',
 ```
 
-- [ ] **Step 4: 验证 dev 渲染无报错**
+- [x] **Step 4: 验证 dev 渲染无报错**
 
 Run: `pnpm dev`
 Expected: 页面底部存在 `#lightbox-overlay`(hidden)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/ui/Lightbox.astro src/components/layout/BaseLayout.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -1341,7 +1341,7 @@ git commit -m "feat: add global Lightbox singleton with open-lightbox event prot
   - `initArticleImageEnhancer()` — singleton document click 委托(`[data-lightbox]` → 派发 `open-lightbox`)+ 每次 `astro:page-load` 给当前页 `[data-article-image]` 绑 onerror 占位图(用 `data-img-error-bound` 标记防重复)
   - `initCodeBlockEnhancer()` — singleton document click 委托(`[data-copy-button]` → clipboard + aria-live 通知)
 
-- [ ] **Step 1: 创建 ArticleImageEnhancer.ts**
+- [x] **Step 1: 创建 ArticleImageEnhancer.ts**
 
 ```ts
 // src/components/article/ArticleImageEnhancer.ts
@@ -1382,7 +1382,7 @@ export function initArticleImageEnhancer(): void {
 }
 ```
 
-- [ ] **Step 2: 创建 CodeBlockEnhancer.ts**
+- [x] **Step 2: 创建 CodeBlockEnhancer.ts**
 
 ```ts
 // src/components/article/CodeBlockEnhancer.ts
@@ -1431,7 +1431,7 @@ export function initCodeBlockEnhancer(): void {
 }
 ```
 
-- [ ] **Step 3: 修改 BaseLayout 加全局增强脚本 + aria-live**
+- [x] **Step 3: 修改 BaseLayout 加全局增强脚本 + aria-live**
 
 在 `src/components/layout/BaseLayout.astro` 的 `<body>` 末尾(`<Lightbox />` 之后)加:
 
@@ -1466,12 +1466,12 @@ export function initCodeBlockEnhancer(): void {
 
 > **生命周期(spec 5.20)**:`astro:page-load` 监听器只注册一次(`__enh_listeners__` 标志保护);`initArticleImageEnhancer` 内部 click 委托 singleton(`__lb_click_init__`),onerror 用 `data-img-error-bound` 防重复绑定;`initCodeBlockEnhancer` 纯 document 委托 singleton(`__cb_init__`)。
 
-- [ ] **Step 4: 验证 dev 无报错 + 类型检查**
+- [x] **Step 4: 验证 dev 无报错 + 类型检查**
 
 Run: `pnpm dev` 然后 `pnpm check`
 Expected: dev 正常;`astro check` 通过
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/article/ArticleImageEnhancer.ts src/components/article/CodeBlockEnhancer.ts src/components/layout/BaseLayout.astro
@@ -1495,7 +1495,7 @@ git commit -m "feat: add ArticleImage/CodeBlock client enhancers (event delegati
 - Consumes: article entry schema(`entry.data.cover?: ImageMetadata`、`coverAlt`、`title`、`excerpt?`、`pubDate`、`category`、`tags[]`)、`@i18n/utils` 的 `t`/`Locale`、`astro:assets` 的 `Image`、`slugOf`(`@lib/i18n`)
 - Produces:`EmptyState`(props `{ locale, message? }`)、`ArticleCard`(props `{ entry, locale }`)、`ArticleList`(props `{ entries, locale }`)、`formatDate(date, locale)`
 
-- [ ] **Step 1: 在 i18n/utils.ts 加 formatDate**
+- [x] **Step 1: 在 i18n/utils.ts 加 formatDate**
 
 在 `src/i18n/utils.ts` 末尾追加:
 
@@ -1509,7 +1509,7 @@ export function formatDate(date: Date, locale: Locale): string {
 }
 ```
 
-- [ ] **Step 2: 补 articles i18n 文案**
+- [x] **Step 2: 补 articles i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -1545,7 +1545,7 @@ export function formatDate(date: Date, locale: Locale): string {
   'articles.categorized': 'Category: {cat}',
 ```
 
-- [ ] **Step 3: 创建 EmptyState.astro**
+- [x] **Step 3: 创建 EmptyState.astro**
 
 ```astro
 ---
@@ -1573,7 +1573,7 @@ const text = message ?? t(locale, 'common.empty');
 </style>
 ```
 
-- [ ] **Step 4: 创建 ArticleCard.astro**
+- [x] **Step 4: 创建 ArticleCard.astro**
 
 ```astro
 ---
@@ -1687,7 +1687,7 @@ const href = `/${locale}/articles/${slugOf(entry)}/`;
 </style>
 ```
 
-- [ ] **Step 5: 创建 ArticleList.astro**
+- [x] **Step 5: 创建 ArticleList.astro**
 
 ```astro
 ---
@@ -1726,12 +1726,12 @@ const { entries, locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 6: 验证类型检查**
+- [x] **Step 6: 验证类型检查**
 
 Run: `pnpm check`
 Expected: 通过
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/common/EmptyState.astro src/components/article/ArticleCard.astro src/components/article/ArticleList.astro src/i18n/utils.ts src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -1758,7 +1758,7 @@ git commit -m "feat: add EmptyState, ArticleCard, ArticleList + formatDate"
   - `ReadingProgress`(props `{ locale }`)— scroll % + aria-live 里程碑(25/50/75/100)
   - `ArticleLayout`(props `{ locale, mode, contentLocale, entry?, group, routeSegment, Content?, headings? }`)— 组合 prose + toc + progress + 占位页渲染
 
-- [ ] **Step 1: 创建 ArticleProse.astro**
+- [x] **Step 1: 创建 ArticleProse.astro**
 
 ```astro
 ---
@@ -1778,7 +1778,7 @@ const Rendered = Content as unknown as Astro.Component;
 </article>
 ```
 
-- [ ] **Step 2: 创建 Toc.astro**
+- [x] **Step 2: 创建 Toc.astro**
 
 ```astro
 ---
@@ -1866,7 +1866,7 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
 </style>
 ```
 
-- [ ] **Step 3: 创建 ReadingProgress.astro**
+- [x] **Step 3: 创建 ReadingProgress.astro**
 
 ```astro
 ---
@@ -1932,7 +1932,7 @@ const { locale } = Astro.props;
 
 > **a11y(spec 5.9 P1-25)**:`role="status"` + `aria-live="polite"`(非 progressbar,因无已知 min/max);视觉进度条持续更新,无障碍文本仅在跨越 25/50/75/100 里程碑时更新,避免屏幕阅读器嘈杂。
 
-- [ ] **Step 4: 创建 ArticleLayout.astro**
+- [x] **Step 4: 创建 ArticleLayout.astro**
 
 ```astro
 ---
@@ -2075,12 +2075,12 @@ const placeholderLang = t(locale, 'langswitch.' + contentLocale);
 
 > **占位页 SEO(spec 6.6)**:`noindex` + canonical 指向实际 render 语言版;hreflang 只含 render 页(`alternates` 已过滤为 renderLocales);`<html lang={uiLocale}>` 由 BaseLayout 设置,`<article lang={contentLocale}>` 由 ArticleProse 设置。
 
-- [ ] **Step 5: 验证类型检查**
+- [x] **Step 5: 验证类型检查**
 
 Run: `pnpm check`
 Expected: 通过(若 `CollectionEntry<'articles'>` 类型推断失败,确认 Plan 2 的 `content.config.ts` 已 export collection)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/article/ArticleProse.astro src/components/article/Toc.astro src/components/article/ReadingProgress.astro src/layouts/ArticleLayout.astro
@@ -2104,7 +2104,7 @@ git commit -m "feat: add ArticleProse, Toc, ReadingProgress, ArticleLayout"
 - Consumes: `getCollection('articles')`(Plan 2)、Task 1 的 `getEntriesGroupedByTranslationKey`/`resolveLocalizedEntry`/`slugOf`/`TranslationGroup`、Task 7 的 `ArticleList`、Task 8 的 `ArticleLayout`、Plan 1 的 `BaseLayout`/`t`/`locales`
 - Produces: 文章列表、文章详情(render + placeholder)、tag/category/archive 过滤页;`getStaticPaths` 遍历 group × locale(render 优先去重)
 
-- [ ] **Step 1: 创建文章列表页**
+- [x] **Step 1: 创建文章列表页**
 
 ```astro
 ---
@@ -2139,7 +2139,7 @@ const entries = all
 </style>
 ```
 
-- [ ] **Step 2: 创建文章详情/占位页([...slug].astro)**
+- [x] **Step 2: 创建文章详情/占位页([...slug].astro)**
 
 ```astro
 ---
@@ -2238,7 +2238,7 @@ if (mode === 'render' && entry) {
 
 > **去重纪律**:两遍遍历——第一遍收集所有 render 路径(`renderKeys`),第二遍只补不与 render 冲突的 placeholder(`renderKeys.has(key) → skip`);处理"两个不同 group 在同 locale 产生同 slug"的边界(render 优先)。
 
-- [ ] **Step 3: 创建 tag 过滤页**
+- [x] **Step 3: 创建 tag 过滤页**
 
 ```astro
 ---
@@ -2283,7 +2283,7 @@ const entries = all
 </style>
 ```
 
-- [ ] **Step 4: 创建 category 过滤页**
+- [x] **Step 4: 创建 category 过滤页**
 
 ```astro
 ---
@@ -2327,7 +2327,7 @@ const entries = all
 </style>
 ```
 
-- [ ] **Step 5: 创建 archive 归档页**
+- [x] **Step 5: 创建 archive 归档页**
 
 ```astro
 ---
@@ -2414,12 +2414,12 @@ for (const e of entries) {
 </style>
 ```
 
-- [ ] **Step 6: 验证 build 生成路由**
+- [x] **Step 6: 验证 build 生成路由**
 
 Run: `pnpm build`(需 content 已 pull;若 Plan 2 fixture 存在)
 Expected: 生成 `/zh/articles/`、`/en/articles/`、`/[locale]/articles/[slug]/`、占位页(`/ru/articles/<slug>/` 含 `noindex`)、tag/category/archive 页;无重复 path 报错
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/pages/[locale]/articles/
@@ -2443,7 +2443,7 @@ git commit -m "feat: add article pages (list, detail, placeholder, tag, category
 - Consumes: project entry schema(含 `status`/`gallery`/`specs`/`datasheets`/`relatedLinks`)、`buildDownloadUrls`(`@lib/assets`,Plan 2,返回 `{ url, mirror }[]`)、`Image`(`astro:assets`)、`slugOf`、Task 8 的 `ArticleProse`(渲染工程 Markdown)、Task 5 的 Lightbox(经 `data-lightbox`)
 - Produces:`ProjectCard`、`ProjectList`、`Gallery`(图廊图加 `data-lightbox`+`data-article-image`+`data-lightbox-group`,交互由全局 enhancer 承担)、`SpecsTable`、`DatasheetDownload`、`ProjectLayout`
 
-- [ ] **Step 1: 补 projects i18n 文案**
+- [x] **Step 1: 补 projects i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -2481,7 +2481,7 @@ git commit -m "feat: add article pages (list, detail, placeholder, tag, category
   'projects.status.planned': 'Planned',
 ```
 
-- [ ] **Step 2: 创建 ProjectCard.astro**
+- [x] **Step 2: 创建 ProjectCard.astro**
 
 ```astro
 ---
@@ -2600,7 +2600,7 @@ const statusClass = `status-${status}`;
 </style>
 ```
 
-- [ ] **Step 3: 创建 ProjectList.astro**
+- [x] **Step 3: 创建 ProjectList.astro**
 
 ```astro
 ---
@@ -2639,7 +2639,7 @@ const { entries, locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 4: 创建 Gallery.astro**
+- [x] **Step 4: 创建 Gallery.astro**
 
 ```astro
 ---
@@ -2717,7 +2717,7 @@ const groupId = 'project-' + slugOf(entry);
 
 > **Lightbox 接入**:Gallery 图加 `data-lightbox`+`data-article-image`+`data-lightbox-group`,点击与 onerror 由 Task 6 的全局 `ArticleImageEnhancer` 统一处理(无需 Gallery 自带脚本)。
 
-- [ ] **Step 5: 创建 SpecsTable.astro**
+- [x] **Step 5: 创建 SpecsTable.astro**
 
 ```astro
 ---
@@ -2807,7 +2807,7 @@ const specs = entry.data.specs;
 </style>
 ```
 
-- [ ] **Step 6: 创建 DatasheetDownload.astro**
+- [x] **Step 6: 创建 DatasheetDownload.astro**
 
 ```astro
 ---
@@ -2908,7 +2908,7 @@ const datasheets = entry.data.datasheets;
 
 > **实现修正**:Step 6 中 `buildDownloadUrlsz` 为占位拼写错误,实现时必须用 Plan 2 导出的正确函数名 **`buildDownloadUrls(ds)`**(返回 `{ url, mirror }[]`)。
 
-- [ ] **Step 7: 创建 ProjectLayout.astro**
+- [x] **Step 7: 创建 ProjectLayout.astro**
 
 ```astro
 ---
@@ -3029,12 +3029,12 @@ const langName: Record<ContentLocale, string> = { zh: '中文', en: 'English' };
 </style>
 ```
 
-- [ ] **Step 8: 验证类型检查**
+- [x] **Step 8: 验证类型检查**
 
 Run: `pnpm check`
 Expected: 通过
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/components/project/ src/layouts/ProjectLayout.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -3055,7 +3055,7 @@ git commit -m "feat: add project components (card, list, gallery, specs, datashe
 - Consumes: `getCollection('projects')`、Task 1 的分组/解析函数、Task 10 的 `ProjectLayout`/`ProjectList`
 - Produces: 工程列表 + 详情(render + placeholder);`getStaticPaths` 同文章(render 优先去重)
 
-- [ ] **Step 1: 创建工程列表页**
+- [x] **Step 1: 创建工程列表页**
 
 ```astro
 ---
@@ -3090,7 +3090,7 @@ const entries = all
 </style>
 ```
 
-- [ ] **Step 2: 创建工程详情/占位页([slug].astro)**
+- [x] **Step 2: 创建工程详情/占位页([slug].astro)**
 
 ```astro
 ---
@@ -3168,12 +3168,12 @@ if (mode === 'render' && entry) {
 />
 ```
 
-- [ ] **Step 3: 验证 build 生成工程路由**
+- [x] **Step 3: 验证 build 生成工程路由**
 
 Run: `pnpm build`
 Expected: 生成 `/[locale]/projects/`、`/[locale]/projects/[slug]/`、占位页;无重复 path 报错
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/pages/[locale]/projects/
@@ -3197,7 +3197,7 @@ git commit -m "feat: add project pages (list, detail, placeholder)"
 - Consumes: `getCollection('anime')`(Plan 2,JSON collection,`entry.data` = item)anime schema(`status`/`cover?`(远程 url)/`score?`/`watchedDate?`/`highlight`/`titleZh?`/`title`/`comment?`)、`formatDate`
 - Produces:`AnimeCard`(props `{ entry, locale }`)、`StatusFilter`(props `{ locale }`,5 tab 单选默认"全部",URL `?status=` 同步用 `history.replaceState`)、`AnimeWall`(props `{ entries, locale }`)、番剧页面;`data-status` 卡片属性供客户端过滤
 
-- [ ] **Step 1: 补 anime i18n 文案**
+- [x] **Step 1: 补 anime i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -3227,7 +3227,7 @@ git commit -m "feat: add project pages (list, detail, placeholder)"
   'anime.comment': 'Thoughts',
 ```
 
-- [ ] **Step 2: 创建 StatusFilter.astro**
+- [x] **Step 2: 创建 StatusFilter.astro**
 
 ```astro
 ---
@@ -3337,7 +3337,7 @@ const statuses = ['all', 'finished', 'watching', 'planned', 'dropped'] as const;
 
 > **URL 同步纪律(P2-31)**:用 `history.replaceState` 更新 `?status=`,**不**触发 ClientRouter 导航、**不**重跑 page-load;仅切显隐(数据一次性注入)。
 
-- [ ] **Step 3: 创建 AnimeCard.astro**
+- [x] **Step 3: 创建 AnimeCard.astro**
 
 ```astro
 ---
@@ -3462,7 +3462,7 @@ const statusClass = `anime-status-${status}`;
 
 > **实现修正**:Step 3 样式中 `.anime-status-finished` 行的 `color-m-mix` 为拼写错误,实现时用 **`color-mix`**。
 
-- [ ] **Step 4: 创建 AnimeWall.astro**
+- [x] **Step 4: 创建 AnimeWall.astro**
 
 ```astro
 ---
@@ -3511,7 +3511,7 @@ const { entries, locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 5: 创建番剧页面**
+- [x] **Step 5: 创建番剧页面**
 
 ```astro
 ---
@@ -3548,12 +3548,12 @@ const entries = all.sort(
 </style>
 ```
 
-- [ ] **Step 6: 验证 build + 类型检查**
+- [x] **Step 6: 验证 build + 类型检查**
 
 Run: `pnpm check` 然后 `pnpm build`
 Expected: 生成 `/[locale]/collection/anime/`;类型通过
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/collection/AnimeCard.astro src/components/collection/StatusFilter.astro src/components/collection/AnimeWall.astro src/pages/[locale]/collection/anime.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -3575,7 +3575,7 @@ git commit -m "feat: add anime wall with single-select StatusFilter + URL sync"
 - Consumes: `getCollection('vocaloid')`(JSON collection)vocaloid schema(`producer`/`vocaloid[]`/`cover?`/`score?`/`status`/`platform[]`/`lyricSnippet?`/`comment?`/`highlight`)、`formatDate`
 - Produces:`VocaloidCard`(props `{ entry, locale }`,点击展开 `lyricSnippet`+`comment`)、`VocaloidWall`(props `{ entries, locale }`)、术曲页面、番&术总览页(CollectionNav)
 
-- [ ] **Step 1: 补 vocaloid/collection i18n 文案**
+- [x] **Step 1: 补 vocaloid/collection i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -3609,7 +3609,7 @@ git commit -m "feat: add anime wall with single-select StatusFilter + URL sync"
   'collection.vocaloidDesc': 'Vocaloid tracks I love',
 ```
 
-- [ ] **Step 2: 创建 VocaloidCard.astro**
+- [x] **Step 2: 创建 VocaloidCard.astro**
 
 ```astro
 ---
@@ -3727,7 +3727,7 @@ const { title, producer, vocaloid, cover, score, platform, lyricSnippet, comment
 </style>
 ```
 
-- [ ] **Step 3: 创建 VocaloidWall.astro**
+- [x] **Step 3: 创建 VocaloidWall.astro**
 
 ```astro
 ---
@@ -3766,7 +3766,7 @@ const { entries, locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 4: 创建术曲页面**
+- [x] **Step 4: 创建术曲页面**
 
 ```astro
 ---
@@ -3801,7 +3801,7 @@ const entries = all.sort(
 </style>
 ```
 
-- [ ] **Step 5: 创建番&术总览页**
+- [x] **Step 5: 创建番&术总览页**
 
 ```astro
 ---
@@ -3890,12 +3890,12 @@ const items = [
 </style>
 ```
 
-- [ ] **Step 6: 验证 build + 类型检查**
+- [x] **Step 6: 验证 build + 类型检查**
 
 Run: `pnpm check` 然后 `pnpm build`
 Expected: 生成 `/[locale]/collection/`、`/[locale]/collection/vocaloid/`;类型通过
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/collection/VocaloidCard.astro src/components/collection/VocaloidWall.astro src/pages/[locale]/collection/index.astro src/pages/[locale]/collection/vocaloid.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -3918,7 +3918,7 @@ git commit -m "feat: add vocaloid wall + collection overview page"
 - Consumes: `getCollection('friends')`(JSON collection)friend schema(`name`/`url`/`avatar?`/`description`/`tags[]`/`status: 'active'|'inactive'|'mutual'`)
 - Produces:`FriendCard`(props `{ entry, locale }`,整卡 `<a target=_blank rel=noopener>`,状态 badge 语义色)、`FriendList`(props `{ entries, locale }`)、友链页面;页面底部预留 `<Comments />` 与 `<Travellings />` 自闭合标签位置(Plan 4 实现可插拔 Integration,本 Task 留 TODO 注释占位但**不引入** Integration 代码)
 
-- [ ] **Step 1: 补 friends i18n 文案**
+- [x] **Step 1: 补 friends i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -3942,7 +3942,7 @@ git commit -m "feat: add vocaloid wall + collection overview page"
   'friends.guestbook': 'Guestbook',
 ```
 
-- [ ] **Step 2: 创建 FriendCard.astro**
+- [x] **Step 2: 创建 FriendCard.astro**
 
 ```astro
 ---
@@ -4070,7 +4070,7 @@ const statusClass = `friend-status-${status}`;
 </style>
 ```
 
-- [ ] **Step 3: 创建 FriendList.astro**
+- [x] **Step 3: 创建 FriendList.astro**
 
 ```astro
 ---
@@ -4109,7 +4109,7 @@ const { entries, locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 4: 创建友链页面**
+- [x] **Step 4: 创建友链页面**
 
 ```astro
 ---
@@ -4158,12 +4158,12 @@ const entries = all.sort(
 </style>
 ```
 
-- [ ] **Step 5: 验证 build + 类型检查**
+- [x] **Step 5: 验证 build + 类型检查**
 
 Run: `pnpm check` 然后 `pnpm build`
 Expected: 生成 `/[locale]/friends/`;类型通过
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/friends/ src/pages/[locale]/friends/index.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -4187,7 +4187,7 @@ git commit -m "feat: add friends page (FriendCard, FriendList) with guestbook sl
 - Consumes: `Image`(`astro:assets`)、各领域 Card 组件(ArticleCard/ProjectCard/AnimeCard/VocaloidCard)、`getCollection`、`t`、`slugOf`
 - Produces:`Hero`(全屏大图 `fetchpriority="high"` + CSS keyframes + 轻量 Canvas 粒子,reduced-motion 停)、`HomeSections`(聚合最新文章/工程/番剧精选/术曲精选/友链入口/关于摘要,每块"查看全部 →")、首页(替换占位)
 
-- [ ] **Step 1: 补 home i18n 文案**
+- [x] **Step 1: 补 home i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -4219,7 +4219,7 @@ git commit -m "feat: add friends page (FriendCard, FriendList) with guestbook sl
   'home.aboutText': 'A personal corner for tech, projects and hobbies.',
 ```
 
-- [ ] **Step 2: 创建 Hero.module.css(超 100 行外置)**
+- [x] **Step 2: 创建 Hero.module.css(超 100 行外置)**
 
 ```css
 /* src/components/home/Hero.module.css */
@@ -4319,7 +4319,7 @@ git commit -m "feat: add friends page (FriendCard, FriendList) with guestbook sl
 }
 ```
 
-- [ ] **Step 3: 创建 Hero.astro**
+- [x] **Step 3: 创建 Hero.astro**
 
 ```astro
 ---
@@ -4390,7 +4390,7 @@ const { locale, heroImage } = Astro.props;
 
 > **a11y/spec 5.7**:大图用 `<Image fetchpriority="high">` + `object-fit: cover`(不用 `background-image` 承载首屏大图,无法用 fetchpriority,P2-21);装饰图 `alt=""`;Canvas 粒子读 `prefers-reduced-motion` 决定是否启动 raf(spec 3.8);`astro:before-swap` 取消 raf 防跨页泄漏。
 
-- [ ] **Step 4: 创建 HomeSections.astro**
+- [x] **Step 4: 创建 HomeSections.astro**
 
 ```astro
 ---
@@ -4538,7 +4538,7 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
 
 > **聚合层纪律(spec 2.2-3)**:HomeSections 组合多领域 Card,是允许的(聚合层可组合领域组件;领域叶子组件间仍禁止互相 import)。
 
-- [ ] **Step 5: 替换首页([locale]/index.astro)**
+- [x] **Step 5: 替换首页([locale]/index.astro)**
 
 把 Plan 1 的 `src/pages/[locale]/index.astro` 占位内容整体替换为:
 
@@ -4596,12 +4596,12 @@ const heroImage = heroArticle?.data.cover;
 </style>
 ```
 
-- [ ] **Step 6: 验证 build + dev**
+- [x] **Step 6: 验证 build + dev**
 
 Run: `pnpm dev` 然后 `pnpm build`
 Expected: 首页渲染 Hero(有大图时)+ HomeSections 各聚合区;无 cover 时降级 hero-fallback
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/home/ src/pages/[locale]/index.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -4624,7 +4624,7 @@ git commit -m "feat: add Hero + HomeSections + replace home placeholder"
 - Consumes: `BaseLayout`、`t`、`locales`、Plan 1 根路径协商脚本模式(404 客户端语言协商)
 - Produces:`NotFound`(props `{ locale }`)、关于页(静态内容走 i18n)、404 页(走 i18n:默认 zh + `navigator.languages` 客户端增强 + 页内语言切换,`noindex`)
 
-- [ ] **Step 1: 补 about i18n 文案**
+- [x] **Step 1: 补 about i18n 文案**
 
 在 `src/i18n/ui/zh.ts` 追加:
 
@@ -4654,7 +4654,7 @@ git commit -m "feat: add Hero + HomeSections + replace home placeholder"
   'about.copyrightText': 'Unless otherwise noted, content is licensed under CC BY-NC-SA 4.0.',
 ```
 
-- [ ] **Step 2: 创建关于页**
+- [x] **Step 2: 创建关于页**
 
 ```astro
 ---
@@ -4715,7 +4715,7 @@ const sections = [
 </style>
 ```
 
-- [ ] **Step 3: 创建 NotFound.astro**
+- [x] **Step 3: 创建 NotFound.astro**
 
 ```astro
 ---
@@ -4766,7 +4766,7 @@ const { locale } = Astro.props;
 </style>
 ```
 
-- [ ] **Step 4: 创建 404 页**
+- [x] **Step 4: 创建 404 页**
 
 ```astro
 ---
@@ -4819,12 +4819,12 @@ const locale: Locale = defaultLocale;
 
 > **404 i18n 纪律(spec 5.17)**:静态 404 默认 zh 渲染(保证无 JS 也有内容)+ `navigator.languages` 客户端增强调整 `lang` + 页内 `<LangSwitch>` 允许切换(切换为静态链接到目标 locale 首页);`noindex`;**不依赖 Referer**。a11y:`<h1>` + 焦点可达(返回链接)。
 
-- [ ] **Step 5: 验证 build 生成 404 + about**
+- [x] **Step 5: 验证 build 生成 404 + about**
 
 Run: `pnpm build`
 Expected: 生成 `/404.html`(含 `noindex`)、`/[locale]/about/`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/errors/NotFound.astro src/pages/[locale]/about/index.astro src/pages/404.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts

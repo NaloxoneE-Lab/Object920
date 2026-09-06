@@ -2,6 +2,7 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod'; // Astro 7 弃用 astro:content 的 z 再导出,官方推荐 astro/zod(Zod v4)
 import { glob, file } from 'astro/loaders';
+import { validateCollectionItemIds } from './lib/content';
 
 const articles = defineCollection({
   loader: glob({
@@ -78,7 +79,11 @@ const projects = defineCollection({
 const anime = defineCollection({
   // Sveltia 写 { items: [...] },file() 期望顶层数组(每对象有 id),用 parser 桥接
   loader: file('src/content/data/anime.json', {
-    parser: (text) => JSON.parse(text).items,
+    parser: (text) => {
+      const items = JSON.parse(text).items;
+      validateCollectionItemIds('anime', items); // spec 4.1 P1-2:id 唯一性构建期校验
+      return items;
+    },
   }),
   schema: z.object({
     id: z.string(),
@@ -101,7 +106,11 @@ const anime = defineCollection({
 
 const vocaloid = defineCollection({
   loader: file('src/content/data/vocaloid.json', {
-    parser: (text) => JSON.parse(text).items,
+    parser: (text) => {
+      const items = JSON.parse(text).items;
+      validateCollectionItemIds('vocaloid', items); // spec 4.1 P1-2:id 唯一性构建期校验
+      return items;
+    },
   }),
   schema: z.object({
     id: z.string(),
@@ -123,7 +132,11 @@ const vocaloid = defineCollection({
 
 const friends = defineCollection({
   loader: file('src/content/data/friends.json', {
-    parser: (text) => JSON.parse(text).items,
+    parser: (text) => {
+      const items = JSON.parse(text).items;
+      validateCollectionItemIds('friends', items); // spec 4.1 P1-2:id 唯一性构建期校验
+      return items;
+    },
   }),
   schema: z.object({
     id: z.string(),

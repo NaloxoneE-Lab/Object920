@@ -1,0 +1,45 @@
+---
+// src/pages/404.astro — 静态 404,默认 zh + 客户端语言协商
+import BaseHead from '@components/layout/BaseHead.astro';
+import NotFound from '@components/errors/NotFound.astro';
+import LangSwitch from '@components/common/LangSwitch.astro';
+import { t } from '@i18n/utils';
+import { defaultLocale, type Locale } from '@i18n/config';
+const locale: Locale = defaultLocale;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <BaseHead locale={locale} title={t(locale, 'common.404.title')} noindex />
+  </head>
+  <body>
+    <main id="main" data-404-root>
+      <NotFound locale={locale} />
+      <div class="langswitch-404" data-404-langswitch>
+        <LangSwitch locale={locale} />
+      </div>
+    </main>
+    <script>
+      (function () {
+        const root = document.querySelector('[data-404-root]');
+        if (!root) return;
+        const langs = navigator.languages ?? [navigator.language];
+        const target = (['zh', 'en', 'ru', 'ja'] as const).find((l) =>
+          langs.some((pl) => pl.toLowerCase().startsWith(l)),
+        );
+        if (target && target !== 'zh') {
+          document.documentElement.setAttribute('lang', target);
+          root.setAttribute('data-404-locale', target);
+        }
+      })();
+    </script>
+    <style>
+      .langswitch-404 {
+        display: flex;
+        justify-content: center;
+        padding: var(--spacing-md);
+      }
+    </style>
+  </body>
+</html>

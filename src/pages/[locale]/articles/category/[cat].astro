@@ -1,0 +1,39 @@
+---
+// src/pages/[locale]/articles/category/[cat].astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import ArticleList from '@components/article/ArticleList.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+export async function getStaticPaths() {
+  const all = await getCollection('articles');
+  const cats = new Set(all.filter((e) => !e.data.draft).map((e) => e.data.category));
+  const paths: { params: { locale: Locale; cat: string } }[] = [];
+  for (const locale of locales) for (const cat of cats) paths.push({ params: { locale, cat } });
+  return paths;
+}
+const { locale, cat } = Astro.params as { locale: Locale; cat: string };
+const all = await getCollection('articles');
+const entries = all
+  .filter(
+    (e) =>
+      e.id.startsWith(locale + '/') &&
+      e.data.category === cat &&
+      (!e.data.draft || import.meta.env.DEV),
+  )
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout locale={locale} title={t(locale, 'articles.categorized', { cat })} noindex>
+  <h1 class="page-title">{t(locale, 'articles.categorized', { cat })}</h1>
+  <ArticleList entries={entries} locale={locale} />
+</BaseLayout>
+<style>
+  .page-title {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md) 0;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+</style>

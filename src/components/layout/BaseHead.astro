@@ -11,13 +11,16 @@ interface Props {
   ogImage?: string;
   canonicalURL?: string;
   noindex?: boolean;
+  robots?: string;
 }
 
-const { title, description, ogImage, canonicalURL, noindex } = Astro.props;
+const { title, description, ogImage, canonicalURL, noindex, robots } = Astro.props;
 const fullURL = (path: string) => new URL(path, siteConfig.siteUrl).toString();
 const canonical = canonicalURL ?? fullURL(Astro.url.pathname);
 const resolvedOg = ogImage ?? '/images/og-default.png';
 const isPreview = import.meta.env.PUBLIC_PREVIEW === 'true';
+const robotsContent =
+  robots ?? (isPreview ? 'noindex, nofollow' : noindex ? 'noindex, follow' : undefined);
 ---
 
 <meta charset="utf-8" />
@@ -28,7 +31,7 @@ const isPreview = import.meta.env.PUBLIC_PREVIEW === 'true';
 {description && <meta name="description" content={description} />}
 <link rel="canonical" href={canonical} />
 
-{(noindex || isPreview) && <meta name="robots" content="noindex, nofollow" />}
+{robotsContent && <meta name="robots" content={robotsContent} />}
 
 <!-- favicon -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

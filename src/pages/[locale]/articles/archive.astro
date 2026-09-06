@@ -1,0 +1,82 @@
+---
+// src/pages/[locale]/articles/archive.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import { t, formatDate } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+import { slugOf } from '@lib/i18n';
+export async function getStaticPaths() {
+  return locales.map((l) => ({ params: { locale: l } }));
+}
+const { locale } = Astro.params as { locale: Locale };
+const all = await getCollection('articles');
+const entries = all
+  .filter((e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const groups = new Map<string, typeof entries>();
+for (const e of entries) {
+  const key =
+    e.data.pubDate.getFullYear() + '-' + String(e.data.pubDate.getMonth() + 1).padStart(2, '0');
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key)!.push(e);
+}
+---
+
+<BaseLayout locale={locale} title={t(locale, 'articles.archive')} noindex>
+  <div class="archive">
+    <h1 class="page-title">{t(locale, 'articles.archive')}</h1>
+    {
+      Array.from(groups.entries()).map(([key, list]) => (
+        <section class="archive-group">
+          <h2 class="archive-month">{key}</h2>
+          <ul class="archive-list">
+            {list.map((e) => (
+              <li>
+                <a href={`/${locale}/articles/${slugOf(e)}/`}>{e.data.title}</a>{' '}
+                <time>{formatDate(e.data.pubDate, locale)}</time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
+<style>
+  .archive {
+    max-width: var(--container-prose);
+    margin: 0 auto;
+    padding: var(--spacing-md);
+  }
+  .page-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+  }
+  .archive-group {
+    margin-top: var(--spacing-lg);
+  }
+  .archive-month {
+    font-size: var(--text-xl);
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--spacing-2xs);
+  }
+  .archive-list {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+  }
+  .archive-list a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .archive-list time {
+    color: var(--color-text-subtle);
+    font-size: var(--text-xs);
+    margin-left: var(--spacing-xs);
+  }
+</style>

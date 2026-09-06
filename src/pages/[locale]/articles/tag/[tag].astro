@@ -1,0 +1,40 @@
+---
+// src/pages/[locale]/articles/tag/[tag].astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import ArticleList from '@components/article/ArticleList.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+export async function getStaticPaths() {
+  const all = await getCollection('articles');
+  const tags = new Set<string>();
+  for (const e of all.filter((e) => !e.data.draft)) for (const tag of e.data.tags) tags.add(tag);
+  const paths: { params: { locale: Locale; tag: string } }[] = [];
+  for (const locale of locales) for (const tag of tags) paths.push({ params: { locale, tag } });
+  return paths;
+}
+const { locale, tag } = Astro.params as { locale: Locale; tag: string };
+const all = await getCollection('articles');
+const entries = all
+  .filter(
+    (e) =>
+      e.id.startsWith(locale + '/') &&
+      e.data.tags.includes(tag) &&
+      (!e.data.draft || import.meta.env.DEV),
+  )
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout locale={locale} title={t(locale, 'articles.tagged', { tag })} noindex>
+  <h1 class="page-title">{t(locale, 'articles.tagged', { tag })}</h1>
+  <ArticleList entries={entries} locale={locale} />
+</BaseLayout>
+<style>
+  .page-title {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md) 0;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+</style>

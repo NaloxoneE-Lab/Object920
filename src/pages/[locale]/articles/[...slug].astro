@@ -1,0 +1,104 @@
+---
+// src/pages/[locale]/articles/[...slug].astro
+import { getCollection, render } from 'astro:content';
+import { locales, type Locale } from '@i18n/config';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import {
+  getEntriesGroupedByTranslationKey,
+  resolveLocalizedEntry,
+  slugOf,
+  type TranslationGroup,
+  validateSlugs,
+  validateTranslationGroups,
+} from '@lib/i18n';
+import { validateOgImageFields } from '@lib/content';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const all = await getCollection('articles');
+  const entries = all.filter((e) => !e.data.draft || import.meta.env.DEV);
+  // spec 4.1/6.5:构建期校验,冲突直接 build fail
+  validateSlugs(entries.map((e) => ({ collection: 'articles', id: e.id })));
+  validateTranslationGroups(
+    entries.map((e) => ({ collection: 'articles', id: e.id, data: e.data })),
+  );
+  validateOgImageFields(entries);
+  const groups = getEntriesGroupedByTranslationKey(entries);
+  const byKey = new Map<
+    string,
+    { params: { locale: Locale; slug?: string }; props: Record<string, unknown> }
+  >();
+  const renderKeys = new Set<string>();
+
+  for (const [, group] of groups) {
+    for (const locale of locales) {
+      const res = resolveLocalizedEntry(group, locale);
+      if (res.mode !== 'render') continue;
+      const sourceEntry = res.entry!;
+      const slug = slugOf(sourceEntry);
+      const key = `${locale}/${slug}`;
+      renderKeys.add(key);
+      byKey.set(key, {
+        params: { locale, slug },
+        props: {
+          mode: 'render',
+          contentLocale: res.contentLocale,
+          entry: res.entry,
+          group,
+          routeSegment: 'articles',
+        },
+      });
+    }
+  }
+  for (const [, group] of groups) {
+    for (const locale of locales) {
+      const res = resolveLocalizedEntry(group, locale);
+      if (res.mode !== 'placeholder') continue;
+      const sourceEntry = group.zh ?? group.en;
+      if (!sourceEntry) continue;
+      const slug = slugOf(sourceEntry);
+      const key = `${locale}/${slug}`;
+      if (renderKeys.has(key) || byKey.has(key)) continue;
+      byKey.set(key, {
+        params: { locale, slug },
+        props: {
+          mode: 'placeholder',
+          contentLocale: res.contentLocale,
+          entry: null,
+          group,
+          routeSegment: 'articles',
+        },
+      });
+    }
+  }
+  return Array.from(byKey.values());
+}
+
+const { locale } = Astro.params as { locale: Locale };
+const { mode, contentLocale, entry, group, routeSegment } = Astro.props as {
+  mode: 'render' | 'placeholder';
+  contentLocale: 'zh' | 'en';
+  entry: CollectionEntry<'articles'> | null;
+  group: TranslationGroup<CollectionEntry<'articles'>>;
+  routeSegment: string;
+};
+
+let Content: unknown = undefined;
+let headings: { depth: number; slug: string; text: string }[] = [];
+if (mode === 'render' && entry) {
+  const rendered = await render(entry);
+  Content = rendered.Content;
+  headings = rendered.headings ?? [];
+}
+---
+
+<ArticleLayout
+  locale={locale}
+  mode={mode}
+  contentLocale={contentLocale}
+  entry={entry ?? undefined}
+  group={group}
+  routeSegment={routeSegment}
+  Content={Content}
+  headings={headings}
+/>
