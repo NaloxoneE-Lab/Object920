@@ -7,6 +7,10 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
+    "pull:content": "node --env-file-if-exists=.env src/scripts/pull-content.mjs",
+    "predev": "node --env-file-if-exists=.env src/scripts/pull-content.mjs --if-missing",
+    "prebuild": "node --env-file-if-exists=.env src/scripts/pull-content.mjs && pnpm run check:datasheets",
+    "check:datasheets": "tsx --env-file-if-exists=.env src/scripts/check-datasheets.ts",
     "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
@@ -30,6 +34,7 @@
     "eslint-plugin-astro": "^3.1.0",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.14.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.69.0",
     "vitest": "^3.0.0"
