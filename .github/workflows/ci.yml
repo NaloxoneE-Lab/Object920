@@ -25,6 +25,7 @@ jobs:
       - uses: lycheeverse/lychee-action@v2
         with:
           install: true
+          args: '--version' # 仅安装二进制;真正的死链检查在 pnpm build 的 postbuild 链里执行(check:links,对 dist/ 离线扫描)
       - run: pnpm install --frozen-lockfile
 
       - name: Code checks (no secret)
