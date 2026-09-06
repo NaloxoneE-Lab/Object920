@@ -1,0 +1,71 @@
+---
+// src/components/project/Gallery.astro
+import { Image } from 'astro:assets';
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { slugOf } from '@lib/i18n';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const groupId = 'project-' + slugOf(entry);
+---
+
+{
+  entry.data.gallery.length > 0 && (
+    <section class="gallery" aria-label={t(locale, 'projects.gallery')}>
+      <h2 class="gallery-title">{t(locale, 'projects.gallery')}</h2>
+      <div class="gallery-grid">
+        {entry.data.gallery.map((item) => (
+          <figure class="gallery-figure">
+            <Image
+              src={item.image}
+              alt={item.alt}
+              width={480}
+              height={360}
+              loading="lazy"
+              data-article-image
+              data-lightbox
+              data-lightbox-group={groupId}
+              class="gallery-img"
+            />
+            {item.caption && <figcaption class="gallery-caption">{item.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    </section>
+  )
+}
+<style>
+  .gallery {
+    margin: var(--spacing-lg) 0;
+  }
+  .gallery-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--spacing-sm);
+  }
+  .gallery-figure {
+    margin: 0;
+  }
+  .gallery-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    cursor: zoom-in;
+  }
+  .gallery-caption {
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-2xs);
+  }
+</style>

@@ -1,0 +1,114 @@
+---
+// src/components/project/ProjectCard.astro
+import { Image } from 'astro:assets';
+import { t, formatDate } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { slugOf } from '@lib/i18n';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const { cover, coverAlt, title, excerpt, pubDate, status } = entry.data;
+const href = `/${locale}/projects/${slugOf(entry)}/`;
+const statusClass = `status-${status}`;
+---
+
+<article class="project-card">
+  <a href={href} class="project-card-link">
+    {
+      cover && (
+        <Image
+          src={cover}
+          alt={coverAlt}
+          width={640}
+          height={360}
+          loading="lazy"
+          class="project-card-cover"
+        />
+      )
+    }
+    <div class="project-card-body">
+      <div class="project-card-head">
+        <h2 class="project-card-title">{title}</h2>
+        <span class:list={['project-status', statusClass]}
+          >{t(locale, 'projects.status.' + status)}</span
+        >
+      </div>
+      {excerpt && <p class="project-card-excerpt">{excerpt}</p>}
+      <time class="project-card-date" datetime={pubDate.toISOString()}
+        >{formatDate(pubDate, locale)}</time
+      >
+    </div>
+  </a>
+</article>
+<style>
+  .project-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .project-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .project-card-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .project-card-body {
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+  }
+  .project-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .project-card-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+  .project-card-excerpt {
+    margin-top: var(--spacing-2xs);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  .project-card-date {
+    color: var(--color-text-subtle);
+    font-size: var(--text-xs);
+  }
+  .project-status {
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    white-space: nowrap;
+  }
+  .status-ongoing {
+    background: color-mix(in srgb, var(--color-info) 18%, transparent);
+    color: var(--color-info);
+  }
+  .status-completed {
+    background: color-mix(in srgb, var(--color-success) 18%, transparent);
+    color: var(--color-success);
+  }
+  .status-archived {
+    background: color-mix(in srgb, var(--color-text-muted) 18%, transparent);
+    color: var(--color-text-muted);
+  }
+  .status-planned {
+    background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+    color: var(--color-warning);
+  }
+</style>

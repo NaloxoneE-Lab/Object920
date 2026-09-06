@@ -1,0 +1,85 @@
+---
+// src/components/project/SpecsTable.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const specs = entry.data.specs;
+---
+
+{
+  specs.length > 0 && (
+    <section class="specs">
+      <h2 class="specs-title">{t(locale, 'projects.specs')}</h2>
+      <table class="specs-table">
+        <tbody>
+          {specs.map((s) => (
+            <tr class="specs-row">
+              <th scope="row" class="specs-label">
+                {s.label}
+              </th>
+              <td class="specs-value">{s.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <dl class="specs-dl">
+        {specs.map((s) => (
+          <div class="specs-dl-item">
+            <dt class="specs-label">{s.label}</dt>
+            <dd class="specs-value">{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+<style>
+  .specs {
+    margin: var(--spacing-lg) 0;
+  }
+  .specs-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+  }
+  .specs-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .specs-row {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .specs-label {
+    text-align: left;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    color: var(--color-text-muted);
+    font-weight: 500;
+    width: 40%;
+  }
+  .specs-value {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+  }
+  .specs-dl {
+    display: none;
+    margin: 0;
+  }
+  .specs-dl-item {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-2xs) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  @media (max-width: 600px) {
+    .specs-table {
+      display: none;
+    }
+    .specs-dl {
+      display: block;
+    }
+  }
+</style>

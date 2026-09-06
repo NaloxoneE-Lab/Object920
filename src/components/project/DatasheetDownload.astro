@@ -1,0 +1,94 @@
+---
+// src/components/project/DatasheetDownload.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { buildDownloadUrls } from '@lib/assets';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'projects'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const datasheets = entry.data.datasheets;
+---
+
+{
+  datasheets.length > 0 && (
+    <section class="datasheets">
+      <h2 class="datasheets-title">{t(locale, 'projects.datasheets')}</h2>
+      <ul class="datasheets-list">
+        {datasheets.map((ds) => {
+          const urls = buildDownloadUrls(ds);
+          const primary = urls[0];
+          const fallbacks = urls.slice(1);
+          return (
+            <li class="datasheet-item">
+              <a
+                href={primary?.url}
+                class="datasheet-primary"
+                aria-label={t(locale, 'projects.download') + ' ' + ds.name}
+                target="_blank"
+                rel="noopener"
+              >
+                {ds.name}
+                {ds.size && <span class="datasheet-size">{ds.size}</span>}
+              </a>
+              {fallbacks.length > 0 && (
+                <details class="datasheet-fallback">
+                  <summary>{t(locale, 'projects.downloadFallback')}</summary>
+                  <ul>
+                    {fallbacks.map((f) => (
+                      <li>
+                        <a href={f.url} target="_blank" rel="noopener">
+                          {f.mirror}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}
+<style>
+  .datasheets {
+    margin: var(--spacing-lg) 0;
+  }
+  .datasheets-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+  }
+  .datasheets-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  .datasheet-primary {
+    display: inline-flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+  }
+  .datasheet-primary:hover {
+    background: var(--color-accent-hover);
+  }
+  .datasheet-size {
+    font-size: var(--text-xs);
+    opacity: 0.85;
+  }
+  .datasheet-fallback {
+    margin-top: var(--spacing-2xs);
+    font-size: var(--text-sm);
+  }
+</style>

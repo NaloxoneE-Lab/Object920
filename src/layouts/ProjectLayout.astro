@@ -1,0 +1,116 @@
+---
+// src/layouts/ProjectLayout.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import ArticleProse from '@components/article/ArticleProse.astro';
+import Gallery from '@components/project/Gallery.astro';
+import SpecsTable from '@components/project/SpecsTable.astro';
+import DatasheetDownload from '@components/project/DatasheetDownload.astro';
+import LangSwitch from '@components/common/LangSwitch.astro';
+import { t } from '@i18n/utils';
+import { defaultLocale, type Locale, type ContentLocale } from '@i18n/config';
+import { siteConfig } from '@config/site';
+import { buildHreflang, pickXDefault } from '@lib/seo';
+import { getLocalizedEntryPath, slugOf, type TranslationGroup } from '@lib/i18n';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  locale: Locale;
+  mode: 'render' | 'placeholder';
+  contentLocale: ContentLocale;
+  entry?: CollectionEntry<'projects'>;
+  group: TranslationGroup<CollectionEntry<'projects'>>;
+  Content?: unknown;
+}
+const { locale, mode, contentLocale, entry, group, Content } = Astro.props;
+const renderLocales = (['zh', 'en'] as const).filter((l) => group[l]);
+const alternates = renderLocales.map((l) => ({
+  locale: l,
+  url: new URL(getLocalizedEntryPath(group, l, 'projects') ?? '/', siteConfig.siteUrl).toString(),
+}));
+const xDefault = pickXDefault(alternates, defaultLocale);
+const hreflangTags = buildHreflang(alternates, xDefault);
+const title = mode === 'render' && entry ? entry.data.title : t(locale, 'projects.title');
+const canonicalPath =
+  mode === 'placeholder'
+    ? (getLocalizedEntryPath(group, contentLocale, 'projects') ?? `/${locale}/projects/`)
+    : `/${locale}/projects/${entry ? slugOf(entry) : ''}/`;
+const langName: Record<ContentLocale, string> = { zh: '中文', en: 'English' };
+---
+
+<BaseLayout
+  locale={locale}
+  title={title}
+  canonicalURL={new URL(canonicalPath, siteConfig.siteUrl).toString()}
+  robots={mode === 'placeholder' ? 'noindex, follow' : undefined}
+>
+  <Fragment slot="head-extras" set:html={hreflangTags} />
+  <div class="project-layout">
+    {
+      mode === 'render' && Content && entry && (
+        <article>
+          <h1 class="project-title">{entry.data.title}</h1>
+          <ArticleProse contentLocale={contentLocale} Content={Content} />
+          <Gallery entry={entry} locale={locale} />
+          <SpecsTable entry={entry} locale={locale} />
+          <DatasheetDownload entry={entry} locale={locale} />
+          {entry.data.relatedLinks.length > 0 && (
+            <section class="related-links">
+              <h2>{t(locale, 'projects.relatedLinks')}</h2>
+              <ul>
+                {entry.data.relatedLinks.map((l) => (
+                  <li>
+                    <a href={l.url} target="_blank" rel="noopener">
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </article>
+      )
+    }
+    {
+      mode === 'placeholder' && (
+        <div class="project-placeholder">
+          <h1>
+            {t(locale, 'articles.untranslated', { lang: t(locale, 'langswitch.' + contentLocale) })}
+          </h1>
+          <p>
+            <a href={getLocalizedEntryPath(group, contentLocale, 'projects') ?? '#'}>
+              {t(locale, 'articles.readOriginal', { lang: langName[contentLocale] })}
+            </a>
+          </p>
+          <LangSwitch locale={locale} />
+        </div>
+      )
+    }
+  </div>
+</BaseLayout>
+<style>
+  .project-layout {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-md);
+  }
+  .project-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+  }
+  .project-placeholder {
+    max-width: var(--container-prose);
+    margin: 0 auto;
+    padding: var(--spacing-2xl) var(--spacing-md);
+    text-align: center;
+  }
+  .related-links ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+  }
+  .related-links a {
+    color: var(--color-accent);
+  }
+</style>
