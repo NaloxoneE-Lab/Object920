@@ -46,6 +46,8 @@ jobs:
           PUBLIC_SEARCH_ENABLED: 'true'
           PUBLIC_SEARCH_PROVIDER: 'pagefind'
           PUBLIC_SITE_URL: 'https://example.com'
+          PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
+          PUBLIC_ASSETS_REPO: 'object920-assets'
 
       - uses: actions/upload-artifact@v4
         if: >-
@@ -97,6 +99,8 @@ jobs:
           PUBLIC_SEARCH_ENABLED: 'true'
           PUBLIC_SEARCH_PROVIDER: 'pagefind'
           PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
+          PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
+          PUBLIC_ASSETS_REPO: 'object920-assets'
       - name: Generate nginx configs
         if: steps.guard.outputs.enabled == 'true'
         run: |
