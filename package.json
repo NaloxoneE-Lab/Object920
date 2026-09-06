@@ -1,0 +1,37 @@
+{
+  "name": "object920",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@9.15.5",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "test": "vitest run",
+    "ci": "pnpm run check && pnpm run lint && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.0",
+    "@tailwindcss/typography": "^0.5",
+    "astro": "^7.0.0",
+    "tailwindcss": "^4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.4.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-astro": "^3.1.0",
+    "prettier": "^3.0.0",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^3.0.0"
+  }
+}
