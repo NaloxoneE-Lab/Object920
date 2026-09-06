@@ -1,0 +1,104 @@
+---
+// src/components/collection/StatusFilter.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const statuses = ['all', 'finished', 'watching', 'planned', 'dropped'] as const;
+---
+
+<div class="status-filter" data-status-filter>
+  <div class="status-filter-tabs" role="tablist" aria-label={t(locale, 'anime.title')}>
+    {
+      statuses.map((s, i) => (
+        <button
+          type="button"
+          role="tab"
+          class:list={['status-tab', { active: s === 'all' }]}
+          data-status-tab={s}
+          aria-selected={s === 'all' ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+        >
+          {t(locale, 'anime.status.' + s)}
+        </button>
+      ))
+    }
+  </div>
+</div>
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector('[data-status-filter]');
+    if (!root) return;
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-status-tab]'));
+    const wall = document.querySelector('[data-anime-wall]');
+    if (tabs.length === 0 || !wall) return;
+
+    const setStatus = (status: string) => {
+      tabs.forEach((tab) => {
+        const active = tab.dataset.statusTab === status;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.tabIndex = active ? 0 : -1;
+      });
+      wall.querySelectorAll<HTMLElement>('[data-anime-card]').forEach((card) => {
+        const match = status === 'all' || card.dataset.status === status;
+        card.hidden = !match;
+      });
+      const url = new URL(window.location.href);
+      if (status === 'all') url.searchParams.delete('status');
+      else url.searchParams.set('status', status);
+      window.history.replaceState({}, '', url);
+    };
+
+    tabs.forEach((tab) =>
+      tab.addEventListener('click', () => setStatus(tab.dataset.statusTab || 'all')),
+    );
+
+    const current = new URL(window.location.href).searchParams.get('status');
+    if (current && tabs.some((t) => t.dataset.statusTab === current)) setStatus(current);
+
+    root.addEventListener('keydown', (e) => {
+      const key = (e as KeyboardEvent).key;
+      const idx = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      if (key === 'ArrowRight') {
+        const n = (idx + 1) % tabs.length;
+        tabs[n].focus();
+        tabs[n].click();
+      }
+      if (key === 'ArrowLeft') {
+        const n = (idx - 1 + tabs.length) % tabs.length;
+        tabs[n].focus();
+        tabs[n].click();
+      }
+    });
+  });
+</script>
+<style>
+  .status-filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+  .status-tab {
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    transition:
+      background calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .status-tab:hover {
+    color: var(--color-text);
+  }
+  .status-tab.active {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+</style>

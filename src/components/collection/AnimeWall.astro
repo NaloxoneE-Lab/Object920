@@ -1,0 +1,44 @@
+---
+// src/components/collection/AnimeWall.astro
+import AnimeCard from './AnimeCard.astro';
+import EmptyState from '@components/common/EmptyState.astro';
+import type { Locale } from '@i18n/config';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entries: CollectionEntry<'anime'>[];
+  locale: Locale;
+}
+const { entries, locale } = Astro.props;
+---
+
+{
+  entries.length === 0 ? (
+    <EmptyState locale={locale} />
+  ) : (
+    <div class="anime-wall" data-anime-wall>
+      {entries.map((entry) => (
+        <AnimeCard entry={entry} locale={locale} />
+      ))}
+    </div>
+  )
+}
+<style>
+  .anime-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    max-width: var(--container-wide);
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) {
+    .anime-wall {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .anime-wall {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+</style>

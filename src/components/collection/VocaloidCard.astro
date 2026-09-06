@@ -1,0 +1,113 @@
+---
+// src/components/collection/VocaloidCard.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'vocaloid'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const { title, producer, vocaloid, cover, score, platform, lyricSnippet, comment, highlight } =
+  entry.data;
+---
+
+<article class:list={['vocaloid-card', { highlight }]} data-vocaloid-card>
+  {
+    cover && (
+      <img src={cover} alt={title} loading="lazy" class="vocaloid-cover" data-article-image />
+    )
+  }
+  <div class="vocaloid-body">
+    <h3 class="vocaloid-title">{title}</h3>
+    <p class="vocaloid-producer">{t(locale, 'vocaloid.producer')}: {producer}</p>
+    {vocaloid.length > 0 && <p class="vocaloid-vocaloid">{vocaloid.join(' / ')}</p>}
+    {
+      score != null && (
+        <p class="vocaloid-score">
+          {t(locale, 'anime.score')}: {score}
+        </p>
+      )
+    }
+    {
+      platform.length > 0 && (
+        <ul class="vocaloid-platforms">
+          {platform.map((p) => (
+            <li>
+              <a href={p.url} target="_blank" rel="noopener">
+                {p.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {
+      (lyricSnippet || comment) && (
+        <details class="vocaloid-details">
+          <summary>{t(locale, 'vocaloid.comment')}</summary>
+          {lyricSnippet && <blockquote class="vocaloid-lyric">{lyricSnippet}</blockquote>}
+          {comment && <p class="vocaloid-comment">{comment}</p>}
+        </details>
+      )
+    }
+  </div>
+</article>
+<style>
+  .vocaloid-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .vocaloid-card.highlight {
+    box-shadow: var(--shadow-glow);
+    border-color: var(--color-accent);
+  }
+  .vocaloid-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+  .vocaloid-body {
+    padding: var(--spacing-sm);
+  }
+  .vocaloid-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .vocaloid-producer,
+  .vocaloid-vocaloid,
+  .vocaloid-score {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-2xs);
+  }
+  .vocaloid-platforms {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+  }
+  .vocaloid-platforms a {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: var(--text-2xs);
+  }
+  .vocaloid-details {
+    margin-top: var(--spacing-xs);
+  }
+  .vocaloid-lyric {
+    margin: var(--spacing-2xs) 0;
+    padding-left: var(--spacing-xs);
+    border-left: 2px solid var(--color-border);
+    font-style: italic;
+    font-size: var(--text-xs);
+  }
+  .vocaloid-comment {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+</style>

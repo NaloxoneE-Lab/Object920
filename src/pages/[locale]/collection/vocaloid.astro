@@ -1,0 +1,84 @@
+---
+// src/pages/[locale]/collection/index.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+export async function getStaticPaths() {
+  return locales.map((l) => ({ params: { locale: l } }));
+}
+const { locale } = Astro.params as { locale: Locale };
+const items = [
+  {
+    key: 'collection.anime',
+    descKey: 'collection.animeDesc',
+    href: `/${locale}/collection/anime/`,
+  },
+  {
+    key: 'collection.vocaloid',
+    descKey: 'collection.vocaloidDesc',
+    href: `/${locale}/collection/vocaloid/`,
+  },
+];
+---
+
+<BaseLayout locale={locale} title={t(locale, 'collection.title')}>
+  <div class="collection-nav">
+    <h1 class="page-title">{t(locale, 'collection.title')}</h1>
+    <ul class="collection-list">
+      {
+        items.map((item) => (
+          <li class="collection-item">
+            <a href={item.href} class="collection-link">
+              <h2>{t(locale, item.key)}</h2>
+              <p>{t(locale, item.descKey)}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>
+<style>
+  .collection-nav {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-md);
+  }
+  .page-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+  }
+  .collection-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+  }
+  .collection-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transition: transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .collection-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .collection-link {
+    display: block;
+    padding: var(--spacing-md);
+    color: inherit;
+    text-decoration: none;
+  }
+  .collection-link h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+  }
+  .collection-link p {
+    margin-top: var(--spacing-2xs);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+</style>

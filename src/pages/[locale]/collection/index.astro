@@ -1,0 +1,30 @@
+---
+// src/pages/[locale]/collection/vocaloid.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import VocaloidWall from '@components/collection/VocaloidWall.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+export async function getStaticPaths() {
+  return locales.map((l) => ({ params: { locale: l } }));
+}
+const { locale } = Astro.params as { locale: Locale };
+const all = await getCollection('vocaloid');
+const entries = all.sort(
+  (a, b) => (b.data.listenedDate?.valueOf() ?? 0) - (a.data.listenedDate?.valueOf() ?? 0),
+);
+---
+
+<BaseLayout locale={locale} title={t(locale, 'vocaloid.title')}>
+  <h1 class="page-title">{t(locale, 'vocaloid.title')}</h1>
+  <VocaloidWall entries={entries} locale={locale} />
+</BaseLayout>
+<style>
+  .page-title {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md) 0;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+  }
+</style>
