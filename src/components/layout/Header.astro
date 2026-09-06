@@ -1,0 +1,81 @@
+---
+// src/components/layout/Header.astro
+import { t } from '@i18n/utils';
+import { siteConfig } from '@config/site';
+import type { Locale } from '@i18n/config';
+import LangSwitch from '../common/LangSwitch.astro';
+import ThemeToggle from '../ui/ThemeToggle.astro';
+import MobileNav from '../ui/MobileNav.astro';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<header class="header">
+  <div class="header-inner">
+    <a href={`/${locale}/`} class="header-logo">{siteConfig.siteName}</a>
+    <nav class="header-nav" aria-label={t(locale, 'nav.home')}>
+      {
+        siteConfig.navItems.map((item) => (
+          <a href={`/${locale}${item.href}`} class="header-nav-link">
+            {t(locale, item.key)}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="header-controls">
+      <LangSwitch locale={locale} />
+      <ThemeToggle locale={locale} />
+    </div>
+    <MobileNav locale={locale} />
+  </div>
+</header>
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .header-inner {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+  .header-logo {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .header-nav {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+  .header-nav-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .header-nav-link:hover {
+    color: var(--color-text);
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  @media (max-width: 768px) {
+    .header-nav,
+    .header-controls {
+      display: none;
+    }
+  }
+</style>

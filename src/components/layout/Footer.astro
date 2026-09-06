@@ -1,0 +1,33 @@
+---
+// src/components/layout/Footer.astro
+import { t } from '@i18n/utils';
+import { siteConfig } from '@config/site';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="footer-inner">
+    <p class="footer-copy">© {year} {siteConfig.siteName}</p>
+    <p class="footer-tech">{t(locale, 'footer.built-with')}</p>
+  </div>
+</footer>
+<style>
+  .footer {
+    border-top: 1px solid var(--color-border);
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  .footer-inner {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+</style>

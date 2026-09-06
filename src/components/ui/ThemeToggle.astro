@@ -1,0 +1,65 @@
+---
+// src/components/ui/ThemeToggle.astro
+import Icon from '../common/Icon.astro';
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<button
+  id="theme-toggle"
+  class="theme-toggle"
+  aria-label={t(locale, 'theme.toggle')}
+  aria-pressed="false"
+>
+  <Icon name="sun" size={20} class="icon-light" />
+  <Icon name="moon" size={20} class="icon-dark" />
+</button>
+<script>
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    const update = () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      btn.setAttribute('aria-pressed', current === 'dark' ? 'true' : 'false');
+    };
+    update();
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: next } }));
+      update();
+    });
+  }
+</script>
+<style>
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .theme-toggle:hover {
+    color: var(--color-text);
+  }
+  .theme-toggle :global(.icon-dark) {
+    display: none;
+  }
+  :global([data-theme='dark']) .theme-toggle :global(.icon-light) {
+    display: none;
+  }
+  :global([data-theme='dark']) .theme-toggle :global(.icon-dark) {
+    display: block;
+  }
+</style>

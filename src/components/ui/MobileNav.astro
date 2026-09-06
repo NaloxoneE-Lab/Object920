@@ -1,0 +1,147 @@
+---
+// src/components/ui/MobileNav.astro
+import Icon from '../common/Icon.astro';
+import { t } from '@i18n/utils';
+import { siteConfig } from '@config/site';
+import type { Locale } from '@i18n/config';
+import LangSwitch from '../common/LangSwitch.astro';
+import ThemeToggle from './ThemeToggle.astro';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<button
+  id="mobile-nav-toggle"
+  class="mobile-nav-toggle"
+  aria-expanded="false"
+  aria-controls="mobile-nav-drawer"
+>
+  <Icon name="menu" size={24} class="icon-menu" />
+  <Icon name="close" size={24} class="icon-close" />
+</button>
+<nav id="mobile-nav-drawer" class="mobile-nav-drawer" aria-label={t(locale, 'nav.home')}>
+  <ul class="mobile-nav-list">
+    {
+      siteConfig.navItems.map((item) => (
+        <li>
+          <a href={`/${locale}${item.href}`} class="mobile-nav-link">
+            {t(locale, item.key)}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <div class="mobile-nav-controls">
+    <LangSwitch locale={locale} />
+    <ThemeToggle locale={locale} />
+  </div>
+</nav>
+<div id="mobile-nav-overlay" class="mobile-nav-overlay" hidden></div>
+<script>
+  const toggle = document.getElementById('mobile-nav-toggle');
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const overlay = document.getElementById('mobile-nav-overlay');
+  if (toggle && drawer && overlay) {
+    const close = () => {
+      toggle.setAttribute('aria-expanded', 'false');
+      drawer.classList.remove('open');
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+    };
+    const open = () => {
+      toggle.setAttribute('aria-expanded', 'true');
+      drawer.classList.add('open');
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+    };
+    toggle.addEventListener('click', () => {
+      const isOpen = drawer.classList.contains('open');
+      if (isOpen) {
+        close();
+      } else {
+        open();
+      }
+    });
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+    });
+  }
+</script>
+<style>
+  .mobile-nav-toggle {
+    display: none;
+  }
+  .mobile-nav-drawer {
+    display: none;
+  }
+  .mobile-nav-overlay {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .mobile-nav-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+    }
+    .mobile-nav-toggle :global(.icon-close) {
+      display: none;
+    }
+    .mobile-nav-toggle[aria-expanded='true'] :global(.icon-menu) {
+      display: none;
+    }
+    .mobile-nav-toggle[aria-expanded='true'] :global(.icon-close) {
+      display: block;
+    }
+    .mobile-nav-drawer {
+      display: flex;
+      position: fixed;
+      top: 0;
+      right: -280px;
+      width: 280px;
+      height: 100vh;
+      flex-direction: column;
+      background: var(--color-surface-raised);
+      padding: var(--spacing-lg);
+      z-index: var(--z-overlay);
+      transition: right calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out);
+    }
+    .mobile-nav-drawer.open {
+      right: 0;
+    }
+    .mobile-nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+    .mobile-nav-link {
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: var(--text-md);
+    }
+    .mobile-nav-controls {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xl);
+    }
+    .mobile-nav-overlay {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--color-surface-overlay);
+      z-index: calc(var(--z-overlay) - 1);
+    }
+  }
+</style>
