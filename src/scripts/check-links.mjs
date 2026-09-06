@@ -15,4 +15,5 @@ if (!hasLychee()) {
   process.exit(0);
 }
 
-execSync('lychee --offline --no-progress "dist/**/*.html"', { stdio: 'inherit' });
+// --root-dir:lychee 解析根相对链接(/zh/ 等)必须指定文件系统根,否则全量报 Cannot resolve(spec 9.2)
+execSync('lychee --offline --no-progress --root-dir dist "dist/**/*.html"', { stdio: 'inherit' });

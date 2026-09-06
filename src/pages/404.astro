@@ -2,9 +2,8 @@
 // src/pages/404.astro — 静态 404,默认 zh + 客户端语言协商
 import BaseHead from '@components/layout/BaseHead.astro';
 import NotFound from '@components/errors/NotFound.astro';
-import LangSwitch from '@components/common/LangSwitch.astro';
+import { defaultLocale, locales, type Locale } from '@i18n/config';
 import { t } from '@i18n/utils';
-import { defaultLocale, type Locale } from '@i18n/config';
 const locale: Locale = defaultLocale;
 ---
 
@@ -16,9 +15,19 @@ const locale: Locale = defaultLocale;
   <body>
     <main id="main" data-404-root>
       <NotFound locale={locale} />
-      <div class="langswitch-404" data-404-langswitch>
-        <LangSwitch locale={locale} />
-      </div>
+      <nav class="langswitch-404" data-404-langswitch aria-label={t(locale, 'langswitch.label')}>
+        {
+          locales.map((l) => (
+            <a
+              href={`/${l}/`}
+              class:list={['langswitch-item', { active: l === locale }]}
+              hreflang={l}
+            >
+              {t(locale, `langswitch.${l}`)}
+            </a>
+          ))
+        }
+      </nav>
     </main>
     <script>
       (function () {
