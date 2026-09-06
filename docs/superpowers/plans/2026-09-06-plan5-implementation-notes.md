@@ -42,5 +42,5 @@
 
 - 部署平台选定后:将 `deploy/{platform}/` 配置复制到根目录并配置真实 `PUBLIC_SITE_URL`(当前 example.com 占位,canonical/sitemap/RSS 均随之更新)
 - content 仓的 reusable workflow(validate-redirects + Deploy Hook 触发)属 content 仓侧配置,spec 9.9,待部署平台确定后接线
-- OG CJK 字体子集(3500 常用字,1-3MB)未生成,当前所有 OG 走默认图降级(spec 7.9 M2)
+- ~~OG CJK 字体子集~~ **已完成(2026-09-06)**:`public/fonts/og/` 入库 NotoSansSC-Regular.ttf(GB2312 一级 3755 字 + 假名 + 西里尔 + 标点共 4613 字符,1.0MB,jsDelivr 源 + pyftsubset 子集化)与 Inter Regular/Bold TTF(fontsource woff2 解包);satori `lang` 仅接受特定值(拉丁不传,CJK 映射 zh-CN/ja-JP);增量缓存补文件缺失重生成分支(P1-18);样例文章/工程 OG 已真实出图
 - 首周验证清单(spec 附录 D/M 项)剩余:`transition:persist` 在浏览器端的音乐跨页实测、Sveltia slug 模板 `default` filter 实测(File System Access API 本地编辑流)
