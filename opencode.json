@@ -1,0 +1,79 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode-go/glm-5.2",
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "opencode-antigravity-auth@latest"
+  ],
+  "provider": {
+    "google": {
+      "models": {
+        "antigravity-gemini-3-flash": {
+          "name": "Gemini 3 Flash (Antigravity)",
+          "limit": { "context": 1048576, "output": 65536 },
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "minimal": { "thinkingLevel": "minimal" },
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" }
+          }
+        }
+      }
+    },
+    "opencode-go": {
+      "models": {
+        "kimi-k3": {
+          "options": {
+            "reasoning_effort": "max"
+          }
+        },
+        "deepseek-v4-flash": {
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            },
+            "reasoning_effort": "max"
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "build": {
+      "model": "opencode-go/glm-5.2",
+      "description": "主会话:负责沟通、任务派发、路线安排,不做任何视觉/多模态工作",
+      "prompt": "你是 GLM 5.2,一个纯文本模型,没有多模态(图像/视觉)能力。你的职责是:与用户沟通、派发任务给子代理、规划实施路线。严格遵守以下规则:1) 禁止使用 OCR 或任何图像识别方式去读取、识别前端页面或截图;2) 禁止读取图片文件(png/jpg/jpeg/webp/gif/bmp/svg 等),相关读取权限已被拒绝;3) 所有涉及视觉的任务——页面布局、组件设计、前端视觉效果与验收——一律派发给 implementer-frontend 子代理(google/antigravity-gemini-3-flash),由它统一处理视觉部分,你不要尝试自行完成。4) 为防止 Google 账号风控,派发 implementer-frontend 时严格遵守纪律:禁止并行派发多个前端任务(同一时间只允许一个 implementer-frontend 在跑);视觉任务尽量批量合并,把多个相关需求打包成一次派发而非每个小问题单独派发;简单视觉判断(如确认页面是否正常、检查布局)合并到实现任务中一并完成,不单独派发;只有真正需要前端实现或视觉验收时才派发,纯文本沟通与规划自己做。",
+      "permission": {
+        "read": {
+          "*": "allow",
+          "**/*.png": "deny",
+          "**/*.jpg": "deny",
+          "**/*.jpeg": "deny",
+          "**/*.webp": "deny",
+          "**/*.gif": "deny",
+          "**/*.bmp": "deny",
+          "**/*.svg": "deny",
+          "**/*.ico": "deny",
+          "**/*.avif": "deny"
+        }
+      }
+    },
+    "implementer-frontend": {
+      "description": "前端实现任务:按 brief 实现页面组件、路由、样式,调用后端 API,编写测试",
+      "mode": "subagent",
+      "model": "google/antigravity-gemini-3-flash",
+      "variant": "high"
+    },
+    "implementer-backend": {
+      "description": "后端实现任务:按 brief 实现 API 端点、数据模型、业务逻辑,编写测试",
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash"
+    },
+    "reviewer": {
+      "description": "代码审查:spec 合规 + 代码质量双审",
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash"
+    }
+  }
+}
