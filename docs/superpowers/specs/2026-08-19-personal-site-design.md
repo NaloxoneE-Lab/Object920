@@ -22,6 +22,7 @@
 | 2026-08-26(3) | 按第八轮审核 21 条意见修订:OG 增量缓存移出 dist(改 `.cache/og-cache.json`);Satori 增加 CJK 字体方案;unified 依赖统一(markdown-remark direct,unified 不单独声明);JSON item.id 唯一性校验;slug→redirect 检测不再依赖 Git rename(结合 _slug/translationKey/path);placeholder→正式翻译迁移检测;redirect target 必须真实存在 / source 不得仍是当前 route;assets repo 必须 public;Admin CSP 补齐 cdn.jsdelivr.net/blob:/data: 并明确 /admin/* 不继承主站 CSP;PAT 统一 fine-grained;清理 lang 旧 checklist;7.10 补 destroy();根路径 noindex;静态页 lastmod 数据源 static-pages.ts;config 目录统一;pnpm 版本统一;Pagefind 措辞精确;CSP hardening + domain 收紧;reusable workflow pin;translationKey CMS 提示;新增 identity/JSON/Redirect/OG/Admin 验证清单 |
 | 2026-08-26(4) | 按第九轮技术审核修订:框架升级评估至 Astro 7(默认 Sätteri,必须显式 `processor: unified()` 保留 remark/rehype;Rust 编译器/Vite 8/Node >=22.12);修正 Sveltia slug 机制(`_slug` 为显式字段 + `default(title)` 初始值;`canonical_slug.key = translationKey`,撤销自造 `_canonicalSlug`);`astro check` 无 content 改为实现首周验证并定义两种验收分支;shikiConfig 位置明确;OG 字体子集化;check-datasheets 并发/超时;generate-redirects.ts 职责与 validateRedirects 时机;transition:persist 在 Astro 7 下验证;修订标记说明;typography v4 兼容版本确认;Sveltia 版本存在性验证;build-meta dev 容错;save_all_locales 废弃说明;reduced-motion JS 检测示例 |
 | 2026-08-28 | 按第十轮审核修订:全文确认 Astro 7.x(无 6.x 残留);新增 Markdown Processor Decision(为何弃用 Sätteri 默认);redirects.json 纳入 Sveltia file collection 形成编辑闭环;src/content 注释改为 external workspace;pull-content 增加 validateContentRepo() 恢复策略;Astro 7 Router Compatibility Test;Toolchain Contract(Node/pnpm/Astro/Vite);OG hash 增加 fontVersion;增强模块命名去 .client 歧义(ArticleImageEnhancer/CodeBlockEnhancer);redirect 校验拆 validateRedirectManifest/validateGeneratedRoutes 两阶段;清理 RSS lang 残留与旧 checklist;Incremental Build 明确不加入核心;确认不引入 Runtime Routing |
+| 2026-09-06 | 第 11 轮(实现验证修订):engines 由 `">=22.12 <23"` 放宽为 `">=22.12"`——Astro 7.3.1 在 Node 24.20 全链实测通过(install/dev/check/146 单测/build 50 页/完整 postbuild 含 Pagefind·OG·redirects·sitemap/RSS 校验),`<23` 上限不再有依据;同步 1.1 Toolchain Contract 与 9.7 示例。同日实现 Plan 1-5 全量落地,期间修正计划层错误 30+ 处,详见 docs/superpowers/plans/2026-09-06-plan{1..5}-implementation-notes.md |
 
 > **修订标记说明(m1)**:正文中穿插的 `P0-x`/`P1-x`/`P2-x`(及历轮 `C1-C3`/`M1-M5`/`m1-m7`)是**历轮审核意见的追踪标记**,用于把正文决策与附录 B checklist 一一对应;接手者阅读时可将它们当作"该处决策曾被审核确认过"的索引,**不影响实现语义**,可按需忽略。
 
@@ -76,14 +77,14 @@
 **版本策略(P1-20)**:
 - Spec 里 `^x` 表示"兼容该主版本",实际生产版本由 `package.json` + `pnpm-lock.yaml` 锁定(frozen-lockfile)
 - **避免 `latest` 与 `^x` 混用**:npm 依赖用 `^x` 范围 + lockfile 锁定;CDN 资源(Sveltia CMS)使用 **exact pinned 版本 `@sveltia/cms@0.197.2`(实现前必须 `npm view @sveltia/cms versions` 确认该版本真实存在且稳定,m3;若不存在则以实际验证的稳定版本替换并同步 1.1/8.5/附录 B)**,不写 `1.x.y` 之类占位,不长期用 `latest`。**升级 Sveltia 必须重新验证**:i18n / `_slug` / `canonical_slug` / media / file collection / local repository / Admin CSP(见 8.5 升级矩阵)
-- **Astro 7 兼容性(C1)**:Astro 7 默认 Markdown 处理器为 **Sätteri(Rust)**,remark/rehype 插件在 Sätteri 下**全部失效**——本项目必须**显式 `markdown.processor: unified({...})`**(见 7.2.2);`.astro` Rust 编译器要求合法 HTML 嵌套;`transition:persist`/`<Image>` 在 7.x 下的行为在实现首周验证(M5);Node 引擎 `>=22.12 <23`(见 9.7)
+- **Astro 7 兼容性(C1)**:Astro 7 默认 Markdown 处理器为 **Sätteri(Rust)**,remark/rehype 插件在 Sätteri 下**全部失效**——本项目必须**显式 `markdown.processor: unified({...})`**(见 7.2.2);`.astro` Rust 编译器要求合法 HTML 嵌套;`transition:persist`/`<Image>` 在 7.x 下的行为在实现首周验证(M5);Node 引擎 `>=22.12`(2026-09-06 按第 11 轮实现验证放宽,见 9.7 与修订记录)
 - 升级时显式更新 `package.json` + lockfile,CI `--frozen-lockfile` 防漂移
 
 **Toolchain Contract(P1-4,单一版本约束,升级时三者同步变更)**:
 
 ```yaml
 runtime:
-  node: ">=22.12 <23"        # Astro 7 要求 >=22.12(C1)
+  node: ">=22.12"           # Astro 7 要求 >=22.12(C1);<23 上限于 2026-09-06 经 Node 24 实测移除(第 11 轮)
 package:
   pnpm: 9.15.5               # 与 packageManager 一致(P0-3)
 framework:
@@ -2469,7 +2470,7 @@ content repo 只负责"push → POST Deploy Hook",**不关心目标平台**(`MAI
 
 ```json
 {
-  "engines": { "node": ">=22.12 <23" },   // C1:Astro 7 要求 Node >= 22.12
+  "engines": { "node": ">=22.12" },   // C1:Astro 7 要求 Node >= 22.12;<23 上限经 Node 24.20 实测移除(2026-09-06,第 11 轮)
   "packageManager": "pnpm@9.15.5"   // P0-3:必须写真实版本,package.json/lockfile/CI/本地 corepack 用同一版本,禁止 9.x.x 占位
 }
 ```

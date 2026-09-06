@@ -87,12 +87,12 @@
 - Consumes: `process.env`(GITHUB_SHA / CONTENT_COMMIT / BUILD_META_DEBUG)、git CLI(`src/content/.git`)
 - Produces: `collectBuildMeta()` 函数;`src/.build-meta.generated.json`(prebuild);`dist/build-meta.json`(postbuild --dist)
 
-- [ ] **Step 1: 安装 tsx 依赖**
+- [x] **Step 1: 安装 tsx 依赖**
 
 Run: `pnpm add -D tsx`
 Expected: tsx 安装成功(用于后续 .ts 脚本执行)
 
-- [ ] **Step 2: 编写失败测试**
+- [x] **Step 2: 编写失败测试**
 
 ```js
 // src/scripts/__tests__/build-meta.test.mjs
@@ -152,12 +152,12 @@ describe('collectBuildMeta', () => {
 });
 ```
 
-- [ ] **Step 3: 运行测试验证失败**
+- [x] **Step 3: 运行测试验证失败**
 
 Run: `pnpm vitest run src/scripts/__tests__/build-meta.test.mjs`
 Expected: FAIL — `collectBuildMeta` 未定义(模块不存在)
 
-- [ ] **Step 4: 实现 build-meta.mjs**
+- [x] **Step 4: 实现 build-meta.mjs**
 
 ```js
 // src/scripts/build-meta.mjs
@@ -213,12 +213,12 @@ if (isMain) {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [x] **Step 5: 运行测试验证通过**
 
 Run: `pnpm vitest run src/scripts/__tests__/build-meta.test.mjs`
 Expected: PASS — 全部 9 个测试通过
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/scripts/build-meta.mjs src/scripts/__tests__/build-meta.test.mjs
@@ -239,12 +239,12 @@ git commit -m "feat: add build-meta script for prebuild and postbuild metadata g
 - Consumes: `PUBLIC_SEARCH_ENABLED`、`PUBLIC_SEARCH_PROVIDER` 环境变量、`dist/` HTML
 - Produces: `dist/pagefind/` 索引(仅 pagefind 启用时);`resolveSearchAction(env)` 函数
 
-- [ ] **Step 1: 安装 pagefind 依赖**
+- [x] **Step 1: 安装 pagefind 依赖**
 
 Run: `pnpm add -D pagefind`
 Expected: pagefind ^1.x 安装成功
 
-- [ ] **Step 2: 编写失败测试**
+- [x] **Step 2: 编写失败测试**
 
 ```js
 // src/scripts/__tests__/search-index.test.mjs
@@ -286,12 +286,12 @@ describe('resolveSearchAction', () => {
 });
 ```
 
-- [ ] **Step 3: 运行测试验证失败**
+- [x] **Step 3: 运行测试验证失败**
 
 Run: `pnpm vitest run src/scripts/__tests__/search-index.test.mjs`
 Expected: FAIL — `resolveSearchAction` 未定义
 
-- [ ] **Step 4: 实现 search-index.mjs**
+- [x] **Step 4: 实现 search-index.mjs**
 
 ```js
 // src/scripts/search-index.mjs
@@ -345,12 +345,12 @@ if (isMain) {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [x] **Step 5: 运行测试验证通过**
 
 Run: `pnpm vitest run src/scripts/__tests__/search-index.test.mjs`
 Expected: PASS — 全部 6 个测试通过
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/scripts/search-index.mjs src/scripts/__tests__/search-index.test.mjs pnpm-lock.yaml
@@ -371,12 +371,12 @@ git commit -m "feat: add search-index script with pagefind provider validation"
 - Consumes: satori、@resvg/resvg-js、`public/fonts/og/` 字体文件
 - Produces: `OG_TEMPLATE_VERSION`/`OG_FONT_VERSION` 常量;`computeOgHash()`;`loadOgFonts(locale)`;`buildOgElementTree(info)`;`renderOgImage(tree, fonts)`
 
-- [ ] **Step 1: 安装 OG 依赖**
+- [x] **Step 1: 安装 OG 依赖**
 
 Run: `pnpm add satori @resvg/resvg-js`
 Expected: satori + @resvg/resvg-js 安装成功
 
-- [ ] **Step 2: 准备字体文件**
+- [x] **Step 2: 准备字体文件**
 
 将以下字体文件放入 `public/fonts/og/`:
 
@@ -386,7 +386,7 @@ Expected: satori + @resvg/resvg-js 安装成功
 
 字体来源在 README.md(Task 15)注明。若字体未就绪,OG 生成 warn 降级(Task 4 处理)。
 
-- [ ] **Step 3: 编写失败测试**
+- [x] **Step 3: 编写失败测试**
 
 ```ts
 // src/lib/__tests__/og.test.ts
@@ -438,12 +438,12 @@ describe('computeOgHash', () => {
 });
 ```
 
-- [ ] **Step 4: 运行测试验证失败**
+- [x] **Step 4: 运行测试验证失败**
 
 Run: `pnpm vitest run src/lib/__tests__/og.test.ts`
 Expected: FAIL — 模块 `../og` 不存在
 
-- [ ] **Step 5: 实现 og.ts**
+- [x] **Step 5: 实现 og.ts**
 
 ```ts
 // src/lib/og.ts
@@ -590,12 +590,12 @@ export async function renderOgImage(
 }
 ```
 
-- [ ] **Step 6: 运行测试验证通过**
+- [x] **Step 6: 运行测试验证通过**
 
 Run: `pnpm vitest run src/lib/__tests__/og.test.ts`
 Expected: PASS — 全部 7 个测试通过
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/lib/og.ts src/lib/__tests__/og.test.ts pnpm-lock.yaml public/fonts/og/
@@ -616,11 +616,11 @@ git commit -m "feat: add OG image core library with satori element tree and incr
 - Consumes: `src/lib/og.ts` 函数;Content Collections(article/project);`.cache/og-cache.json`
 - Produces: `dist/og/{collection}-{locale}-{slug}.png`;更新 `.cache/og-cache.json`
 
-- [ ] **Step 1: 准备默认 OG 图**
+- [x] **Step 1: 准备默认 OG 图**
 
 创建或获取一张 1200x630 PNG 放入 `public/images/og-default.png`。无特定 OG 的页面(draft/生成失败降级)用它。
 
-- [ ] **Step 2: 实现 generate-og.ts**
+- [x] **Step 2: 实现 generate-og.ts**
 
 ```ts
 // src/scripts/generate-og.ts
@@ -773,16 +773,16 @@ main().catch((err) => {
 });
 ```
 
-- [ ] **Step 3: 验证脚本可执行**
+- [x] **Step 3: 验证脚本可执行**
 
 Run: `pnpm build && pnpm tsx src/scripts/generate-og.ts`
 Expected: 输出 generated/skipped/degraded 统计;`dist/og/` 下有 PNG(或降级 warn);退出码 0
 
-- [ ] **Step 4: 确认 .gitignore 含 dist/ 与 .cache/**
+- [x] **Step 4: 确认 .gitignore 含 dist/ 与 .cache/**
 
 确认 `.gitignore` 已含 `dist/` 和 `.cache/`(Plan 1 应已添加)。若缺失则追加。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/scripts/generate-og.ts public/images/og-default.png .gitignore
@@ -803,7 +803,7 @@ git commit -m "feat: add incremental OG image generation script with resvg fallb
 - Consumes: 环境变量(`PUBLIC_GISCUS_ENABLED`/`PUBLIC_UMAMI_ENABLED`/`PUBLIC_UMAMI_SCRIPT_URL`/`PUBLIC_MUSIC_ENABLED`)
 - Produces: `buildCsp(env?, opts?)` → CSP 字符串;`CspEnv` 类型
 
-- [ ] **Step 1: 编写失败测试**
+- [x] **Step 1: 编写失败测试**
 
 ```ts
 // src/lib/__tests__/seo-csp.test.ts
@@ -879,12 +879,12 @@ describe('buildCsp', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm vitest run src/lib/__tests__/seo-csp.test.ts`
 Expected: FAIL — `buildCsp` 未导出
 
-- [ ] **Step 3: 在 seo.ts 追加 buildCsp()**
+- [x] **Step 3: 在 seo.ts 追加 buildCsp()**
 
 在 `src/lib/seo.ts` 文件末尾追加(保留 Plan 3 已有的 `buildHreflang`/`buildCanonical` 等函数):
 
@@ -959,12 +959,12 @@ export function buildCsp(
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm vitest run src/lib/__tests__/seo-csp.test.ts`
 Expected: PASS — 全部 9 个测试通过
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/seo.ts src/lib/__tests__/seo-csp.test.ts
@@ -986,7 +986,7 @@ git commit -m "feat: add dynamic CSP generation with buildCsp pure function"
 - Consumes: `resolveLocalizedEntry()`(from `src/lib/i18n.ts`,Plan 3)、`staticPageMeta`(from `src/config/static-pages.ts`,Plan 3)、`locales`/`defaultLocale`(from `src/i18n/config.ts`,Plan 1)
 - Produces: `buildSitemapEntries(pages, baseUrl)` → `SitemapEntry[]`;`renderSitemapXml(entries)` → XML string;`/sitemap.xml` 端点
 
-- [ ] **Step 1: 编写失败测试**
+- [x] **Step 1: 编写失败测试**
 
 ```ts
 // src/lib/__tests__/seo-sitemap.test.ts
@@ -1066,12 +1066,12 @@ describe('buildSitemapEntries', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm vitest run src/lib/__tests__/seo-sitemap.test.ts`
 Expected: FAIL — `buildSitemapEntries`/`SitemapPage` 未导出
 
-- [ ] **Step 3: 在 seo.ts 追加 sitemap 函数**
+- [x] **Step 3: 在 seo.ts 追加 sitemap 函数**
 
 ```ts
 // --- Sitemap Generation (Plan 5) ---
@@ -1133,12 +1133,12 @@ function esc(s: string): string {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm vitest run src/lib/__tests__/seo-sitemap.test.ts`
 Expected: PASS — 全部 6 个测试通过
 
-- [ ] **Step 5: 创建 sitemap.xml.ts 端点**
+- [x] **Step 5: 创建 sitemap.xml.ts 端点**
 
 ```ts
 // src/pages/sitemap.xml.ts
@@ -1232,12 +1232,12 @@ export const GET: APIRoute = async () => {
 };
 ```
 
-- [ ] **Step 6: 验证端点生成**
+- [x] **Step 6: 验证端点生成**
 
 Run: `pnpm build`
 Expected: `dist/sitemap.xml` 生成,含 `<urlset>` + `<xhtml:link>` + `<lastmod>`
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/lib/seo.ts src/lib/__tests__/seo-sitemap.test.ts src/pages/sitemap.xml.ts
@@ -1258,12 +1258,12 @@ git commit -m "feat: add custom sitemap with unified data source and hreflang su
 - Consumes: `@astrojs/rss`、Content Collections(articles)、`locales`、`getSiteConfig()`
 - Produces: `/rss/{locale}.xml`(每语言一 feed,过滤 draft);`/robots.txt`(声明 Sitemap)
 
-- [ ] **Step 1: 安装 @astrojs/rss**
+- [x] **Step 1: 安装 @astrojs/rss**
 
 Run: `pnpm add @astrojs/rss`
 Expected: 安装成功
 
-- [ ] **Step 2: 创建 RSS 端点**
+- [x] **Step 2: 创建 RSS 端点**
 
 ```ts
 // src/pages/rss/[locale].xml.ts
@@ -1313,7 +1313,7 @@ export const GET: APIRoute = async (context) => {
 };
 ```
 
-- [ ] **Step 3: 创建 robots.txt 端点**
+- [x] **Step 3: 创建 robots.txt 端点**
 
 ```ts
 // src/pages/robots.txt.ts
@@ -1331,12 +1331,12 @@ export const GET: APIRoute = () => {
 };
 ```
 
-- [ ] **Step 4: 验证端点生成**
+- [x] **Step 4: 验证端点生成**
 
 Run: `pnpm build`
 Expected: `dist/rss/zh.xml`、`dist/rss/en.xml`、`dist/rss/ru.xml`、`dist/rss/ja.xml` 生成(ru/ja 可为空 feed);`dist/robots.txt` 含 `Sitemap:` 行
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/pages/rss/ src/pages/robots.txt.ts pnpm-lock.yaml
@@ -1358,7 +1358,7 @@ git commit -m "feat: add per-locale RSS feeds and robots.txt endpoint"
 - Consumes: `src/content/redirects.json`(`{ "/old/": "/new/" }`)、`dist/` 路由列表
 - Produces: `validateRedirectManifest()`、`validateGeneratedRoutes()`、`generateRedirectsFile()`、`generateVercelRedirects()`、`generateStaticRedirectHtml()`;dist 下平台规则文件
 
-- [ ] **Step 1: 编写失败测试**
+- [x] **Step 1: 编写失败测试**
 
 ```ts
 // src/lib/__tests__/redirects.test.ts
@@ -1424,12 +1424,12 @@ describe('validateGeneratedRoutes', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm vitest run src/lib/__tests__/redirects.test.ts`
 Expected: FAIL — `validateRedirectManifest`/`RedirectMap` 未导出
 
-- [ ] **Step 3: 创建 redirects.ts**
+- [x] **Step 3: 创建 redirects.ts**
 
 ```ts
 // src/lib/redirects.ts
@@ -1506,12 +1506,12 @@ export function generateStaticRedirectHtml(
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm vitest run src/lib/__tests__/redirects.test.ts`
 Expected: PASS — 全部 11 个测试通过
 
-- [ ] **Step 5: 创建 generate-redirects.ts 脚本**
+- [x] **Step 5: 创建 generate-redirects.ts 脚本**
 
 ```ts
 // src/scripts/generate-redirects.ts
@@ -1616,7 +1616,7 @@ main().catch((err) => {
 });
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/redirects.ts src/lib/__tests__/redirects.test.ts src/scripts/generate-redirects.ts
@@ -1637,7 +1637,7 @@ git commit -m "feat: add redirect manifest validation and platform-specific gene
 - Consumes: `dist/sitemap.xml`、`dist/rss/*.xml`、`locales`(from `src/i18n/config`)
 - Produces: 非零退出码当校验失败(阻断 CI)
 
-- [ ] **Step 1: 实现 check-sitemap.ts**
+- [x] **Step 1: 实现 check-sitemap.ts**
 
 ```ts
 // src/scripts/check-sitemap.ts
@@ -1688,7 +1688,7 @@ function main() {
 main();
 ```
 
-- [ ] **Step 2: 实现 check-rss.ts**
+- [x] **Step 2: 实现 check-rss.ts**
 
 ```ts
 // src/scripts/check-rss.ts
@@ -1731,12 +1731,12 @@ function main() {
 main();
 ```
 
-- [ ] **Step 3: 验证校验器运行**
+- [x] **Step 3: 验证校验器运行**
 
 Run: `pnpm build && pnpm tsx src/scripts/check-sitemap.ts && pnpm tsx src/scripts/check-rss.ts`
 Expected: 两个脚本输出 OK 并退出码 0
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/scripts/check-sitemap.ts src/scripts/check-rss.ts
@@ -1756,7 +1756,7 @@ git commit -m "feat: add postbuild sitemap and RSS feed validators"
 - Consumes: Task 1-9 所有脚本
 - Produces: `pnpm build` 自动触发 prebuild + postbuild 完整链;`pnpm ci` 单命令全链
 
-- [ ] **Step 1: 更新 package.json scripts 段**
+- [x] **Step 1: 更新 package.json scripts 段**
 
 将 `package.json` 的 `scripts` 替换为(保留 Plan 1 已有的 `dev`/`build`/`check`/`lint`/`test`/`ci`):
 
@@ -1789,7 +1789,7 @@ git commit -m "feat: add postbuild sitemap and RSS feed validators"
 
 **postbuild 链说明**:build-meta --dist → search:index(仅 pagefind 启用,失败 = CI fail)→ generate-og(warn + exit 0)→ generate:redirects → check:links → check:sitemap → check:rss。`check:links` 依赖 `lychee` 在 PATH 上(CI 用 GitHub Action,本地 `cargo install lychee` 或下载预编译)。
 
-- [ ] **Step 2: 更新 dependencies**
+- [x] **Step 2: 更新 dependencies**
 
 在 `package.json` 添加(保留已有依赖):
 
@@ -1808,22 +1808,22 @@ git commit -m "feat: add postbuild sitemap and RSS feed validators"
 }
 ```
 
-- [ ] **Step 3: 安装新依赖**
+- [x] **Step 3: 安装新依赖**
 
 Run: `pnpm install`
 Expected: 所有依赖安装成功,pnpm-lock.yaml 更新
 
-- [ ] **Step 4: 验证完整构建链**
+- [x] **Step 4: 验证完整构建链**
 
 Run: `pnpm build`
 Expected: prebuild → astro build → postbuild 全链退出码 0
 
-- [ ] **Step 5: 验证 ci 单命令**
+- [x] **Step 5: 验证 ci 单命令**
 
 Run: `pnpm ci`
 Expected: check → lint → test → build(含 prebuild + postbuild)全链通过
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add package.json pnpm-lock.yaml
@@ -1843,7 +1843,7 @@ git commit -m "feat: complete postbuild chain with all build/deploy scripts"
 - Consumes: Task 10 的 `package.json` scripts
 - Produces: CI workflow 含 secret 边界 + pull:content + lychee + artifact
 
-- [ ] **Step 1: 替换 ci.yml**
+- [x] **Step 1: 替换 ci.yml**
 
 ```yaml
 # .github/workflows/ci.yml
@@ -1900,12 +1900,12 @@ jobs:
 
 **关键设计**:`push` 只监听 `main`;fork 判断先检查 `github.event_name == 'pull_request'`;`CONTENT_GITHUB_TOKEN` 只在 build 步骤 env;`FORCE_CONTENT_SYNC=true` 只在 CI;lychee 通过 GitHub Action 安装;artifact 仅 internal PR(含 private content,不得公开)。
 
-- [ ] **Step 2: 验证 YAML 语法**
+- [x] **Step 2: 验证 YAML 语法**
 
 Run: `pnpm prettier --check .github/workflows/ci.yml`
 Expected: 无格式错误(如有则 `pnpm prettier --write` 修复)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -1930,7 +1930,7 @@ git commit -m "ci: enhance workflow with secret boundaries, content pull, and ly
 - Consumes: `buildCsp()` from `src/lib/seo.ts`、`generate-redirects.ts` 输出
 - Produces: 平台参考配置 + CSP 注入脚本
 
-- [ ] **Step 1: 创建 generate-deploy-config.ts**
+- [x] **Step 1: 创建 generate-deploy-config.ts**
 
 ```ts
 // src/scripts/generate-deploy-config.ts
@@ -1998,7 +1998,7 @@ main().catch((err) => {
 });
 ```
 
-- [ ] **Step 2: 创建 Cloudflare README.md**
+- [x] **Step 2: 创建 Cloudflare README.md**
 
 ```markdown
 # Cloudflare Pages 部署
@@ -2030,7 +2030,7 @@ Cloudflare Pages → Settings → Deploy hooks 创建 URL,配置到 content 仓�
 以 Cloudflare 官方当前文档为准(不写死在 Spec,易变)。
 ```
 
-- [ ] **Step 3: 创建 Cloudflare \_headers 模板**
+- [x] **Step 3: 创建 Cloudflare \_headers 模板**
 
 ```
 # deploy/cloudflare/_headers — 模板参考
@@ -2047,7 +2047,7 @@ Cloudflare Pages → Settings → Deploy hooks 创建 URL,配置到 content 仓�
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' https://unpkg.com; manifest-src 'self';
 ```
 
-- [ ] **Step 4: 创建 Cloudflare \_redirects 模板**
+- [x] **Step 4: 创建 Cloudflare \_redirects 模板**
 
 ```
 # deploy/cloudflare/_redirects — 模板参考
@@ -2055,7 +2055,7 @@ Cloudflare Pages → Settings → Deploy hooks 创建 URL,配置到 content 仓�
 # 格式: /old-url/ /new-url/ 301
 ```
 
-- [ ] **Step 5: 创建 Vercel README.md**
+- [x] **Step 5: 创建 Vercel README.md**
 
 ```markdown
 # Vercel 部署
@@ -2080,7 +2080,7 @@ Cloudflare Pages → Settings → Deploy hooks 创建 URL,配置到 content 仓�
 Vercel → Settings → Git → Deploy Hook 创建 URL,配置到 content 仓库 `MAIN_SITE_DEPLOY_HOOK_URL` secret。
 ```
 
-- [ ] **Step 6: 创建 Vercel vercel.json 模板**
+- [x] **Step 6: 创建 Vercel vercel.json 模板**
 
 ```json
 {
@@ -2108,7 +2108,7 @@ Vercel → Settings → Git → Deploy Hook 创建 URL,配置到 content 仓库 
 }
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add deploy/cloudflare/ deploy/vercel/ src/scripts/generate-deploy-config.ts
@@ -2132,7 +2132,7 @@ git commit -m "feat: add Cloudflare and Vercel deploy configs with dynamic CSP g
 - Consumes: `buildCsp()`、`generate-redirects.ts`
 - Produces: Netlify 配置模板 + GitHub Pages deploy workflow
 
-- [ ] **Step 1: 创建 Netlify README.md**
+- [x] **Step 1: 创建 Netlify README.md**
 
 ```markdown
 # Netlify 部署
@@ -2156,7 +2156,7 @@ git commit -m "feat: add Cloudflare and Vercel deploy configs with dynamic CSP g
 Netlify → Site settings → Build hooks 创建 URL,配置到 content 仓库 `MAIN_SITE_DEPLOY_HOOK_URL` secret。
 ```
 
-- [ ] **Step 2: 创建 Netlify netlify.toml**
+- [x] **Step 2: 创建 Netlify netlify.toml**
 
 ```toml
 # deploy/netlify/netlify.toml — 选定 Netlify 后复制到根目录
@@ -2185,7 +2185,7 @@ Netlify → Site settings → Build hooks 创建 URL,配置到 content 仓库 `M
   status = 404
 ```
 
-- [ ] **Step 3: 创建 Netlify \_redirects 模板**
+- [x] **Step 3: 创建 Netlify \_redirects 模板**
 
 ```
 # deploy/netlify/_redirects — 模板参考
@@ -2193,7 +2193,7 @@ Netlify → Site settings → Build hooks 创建 URL,配置到 content 仓库 `M
 # 格式: /old-url/ /new-url/ 301
 ```
 
-- [ ] **Step 4: 创建 GitHub Pages README.md**
+- [x] **Step 4: 创建 GitHub Pages README.md**
 
 ```markdown
 # GitHub Pages 部署
@@ -2218,7 +2218,7 @@ GitHub Pages **不支持自定义 HTTP headers**(CSP/HSTS 等)。CSP 通过 `<me
 GitHub Pages 不支持同栈 OAuth 代理,参考 `deploy/oauth-proxy/` 部署独立代理。MVP 个人站用 Access Token 无需部署。
 ```
 
-- [ ] **Step 5: 创建 GitHub Pages deploy.yml**
+- [x] **Step 5: 创建 GitHub Pages deploy.yml**
 
 ```yaml
 # deploy/github-pages/.github/workflows/deploy.yml — 复制到 .github/workflows/ 使用
@@ -2275,7 +2275,7 @@ jobs:
         id: deployment
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add deploy/netlify/ deploy/github-pages/
@@ -2298,7 +2298,7 @@ git commit -m "feat: add Netlify and GitHub Pages deploy configs with meta CSP f
 - Consumes: GitHub OAuth App(client ID/secret)
 - Produces: Sveltia CMS OAuth 代理参考代码(多用户可选部署)
 
-- [ ] **Step 1: 创建 Cloudflare Worker README**
+- [x] **Step 1: 创建 Cloudflare Worker README**
 
 ```markdown
 # Sveltia CMS OAuth Proxy (Cloudflare Worker)
@@ -2319,7 +2319,7 @@ MVP 个人站用 Access Token 无需部署此代理。多用户编辑时部署�
 `GITHUB_CLIENT_SECRET` 只在 Worker 端,不进主仓。建议用 fine-grained PAT 限制 scope。
 ```
 
-- [ ] **Step 2: 创建 Cloudflare Worker 代码**
+- [x] **Step 2: 创建 Cloudflare Worker 代码**
 
 ```js
 // deploy/oauth-proxy/cloudflare-worker/worker.js
@@ -2369,7 +2369,7 @@ export default {
 };
 ```
 
-- [ ] **Step 3: 创建 Vercel Edge README**
+- [x] **Step 3: 创建 Vercel Edge README**
 
 ```markdown
 # Sveltia CMS OAuth Proxy (Vercel Edge Function)
@@ -2385,7 +2385,7 @@ export default {
 5. Deploy
 ```
 
-- [ ] **Step 4: 创建 Vercel Edge 代码**
+- [x] **Step 4: 创建 Vercel Edge 代码**
 
 ```js
 // deploy/oauth-proxy/vercel-edge/api/auth.js
@@ -2445,7 +2445,7 @@ export default async function handler(req, res) {
 }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add deploy/oauth-proxy/
@@ -2465,7 +2465,7 @@ git commit -m "feat: add Sveltia CMS OAuth proxy reference implementations"
 - Consumes: 附录 D 接手者必读清单的所有条目
 - Produces: 项目接手指南
 
-- [ ] **Step 1: 创建 README.md**
+- [x] **Step 1: 创建 README.md**
 
 ````markdown
 # Object920
@@ -2602,7 +2602,7 @@ public/               # 静态资源(admin/ fonts/ images/)
 MIT
 ````
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add README.md
@@ -2622,7 +2622,7 @@ git commit -m "docs: add project README with handoff guide and common issues"
 - Consumes: spec 双语配对/datasheet/图片规范/代码风格纪律
 - Produces: 内容/代码贡献流程文档
 
-- [ ] **Step 1: 创建 CONTRIBUTING.md**
+- [x] **Step 1: 创建 CONTRIBUTING.md**
 
 ````markdown
 # 贡献指南
@@ -2716,7 +2716,7 @@ zh/en 两版文章必须填同样的 `translationKey`(opaque identifier,`z.strin
 - 非 `PUBLIC_*` = 构建/服务端专用(绝不加 `PUBLIC_` 前缀)
 ````
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add CONTRIBUTING.md

@@ -20,3 +20,9 @@ src/.build-meta.generated.json
 # misc
 .DS_Store
 *.log
+
+# generated deploy configs (generate:redirects / generate:deploy-config 产物)
+vercel.json
+_headers
+_redirects
+netlify.toml
