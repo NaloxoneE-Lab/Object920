@@ -1,0 +1,174 @@
+---
+// src/components/integrations/music/MusicPlayerWidget.astro
+// UI boundary(spec 5.12 P1-11):只 import resolver + 接口类型,不 import 具体 Provider
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+
+const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
+---
+
+{
+  enabled && (
+    <div class="music-widget" data-music-widget>
+      <button
+        type="button"
+        class="music-btn music-play-btn"
+        aria-label={t(locale, 'music.play')}
+        data-music-play
+      >
+        <span data-music-icon-play aria-hidden="true">
+          ▶
+        </span>
+        <span data-music-icon-pause hidden aria-hidden="true">
+          ⏸
+        </span>
+      </button>
+      <span class="music-track-name" data-music-track-name aria-live="polite">
+        —
+      </span>
+      <button
+        type="button"
+        class="music-btn music-next-btn"
+        aria-label={t(locale, 'music.next')}
+        data-music-next
+      >
+        <span aria-hidden="true">⏭</span>
+      </button>
+    </div>
+  )
+}
+
+<style>
+  .music-widget {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    box-shadow: var(--shadow-md);
+  }
+  .music-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .music-btn:hover {
+    background: var(--color-surface);
+  }
+  .music-play-btn {
+    background: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+  .music-play-btn:hover {
+    background: var(--color-accent-hover);
+  }
+  .music-track-name {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  import type { MusicPlayer, MusicPlayerState } from './MusicPlayer';
+
+  // Provider singleton(模块缓存,ClientRouter 导航后不重建)(spec 5.12/5.20)
+  let provider: MusicPlayer | null | undefined = undefined;
+  let unsubStateChange: (() => void) | null = null;
+
+  function initMusicWidget() {
+    const widget = document.querySelector<HTMLElement>('[data-music-widget]');
+    if (!widget) return;
+
+    const audio = document.querySelector<HTMLAudioElement>('[data-music-audio]');
+    if (!audio) return;
+
+    // 创建 provider singleton(只创建一次)(spec 5.20)
+    if (provider === undefined) {
+      // 动态 import resolver(避免 frontmatter 和 client bundle 路径不一致)
+      import('./createMusicProvider').then(({ createMusicProvider }) => {
+        provider = createMusicProvider(audio);
+        if (!provider) return;
+        bindWidget(widget, provider);
+      });
+    } else if (provider) {
+      // provider 已存在(ClientRouter 导航后),重新绑定控件
+      bindWidget(
+        widget, // provider 在 openPanel 初始化成功后必非空
+        provider,
+      );
+    }
+  }
+
+  function bindWidget(widget: HTMLElement, p: MusicPlayer) {
+    // 清理旧订阅(spec 5.20)
+    unsubStateChange?.();
+    unsubStateChange = null;
+
+    const playBtn = widget.querySelector<HTMLButtonElement>('[data-music-play]');
+    const trackName = widget.querySelector<HTMLElement>('[data-music-track-name]');
+    const iconPlay = widget.querySelector<HTMLElement>('[data-music-icon-play]');
+    const iconPause = widget.querySelector<HTMLElement>('[data-music-icon-pause]');
+
+    // 恢复 UI 状态(spec 5.20:每次 page-load 从 getState() 恢复)
+    updateUI(p.getState());
+
+    // 订阅状态变化(控件监听更新 UI)
+    unsubStateChange = p.onStateChange(updateUI);
+
+    // 事件委托绑定控件(spec 5.20:data-initialized guard 防重复)
+    if (widget.dataset.bound === 'true') return;
+    widget.dataset.bound = 'true';
+
+    widget.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-music-play]')) {
+        const state = p.getState();
+        if (state.isPlaying) {
+          p.pause();
+        } else {
+          // 首次播放时懒初始化(spec 5.12:默认不播放,用户点击才播)
+          const isReady = await p.ready();
+          if (!isReady) {
+            await p.initialize();
+          }
+          await p.play();
+        }
+      } else if (target.closest('[data-music-next]')) {
+        await p.next();
+      }
+    });
+
+    function updateUI(state: MusicPlayerState) {
+      if (iconPlay) iconPlay.hidden = state.isPlaying;
+      if (iconPause) iconPause.hidden = !state.isPlaying;
+      if (playBtn) {
+        playBtn.setAttribute('aria-label', state.isPlaying ? '暂停背景音乐' : '播放背景音乐');
+      }
+      if (trackName) {
+        trackName.textContent = state.currentTrackId ?? '—';
+      }
+    }
+  }
+
+  // 每次 astro:page-load 重新绑定控件(spec 5.20)
+  document.addEventListener('astro:page-load', initMusicWidget);
+</script>

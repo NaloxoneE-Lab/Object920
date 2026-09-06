@@ -1,0 +1,24 @@
+---
+// src/components/integrations/music/MusicHost.astro
+// persistence boundary(spec 5.12 P1-11/P1-18):
+// 仅音乐启用时 BaseLayout 渲染 MusicHost;transition:persist 跨页面保留 <audio>
+const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
+---
+
+{
+  enabled && (
+    <div transition:persist="music-host" class="music-host">
+      <audio preload="metadata" class="music-host-audio" data-music-audio />
+      <slot />
+    </div>
+  )
+}
+
+<style>
+  .music-host {
+    position: fixed;
+    bottom: var(--spacing-sm);
+    left: var(--spacing-sm);
+    z-index: var(--z-overlay);
+  }
+</style>
