@@ -24,19 +24,19 @@ mkdir -p /var/www/object920
 
 ## GitHub Secrets 清单(主仓 Object920)
 
-| Secret | 值 |
-|---|---|
-| `ECS_HOST` | `47.114.43.241` |
-| `ECS_USER` | `root` |
-| `ECS_SSH_KEY` | `naloxonee.pem` 的完整内容(含 BEGIN/END 行) |
-| `CONTENT_REPO` | `NaloxoneE-Lab/object920-content` |
+| Secret                 | 值                                                         |
+| ---------------------- | ---------------------------------------------------------- |
+| `ECS_HOST`             | `47.114.43.241`                                            |
+| `ECS_USER`             | `root`                                                     |
+| `ECS_SSH_KEY`          | `naloxonee.pem` 的完整内容(含 BEGIN/END 行)                |
+| `CONTENT_REPO`         | `NaloxoneE-Lab/object920-content`                          |
 | `CONTENT_GITHUB_TOKEN` | fine-grained PAT:仅 content 仓,Contents: Read(CI 拉内容用) |
-| `DEPLOY_SITE_URL` | `http://47.114.43.241`(换域名后改为 `https://域名`) |
+| `DEPLOY_SITE_URL`      | `http://47.114.43.241`(换域名后改为 `https://域名`)        |
 
 ## GitHub Secrets 清单(content 仓 object920-content)
 
-| Secret | 值 |
-|---|---|
+| Secret                 | 值                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `CONTENT_DEPLOY_TOKEN` | fine-grained PAT:仅主仓 Object920,**Contents: Read and write + Actions: Read and write**(repository_dispatch 触发权) |
 
 配置齐全后:`git push` 到主仓 main 或 Sveltia 发内容 → 自动构建部署;未配置时 deploy job 自动跳过(仅 CI)。
