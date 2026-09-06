@@ -1,0 +1,15 @@
+---
+// src/components/article/ArticleProse.astro
+import '@styles/prose.css';
+import type { ContentLocale } from '@i18n/config';
+interface Props {
+  contentLocale: ContentLocale;
+  Content: unknown;
+}
+const { contentLocale, Content } = Astro.props;
+const Rendered = Content as unknown as (props: Record<string, unknown>) => unknown;
+---
+
+<article class="prose" lang={contentLocale}>
+  <Rendered />
+</article>

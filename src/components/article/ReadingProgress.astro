@@ -1,0 +1,54 @@
+---
+// src/components/article/ReadingProgress.astro
+---
+
+<div class="reading-progress" role="status" aria-live="polite">
+  <div class="reading-progress-bar" id="reading-progress-bar"></div>
+  <span class="sr-only" id="reading-progress-text"></span>
+</div>
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const bar = document.getElementById('reading-progress-bar');
+    const text = document.getElementById('reading-progress-text');
+    if (!bar || !text) return;
+    let lastMilestone = -1;
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const total = doc.scrollHeight - doc.clientHeight;
+      const pct = total > 0 ? Math.min(100, Math.max(0, (doc.scrollTop / total) * 100)) : 100;
+      bar.style.width = pct + '%';
+      const milestone = Math.floor(pct / 25) * 25;
+      if (
+        milestone !== lastMilestone &&
+        (milestone === 25 || milestone === 50 || milestone === 75 || milestone === 100)
+      ) {
+        lastMilestone = milestone;
+        text.textContent = milestone + '%';
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  });
+</script>
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: var(--z-overlay);
+    background: transparent;
+  }
+  .reading-progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--color-accent);
+    transition: width 80ms linear;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reading-progress-bar {
+      transition: none;
+    }
+  }
+</style>

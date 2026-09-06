@@ -1,0 +1,83 @@
+---
+// src/components/article/Toc.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Props {
+  headings: Heading[];
+  locale: Locale;
+}
+const { headings, locale } = Astro.props;
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <nav class="toc" aria-label={t(locale, 'articles.toc')}>
+      <ul class="toc-list">
+        {items.map((h) => (
+          <li class:list={['toc-item', { 'toc-item-h3': h.depth === 3 }]}>
+            <a href={`#${h.slug}`} class="toc-link" data-toc-link data-target={h.slug}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const links = document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]');
+    if (links.length === 0) return;
+    const targets = Array.from(links)
+      .map((l) => document.getElementById(l.dataset.target || ''))
+      .filter((el): el is HTMLElement => !!el);
+    if (targets.length === 0) return;
+    const activeByScroll = () => {
+      let current = targets[0]?.id;
+      for (const el of targets) {
+        if (el.getBoundingClientRect().top <= 120) current = el.id;
+      }
+      links.forEach((l) => l.classList.toggle('toc-link-active', l.dataset.target === current));
+    };
+    activeByScroll();
+    window.addEventListener('scroll', activeByScroll, { passive: true });
+  });
+</script>
+<style>
+  .toc {
+    position: sticky;
+    top: var(--spacing-2xl);
+    max-height: calc(100vh - var(--spacing-3xl));
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+  }
+  .toc-item-h3 {
+    padding-left: var(--spacing-sm);
+  }
+  .toc-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: var(--text-xs);
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .toc-link:hover {
+    color: var(--color-text);
+  }
+  .toc-link-active {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+</style>

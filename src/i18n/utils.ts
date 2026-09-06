@@ -29,3 +29,10 @@ export function getLocaleFromPath(pathname: string): Locale {
   const m = pathname.match(/^\/(zh|en|ru|ja)(?=\/|$)/);
   return (m?.[1] as Locale) ?? defaultLocale;
 }
+export function formatDate(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}

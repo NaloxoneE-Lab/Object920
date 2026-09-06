@@ -1,0 +1,23 @@
+---
+// src/components/common/EmptyState.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+  message?: string;
+}
+const { locale, message } = Astro.props;
+const text = message ?? t(locale, 'common.empty');
+---
+
+<div class="empty-state">
+  <p>{text}</p>
+</div>
+<style>
+  .empty-state {
+    padding: var(--spacing-2xl) var(--spacing-md);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+  }
+</style>

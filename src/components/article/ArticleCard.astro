@@ -1,0 +1,109 @@
+---
+// src/components/article/ArticleCard.astro
+import { Image } from 'astro:assets';
+import { formatDate } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { slugOf } from '@lib/i18n';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'articles'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const { cover, coverAlt, title, excerpt, pubDate, category, tags } = entry.data;
+const href = `/${locale}/articles/${slugOf(entry)}/`;
+---
+
+<article class="article-card">
+  <a href={href} class="article-card-link">
+    {
+      cover && (
+        <Image
+          src={cover}
+          alt={coverAlt}
+          width={640}
+          height={360}
+          loading="lazy"
+          class="article-card-cover"
+        />
+      )
+    }
+    <div class="article-card-body">
+      <h2 class="article-card-title">{title}</h2>
+      {excerpt && <p class="article-card-excerpt">{excerpt}</p>}
+      <div class="article-card-meta">
+        <time datetime={pubDate.toISOString()}>{formatDate(pubDate, locale)}</time>
+        <span class="article-card-category">{category}</span>
+      </div>
+      {
+        tags.length > 0 && (
+          <ul class="article-card-tags">
+            {tags.slice(0, 4).map((tag) => (
+              <li class="article-card-tag">{tag}</li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </a>
+</article>
+<style>
+  .article-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .article-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .article-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .article-card-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .article-card-body {
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+  }
+  .article-card-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+  .article-card-excerpt {
+    margin-top: var(--spacing-2xs);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  .article-card-meta {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
+    color: var(--color-text-subtle);
+    font-size: var(--text-xs);
+  }
+  .article-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+    list-style: none;
+    padding: 0;
+  }
+  .article-card-tag {
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    background: var(--color-surface-raised);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    color: var(--color-text-muted);
+  }
+</style>
