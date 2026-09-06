@@ -1,0 +1,187 @@
+---
+// src/components/ui/Lightbox.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<div
+  id="lightbox-overlay"
+  class="lightbox-overlay"
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label={t(locale, 'common.lightbox.label')}
+>
+  <button
+    id="lightbox-close"
+    class="lightbox-close"
+    data-lightbox-close
+    aria-label={t(locale, 'common.close')}>✕</button
+  >
+  <button
+    class="lightbox-nav lightbox-prev"
+    data-lightbox-prev
+    aria-label={t(locale, 'common.prev')}>‹</button
+  >
+  <img id="lightbox-image" class="lightbox-image" alt="" />
+  <p id="lightbox-caption" class="lightbox-caption"></p>
+  <button
+    class="lightbox-nav lightbox-next"
+    data-lightbox-next
+    aria-label={t(locale, 'common.next')}>›</button
+  >
+</div>
+<script>
+  const LB_KEY = '__lightbox_init__';
+  function initLightbox() {
+    if ((window as unknown as Record<string, unknown>)[LB_KEY]) return;
+    (window as unknown as Record<string, unknown>)[LB_KEY] = true;
+    let state: { images: HTMLElement[]; index: number } | null = null;
+    const overlay = () => document.getElementById('lightbox-overlay');
+    const imgEl = () => document.getElementById('lightbox-image') as HTMLImageElement | null;
+    const capEl = () => document.getElementById('lightbox-caption');
+    const groupImages = (groupId: string) =>
+      Array.from(
+        document.querySelectorAll(`[data-lightbox][data-lightbox-group="${groupId}"]`),
+      ) as HTMLElement[];
+
+    function show() {
+      const s = state;
+      if (!s) return;
+      const ov = overlay();
+      const im = imgEl();
+      const cap = capEl();
+      if (!ov || !im || !s.images[s.index]) return;
+      const src = s.images[s.index] as HTMLImageElement;
+      im.src = src.currentSrc || src.src;
+      im.alt = src.alt || '';
+      if (cap) cap.textContent = src.alt || '';
+      ov.hidden = false;
+      document.getElementById('lightbox-close')?.focus();
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      const ov = overlay();
+      if (ov) ov.hidden = true;
+      state = null;
+      document.body.style.overflow = '';
+    }
+    function navigate(dir: number) {
+      if (!state || state.images.length === 0) return;
+      state.index = (state.index + dir + state.images.length) % state.images.length;
+      show();
+    }
+
+    document.addEventListener('open-lightbox', (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const groupId = detail.groupId || 'content-images';
+      const images = groupImages(groupId);
+      if (images.length === 0) {
+        const ov = overlay();
+        const im = imgEl();
+        if (ov && im) {
+          im.src = detail.src;
+          im.alt = detail.alt || '';
+          ov.hidden = false;
+          document.body.style.overflow = 'hidden';
+          state = { images: [], index: 0 };
+        }
+        return;
+      }
+      let index = images.findIndex(
+        (im) =>
+          (im as HTMLImageElement).currentSrc === detail.src ||
+          (im as HTMLImageElement).src === detail.src,
+      );
+      if (index === -1) index = 0;
+      state = { images, index };
+      show();
+    });
+    document.addEventListener('click', (e) => {
+      const t = e.target as Element;
+      if (!t) return;
+      if (t.closest('[data-lightbox-close]')) return close();
+      if (t.closest('[data-lightbox-prev]')) return navigate(-1);
+      if (t.closest('[data-lightbox-next]')) return navigate(1);
+      if (t.id === 'lightbox-overlay') return close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!state) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') navigate(-1);
+      else if (e.key === 'ArrowRight') navigate(1);
+    });
+    document.addEventListener('astro:after-swap', () => {
+      if (state) close();
+    });
+  }
+  initLightbox();
+</script>
+<style>
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--color-surface-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+    padding: var(--spacing-md);
+  }
+  .lightbox-overlay[hidden] {
+    display: none;
+  }
+  .lightbox-image {
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+  }
+  .lightbox-caption {
+    position: absolute;
+    bottom: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--color-text-on-accent);
+    font-size: var(--text-sm);
+    max-width: 80vw;
+    text-align: center;
+  }
+  .lightbox-close,
+  .lightbox-nav {
+    position: absolute;
+    border: none;
+    background: transparent;
+    color: var(--color-text-on-accent);
+    font-size: var(--text-2xl);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    line-height: 1;
+  }
+  .lightbox-close {
+    top: var(--spacing-sm);
+    right: var(--spacing-md);
+  }
+  .lightbox-prev {
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lightbox-next {
+    right: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .lightbox-overlay {
+    transition: opacity calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lightbox-overlay {
+      transition: none;
+    }
+  }
+</style>
