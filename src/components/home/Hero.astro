@@ -1,0 +1,65 @@
+---
+// src/components/home/Hero.astro
+import { Image } from 'astro:assets';
+import { t } from '@i18n/utils';
+import type { ImageMetadata } from 'astro';
+import type { Locale } from '@i18n/config';
+import styles from './Hero.module.css';
+interface Props {
+  locale: Locale;
+  heroImage: ImageMetadata;
+}
+const { locale, heroImage } = Astro.props;
+---
+
+<section class={styles.hero}>
+  <Image src={heroImage} alt="" class={styles['hero-bg']} fetchpriority="high" />
+  <div class={styles['hero-overlay']}></div>
+  <canvas class={styles['hero-canvas']} data-hero-canvas></canvas>
+  <div class={styles['hero-content']}>
+    <h1 class={styles['hero-title']}>{t(locale, 'home.heroTitle')}</h1>
+    <p class={styles['hero-subtitle']}>{t(locale, 'home.heroSubtitle')}</p>
+    <p class={styles['hero-intro']}>{t(locale, 'home.heroIntro')}</p>
+    <a href={`/${locale}/articles/`} class={styles['hero-cta']}>{t(locale, 'home.heroCta')}</a>
+  </div>
+</section>
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
+    if (!canvas) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let raf = 0;
+    const particles = Array.from({ length: 40 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      vx: (Math.random() - 0.5) * 0.0008,
+      vy: (Math.random() - 0.5) * 0.0008,
+      r: Math.random() * 1.5 + 0.5,
+    }));
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > 1) p.vx *= -1;
+        if (p.y < 0 || p.y > 1) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x * canvas.width, p.y * canvas.height, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    window.addEventListener('resize', resize);
+    document.addEventListener('astro:before-swap', () => cancelAnimationFrame(raf), { once: true });
+  });
+</script>

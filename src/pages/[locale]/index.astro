@@ -1,38 +1,51 @@
 ---
-// src/pages/[locale]/index.astro — 首页占位(Plan 3 填充 Hero + HomeSections)
+// src/pages/[locale]/index.astro — 首页(Hero + HomeSections)
 import BaseLayout from '@components/layout/BaseLayout.astro';
+import Hero from '@components/home/Hero.astro';
+import HomeSections from '@components/home/HomeSections.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
 export function getStaticPaths() {
-  return locales.map(function (l) {
-    return { params: { locale: l } };
-  });
+  return locales.map((l) => ({ params: { locale: l } }));
 }
 const { locale } = Astro.params as { locale: Locale };
+const heroArticle = (await getCollection('articles')).find(
+  (e) => e.id.startsWith(locale + '/') && e.data.cover && !e.data.draft,
+);
+const heroImage = heroArticle?.data.cover;
 ---
 
-<BaseLayout locale={locale} title={t(locale, 'site.title')}>
-  <div class="home-placeholder">
-    <h1>{t(locale, 'site.title')}</h1>
-    <p>{t(locale, 'site.tagline')}</p>
-    <p style="color: var(--color-text-muted); margin-top: var(--spacing-lg);">
-      首页内容待 Plan 3 填充
-    </p>
-  </div>
+<BaseLayout locale={locale} title={t(locale, 'site.title')} description={t(locale, 'site.tagline')}>
+  {
+    heroImage ? (
+      <Hero locale={locale} heroImage={heroImage} />
+    ) : (
+      <section class="hero-fallback">
+        <h1>{t(locale, 'home.heroTitle')}</h1>
+        <p>{t(locale, 'home.heroSubtitle')}</p>
+      </section>
+    )
+  }
+  <HomeSections locale={locale} />
 </BaseLayout>
 <style>
-  .home-placeholder {
-    max-width: var(--container-page);
-    margin: 0 auto;
-    padding: var(--spacing-3xl) var(--spacing-md);
+  .hero-fallback {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xl) var(--spacing-md);
     text-align: center;
   }
-  .home-placeholder h1 {
-    font-size: var(--text-3xl);
+  .hero-fallback h1 {
+    font-size: var(--text-4xl);
     font-weight: 700;
   }
-  .home-placeholder p {
-    margin-top: var(--spacing-sm);
+  .hero-fallback p {
     color: var(--color-text-muted);
+    font-size: var(--text-xl);
   }
 </style>

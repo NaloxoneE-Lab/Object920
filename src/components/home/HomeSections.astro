@@ -1,0 +1,140 @@
+---
+// src/components/home/HomeSections.astro
+import ArticleCard from '@components/article/ArticleCard.astro';
+import ProjectCard from '@components/project/ProjectCard.astro';
+import AnimeCard from '@components/collection/AnimeCard.astro';
+import VocaloidCard from '@components/collection/VocaloidCard.astro';
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+
+const articles = (await getCollection('articles'))
+  .filter((e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+const projects = (await getCollection('projects'))
+  .filter((e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+const anime = (await getCollection('anime')).filter((e) => e.data.highlight).slice(0, 4);
+const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highlight).slice(0, 4);
+---
+
+<div class="home-sections">
+  {
+    articles.length > 0 && (
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2>{t(locale, 'home.latestArticles')}</h2>
+          <a href={`/${locale}/articles/`} class="home-section-more">
+            {t(locale, 'articles.viewAll')} →
+          </a>
+        </div>
+        <div class="home-section-grid">
+          {articles.map((e) => (
+            <ArticleCard entry={e} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+  {
+    projects.length > 0 && (
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2>{t(locale, 'home.latestProjects')}</h2>
+          <a href={`/${locale}/projects/`} class="home-section-more">
+            {t(locale, 'projects.viewAll')} →
+          </a>
+        </div>
+        <div class="home-section-grid">
+          {projects.map((e) => (
+            <ProjectCard entry={e} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+  {
+    anime.length > 0 && (
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2>{t(locale, 'home.animePicks')}</h2>
+          <a href={`/${locale}/collection/anime/`} class="home-section-more">
+            {t(locale, 'articles.viewAll')} →
+          </a>
+        </div>
+        <div class="home-section-grid home-section-grid-small">
+          {anime.map((e) => (
+            <AnimeCard entry={e} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+  {
+    vocaloid.length > 0 && (
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2>{t(locale, 'home.vocaloidPicks')}</h2>
+          <a href={`/${locale}/collection/vocaloid/`} class="home-section-more">
+            {t(locale, 'articles.viewAll')} →
+          </a>
+        </div>
+        <div class="home-section-grid">
+          {vocaloid.map((e) => (
+            <VocaloidCard entry={e} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+  <section class="home-section">
+    <div class="home-section-head">
+      <h2>{t(locale, 'home.aboutSummary')}</h2>
+      <a href={`/${locale}/about/`} class="home-section-more">→</a>
+    </div>
+    <p class="home-about-text">{t(locale, 'home.aboutText')}</p>
+  </section>
+</div>
+<style>
+  .home-sections {
+    max-width: var(--container-wide);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+  .home-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--spacing-md);
+  }
+  .home-section-head h2 {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+  .home-section-more {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: var(--text-sm);
+  }
+  .home-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+  }
+  .home-section-grid-small {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .home-about-text {
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+  }
+</style>
