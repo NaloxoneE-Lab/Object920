@@ -75,7 +75,7 @@
 - Consumes: 无(首个 search task)
 - Produces: `SearchResult`、`SearchOptions`、`SearchProviderState`、`SearchProvider`(interface)、`SearchError`(class)— 后续 PagefindProvider/resolver/SearchBox 全部依赖
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/components/integrations/search/__tests__/SearchProvider.test.ts
@@ -107,12 +107,12 @@ describe('SearchError', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/search/__tests__/SearchProvider.test.ts`
 Expected: FAIL — `Failed to resolve import '../SearchProvider'`
 
-- [ ] **Step 3: 写最小实现**
+- [x] **Step 3: 写最小实现**
 
 ```ts
 // src/components/integrations/search/SearchProvider.ts
@@ -149,12 +149,12 @@ export class SearchError extends Error {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/search/__tests__/SearchProvider.test.ts`
 Expected: PASS — 4 tests passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/search/SearchProvider.ts src/components/integrations/search/__tests__/SearchProvider.test.ts
@@ -173,7 +173,7 @@ git commit -m "feat(search): add SearchProvider interface and SearchError class"
 - Consumes: Task 1 的 `SearchProvider`、`SearchProviderState`、`SearchResult`、`SearchOptions`、`SearchError`
 - Produces: `PagefindProvider` class — Task 3 resolver 引用,Task 4 SearchBox 间接使用
 
-- [ ] **Step 1: 追加失败测试**
+- [x] **Step 1: 追加失败测试**
 
 在 `src/components/integrations/search/__tests__/SearchProvider.test.ts` 末尾追加:
 
@@ -301,12 +301,12 @@ d2('PagefindProvider', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/search/__tests__/SearchProvider.test.ts`
 Expected: FAIL — `Failed to resolve import '../PagefindProvider'`
 
-- [ ] **Step 3: 写 PagefindProvider 实现**
+- [x] **Step 3: 写 PagefindProvider 实现**
 
 ```ts
 // src/components/integrations/search/PagefindProvider.ts
@@ -403,12 +403,12 @@ export class PagefindProvider implements SearchProvider {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/search/__tests__/SearchProvider.test.ts`
 Expected: PASS — 全部测试通过(SearchError 4 + PagefindProvider 11 = 15)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/search/PagefindProvider.ts src/components/integrations/search/__tests__/SearchProvider.test.ts
@@ -427,7 +427,7 @@ git commit -m "feat(search): implement PagefindProvider with state machine and a
 - Consumes: Task 1 的 `SearchProvider`(type)、Task 2 的 `PagefindProvider`
 - Produces: `createSearchProvider(): SearchProvider | null` — Task 4 SearchBox 调用
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/components/integrations/search/__tests__/createSearchProvider.test.ts
@@ -475,12 +475,12 @@ describe('createSearchProvider', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/search/__tests__/createSearchProvider.test.ts`
 Expected: FAIL — `Failed to resolve import '../createSearchProvider'`
 
-- [ ] **Step 3: 写 resolver 实现**
+- [x] **Step 3: 写 resolver 实现**
 
 ```ts
 // src/components/integrations/search/createSearchProvider.ts
@@ -501,12 +501,12 @@ export function createSearchProvider(): SearchProvider | null {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/search/__tests__/createSearchProvider.test.ts`
 Expected: PASS — 5 tests passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/search/createSearchProvider.ts src/components/integrations/search/__tests__/createSearchProvider.test.ts
@@ -524,7 +524,7 @@ git commit -m "feat(search): add createSearchProvider resolver with env-based sw
 - Consumes: Task 3 的 `createSearchProvider`、Task 1 的 `SearchProvider`/`SearchResult` type、Plan 1 的 `t()`/`Locale`
 - Produces: `SearchBox.astro` 组件 — Task 13 BaseLayout/Header 引用
 
-- [ ] **Step 1: 追加 i18n keys 到 zh.ts**
+- [x] **Step 1: 追加 i18n keys 到 zh.ts**
 
 在 `src/i18n/ui/zh.ts` 的 `export default { ... }` 对象内,`'common.404.back'` 行之后追加:
 
@@ -537,7 +537,7 @@ git commit -m "feat(search): add createSearchProvider resolver with env-based sw
   'common.search.label': '站内搜索',
 ```
 
-- [ ] **Step 2: 追加 i18n keys 到 en.ts**
+- [x] **Step 2: 追加 i18n keys 到 en.ts**
 
 在 `src/i18n/ui/en.ts` 的 `export default { ... }` 对象内,`'common.404.back'` 行之后追加:
 
@@ -550,7 +550,7 @@ git commit -m "feat(search): add createSearchProvider resolver with env-based sw
   'common.search.label': 'Site search',
 ```
 
-- [ ] **Step 3: 创建 SearchBox.astro**
+- [x] **Step 3: 创建 SearchBox.astro**
 
 ```astro
 ---
@@ -776,17 +776,17 @@ const provider = enabled ? createSearchProvider() : null;
 </script>
 ```
 
-- [ ] **Step 4: 运行 type check**
+- [x] **Step 4: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误
 
-- [ ] **Step 5: 运行测试确保无回归**
+- [x] **Step 5: 运行测试确保无回归**
 
 Run: `pnpm test`
 Expected: 全部已有测试 PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/integrations/search/SearchBox.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -805,12 +805,12 @@ git commit -m "feat(search): add SearchBox UI with lazy provider init and astro:
 - Consumes: `process.env.PUBLIC_SEARCH_ENABLED` + `PUBLIC_SEARCH_PROVIDER`
 - Produces: `dist/pagefind/` 索引目录(仅启用时);CI 失败时非零退出
 
-- [ ] **Step 1: 安装 pagefind**
+- [x] **Step 1: 安装 pagefind**
 
 Run: `pnpm add -D pagefind@^1.5.0`
 Expected: pagefind 安装成功
 
-- [ ] **Step 2: 创建 search-index.mjs**
+- [x] **Step 2: 创建 search-index.mjs**
 
 ```js
 // src/scripts/search-index.mjs
@@ -846,7 +846,7 @@ try {
 }
 ```
 
-- [ ] **Step 3: 修改 package.json scripts**
+- [x] **Step 3: 修改 package.json scripts**
 
 在 `package.json` 的 `"scripts"` 中追加(若 `postbuild` 已存在,将 `search:index` 追加到现有 postbuild 链末尾):
 
@@ -861,17 +861,17 @@ try {
 
 注意:若 Plan 2-3 已添加 `postbuild`(如 `build-meta`、`generate-og` 等),合并为 `"postbuild": "pnpm run build-meta -- --dist && pnpm run search:index && pnpm run generate-og && ..."`。仅追加 `search:index`,不删除已有步骤。
 
-- [ ] **Step 4: 手动验证(搜索禁用时跳过)**
+- [x] **Step 4: 手动验证(搜索禁用时跳过)**
 
 Run: `$env:PUBLIC_SEARCH_ENABLED='false'; pnpm run search:index`
 Expected: 输出 `[search-index] Skipped: PUBLIC_SEARCH_ENABLED is false`,退出码 0
 
-- [ ] **Step 5: 手动验证(搜索启用时需先 build)**
+- [x] **Step 5: 手动验证(搜索启用时需先 build)**
 
 Run: `pnpm build`
 Expected: `astro build` 完成后,`search:index` 运行 pagefind,生成 `dist/pagefind/` 目录(若 dist 有 HTML 内容)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/scripts/search-index.mjs package.json
@@ -890,7 +890,7 @@ git commit -m "feat(search): add search-index.mjs postbuild script with pagefind
 - Consumes: `import.meta.env.PUBLIC_UMAMI_*`、`PUBLIC_TRAVELLINGS_ENABLED`、Plan 1 的 `t()`/`Locale`
 - Produces: `Analytics.astro`(零 props)、`Travellings.astro` — Task 13 BaseLayout / friends 页引用
 
-- [ ] **Step 1: 追加 travellings i18n keys 到 zh.ts**
+- [x] **Step 1: 追加 travellings i18n keys 到 zh.ts**
 
 在 `src/i18n/ui/zh.ts` 的 search keys 之后追加:
 
@@ -900,7 +900,7 @@ git commit -m "feat(search): add search-index.mjs postbuild script with pagefind
   'common.travellings.button': '随机前往',
 ```
 
-- [ ] **Step 2: 追加 travellings i18n keys 到 en.ts**
+- [x] **Step 2: 追加 travellings i18n keys 到 en.ts**
 
 在 `src/i18n/ui/en.ts` 的 search keys 之后追加:
 
@@ -910,7 +910,7 @@ git commit -m "feat(search): add search-index.mjs postbuild script with pagefind
   'common.travellings.button': 'Travel randomly',
 ```
 
-- [ ] **Step 3: 创建 Analytics.astro**
+- [x] **Step 3: 创建 Analytics.astro**
 
 ```astro
 ---
@@ -935,7 +935,7 @@ const ready = enabled && scriptUrl && websiteId;
 )}
 ```
 
-- [ ] **Step 4: 创建 Travellings.astro**
+- [x] **Step 4: 创建 Travellings.astro**
 
 ```astro
 ---
@@ -991,12 +991,12 @@ const enabled = import.meta.env.PUBLIC_TRAVELLINGS_ENABLED !== 'false';
 </style>
 ```
 
-- [ ] **Step 5: 运行 type check**
+- [x] **Step 5: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/integrations/analytics/Analytics.astro src/components/integrations/travellings/Travellings.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -1017,7 +1017,7 @@ git commit -m "feat(integrations): add Analytics (Umami) and Travellings pluggab
 - Consumes: `import.meta.env.PUBLIC_GISCUS_*`、Plan 1 的 `t()`/`Locale`、ThemeToggle 的 `theme-change` CustomEvent
 - Produces: `Comments.astro` 组件、`giscus.ts` 工具库 — Task 13 article/friends 页引用
 
-- [ ] **Step 1: 追加 comments i18n keys 到 zh.ts**
+- [x] **Step 1: 追加 comments i18n keys 到 zh.ts**
 
 在 `src/i18n/ui/zh.ts` 的 travellings keys 之后追加:
 
@@ -1027,7 +1027,7 @@ git commit -m "feat(integrations): add Analytics (Umami) and Travellings pluggab
   'common.comments.guestbook': '留言板',
 ```
 
-- [ ] **Step 2: 追加 comments i18n keys 到 en.ts**
+- [x] **Step 2: 追加 comments i18n keys 到 en.ts**
 
 在 `src/i18n/ui/en.ts` 的 travellings keys 之后追加:
 
@@ -1037,7 +1037,7 @@ git commit -m "feat(integrations): add Analytics (Umami) and Travellings pluggab
   'common.comments.guestbook': 'Guestbook',
 ```
 
-- [ ] **Step 3: 创建 giscus.ts**
+- [x] **Step 3: 创建 giscus.ts**
 
 ```ts
 // src/lib/giscus.ts
@@ -1111,7 +1111,7 @@ export function updateGiscusTheme(theme: 'light' | 'dark'): void {
 }
 ```
 
-- [ ] **Step 4: 创建 Comments.astro**
+- [x] **Step 4: 创建 Comments.astro**
 
 ```astro
 ---
@@ -1225,12 +1225,12 @@ const giscusLang: Record<string, string> = {
 </script>
 ```
 
-- [ ] **Step 5: 运行 type check**
+- [x] **Step 5: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/giscus.ts src/components/integrations/comments/Comments.astro src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -1247,7 +1247,7 @@ git commit -m "feat(comments): add Giscus pluggable component with singleton scr
 - Consumes: 无(首个 music task)
 - Produces: `Track`、`Playlist`、`MusicPlayerState`、`MusicPlayer`(interface)— 后续 HtmlAudioProvider/resolver/Widget 全部依赖
 
-- [ ] **Step 1: 写测试(验证类型可被实现)**
+- [x] **Step 1: 写测试(验证类型可被实现)**
 
 ```ts
 // src/components/integrations/music/__tests__/MusicPlayer.test.ts
@@ -1325,12 +1325,12 @@ describe('MusicPlayer types', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/music/__tests__/MusicPlayer.test.ts`
 Expected: FAIL — `Failed to resolve import '../MusicPlayer'`
 
-- [ ] **Step 3: 写接口定义**
+- [x] **Step 3: 写接口定义**
 
 ```ts
 // src/components/integrations/music/MusicPlayer.ts
@@ -1379,12 +1379,12 @@ export interface MusicPlayer {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/music/__tests__/MusicPlayer.test.ts`
 Expected: PASS — 5 tests passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/music/MusicPlayer.ts src/components/integrations/music/__tests__/MusicPlayer.test.ts
@@ -1403,7 +1403,7 @@ git commit -m "feat(music): add MusicPlayer interface with Track/Playlist/State 
 - Consumes: Task 8 的 `MusicPlayer`、`MusicPlayerState`、`Track`、`Playlist`;`src/config/music.ts` 的 `playlists`(Task 11 创建,但此 task 用可选注入参数解耦)
 - Produces: `HtmlAudioProvider` class — Task 10 resolver 引用,Task 12 Widget 间接使用
 
-- [ ] **Step 1: 追加失败测试**
+- [x] **Step 1: 追加失败测试**
 
 在 `src/components/integrations/music/__tests__/MusicPlayer.test.ts` 末尾追加:
 
@@ -1577,12 +1577,12 @@ d2('HtmlAudioProvider', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/music/__tests__/MusicPlayer.test.ts`
 Expected: FAIL — `Failed to resolve import '../HtmlAudioProvider'`
 
-- [ ] **Step 3: 写 HtmlAudioProvider 实现**
+- [x] **Step 3: 写 HtmlAudioProvider 实现**
 
 ```ts
 // src/components/integrations/music/HtmlAudioProvider.ts
@@ -1712,12 +1712,12 @@ export class HtmlAudioProvider implements MusicPlayer {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/music/__tests__/MusicPlayer.test.ts`
 Expected: PASS — 全部测试通过(types 5 + HtmlAudioProvider 15 = 20)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/music/HtmlAudioProvider.ts src/components/integrations/music/__tests__/MusicPlayer.test.ts
@@ -1736,7 +1736,7 @@ git commit -m "feat(music): implement HtmlAudioProvider with playlist management
 - Consumes: Task 8 的 `MusicPlayer`(type)、Task 9 的 `HtmlAudioProvider`
 - Produces: `createMusicProvider(audioElement): MusicPlayer | null` — Task 12 Widget 调用
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 ```ts
 // src/components/integrations/music/__tests__/createMusicProvider.test.ts
@@ -1803,12 +1803,12 @@ describe('createMusicProvider', () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [x] **Step 2: 运行测试验证失败**
 
 Run: `pnpm test src/components/integrations/music/__tests__/createMusicProvider.test.ts`
 Expected: FAIL — `Failed to resolve import '../createMusicProvider'`
 
-- [ ] **Step 3: 写 resolver 实现**
+- [x] **Step 3: 写 resolver 实现**
 
 ```ts
 // src/components/integrations/music/createMusicProvider.ts
@@ -1834,12 +1834,12 @@ export function createMusicProvider(audioElement: HTMLAudioElement): MusicPlayer
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [x] **Step 4: 运行测试验证通过**
 
 Run: `pnpm test src/components/integrations/music/__tests__/createMusicProvider.test.ts`
 Expected: PASS — 5 tests passed
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/music/createMusicProvider.ts src/components/integrations/music/__tests__/createMusicProvider.test.ts
@@ -1857,7 +1857,7 @@ git commit -m "feat(music): add createMusicProvider resolver with env-based swit
 - Consumes: Task 8 的 `Playlist` type
 - Produces: `playlists: Playlist[]` — Task 9 HtmlAudioProvider 延迟 import;Task 12 Widget 展示
 
-- [ ] **Step 1: 追加 music i18n keys 到 zh.ts**
+- [x] **Step 1: 追加 music i18n keys 到 zh.ts**
 
 在 `src/i18n/ui/zh.ts` 的 comments keys 之后追加(spec 6.3: music.play/pause/next/prev/playlist/volume/unavailable):
 
@@ -1871,7 +1871,7 @@ git commit -m "feat(music): add createMusicProvider resolver with env-based swit
   'music.playlist': '歌单',
 ```
 
-- [ ] **Step 2: 追加 music i18n keys 到 en.ts**
+- [x] **Step 2: 追加 music i18n keys 到 en.ts**
 
 在 `src/i18n/ui/en.ts` 的 comments keys 之后追加:
 
@@ -1885,7 +1885,7 @@ git commit -m "feat(music): add createMusicProvider resolver with env-based swit
   'music.playlist': 'Playlist',
 ```
 
-- [ ] **Step 3: 创建 src/config/music.ts**
+- [x] **Step 3: 创建 src/config/music.ts**
 
 ```ts
 // src/config/music.ts
@@ -1917,17 +1917,17 @@ export const playlists: Playlist[] = [
 
 注意:以上 `src` URL 中的 `YourUser/object920-assets` 需替换为实际 assets 仓地址(与 `.env.example` 的 `PUBLIC_ASSETS_USER` / `PUBLIC_ASSETS_REPO` 一致)。MVP 歌单为示例占位,部署前替换为真实音频文件链接。
 
-- [ ] **Step 4: 运行 type check**
+- [x] **Step 4: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误
 
-- [ ] **Step 5: 运行测试确保无回归**
+- [x] **Step 5: 运行测试确保无回归**
 
 Run: `pnpm test`
 Expected: 全部已有测试 PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/config/music.ts src/i18n/ui/zh.ts src/i18n/ui/en.ts
@@ -1946,7 +1946,7 @@ git commit -m "feat(music): add playlist config and music i18n keys"
 - Consumes: Task 10 的 `createMusicProvider`、Task 8 的 `MusicPlayer`/`MusicPlayerState` type、Plan 1 的 `t()`/`Locale`
 - Produces: `MusicHost.astro`(persistence boundary)、`MusicPlayerWidget.astro`(UI boundary)— Task 13 BaseLayout 引用
 
-- [ ] **Step 1: 创建 MusicHost.astro**
+- [x] **Step 1: 创建 MusicHost.astro**
 
 ```astro
 ---
@@ -1972,7 +1972,7 @@ const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
 </style>
 ```
 
-- [ ] **Step 2: 创建 MusicPlayerWidget.astro**
+- [x] **Step 2: 创建 MusicPlayerWidget.astro**
 
 ```astro
 ---
@@ -2138,17 +2138,17 @@ const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
 </script>
 ```
 
-- [ ] **Step 3: 运行 type check**
+- [x] **Step 3: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误(若有 `transition:persist` 类型问题,确认 Astro 7 类型支持;必要时用 `// @astro-ignore` 临时标注并记录为验证项)
 
-- [ ] **Step 4: 运行测试确保无回归**
+- [x] **Step 4: 运行测试确保无回归**
 
 Run: `pnpm test`
 Expected: 全部已有测试 PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/integrations/music/MusicHost.astro src/components/integrations/music/MusicPlayerWidget.astro
@@ -2164,7 +2164,7 @@ git commit -m "feat(music): add MusicHost (persist) and MusicPlayerWidget with s
 - Consumes: Task 6 的 `Analytics`、Task 12 的 `MusicHost`/`MusicPlayerWidget`、Plan 1 的 `BaseLayout`/`BaseHead`
 - Produces: 更新后的 `BaseLayout.astro` — 所有页面通过 `<BaseLayout>` 自动获得可插拔 Integration
 
-- [ ] **Step 1: 修改 BaseLayout.astro**
+- [x] **Step 1: 修改 BaseLayout.astro**
 
 在 `src/components/layout/BaseLayout.astro` 中,添加 ClientRouter、Analytics、MusicHost + Widget 的集成。将现有 BaseLayout 替换为:
 
@@ -2228,22 +2228,22 @@ const { locale, title, description, ogImage, canonicalURL, noindex } = Astro.pro
 - `Analytics` 零 props;`MusicHost` 包裹 `MusicPlayerWidget` 并通过 slot 注入(spec 5.12 组件层级 P1-11)。
 - 环境变量关闭时(`PUBLIC_UMAMI_ENABLED !== 'true'`、`PUBLIC_MUSIC_ENABLED !== 'true'`),这些组件输出零 DOM,页面结构不受影响。
 
-- [ ] **Step 2: 运行 type check**
+- [x] **Step 2: 运行 type check**
 
 Run: `pnpm check`
 Expected: 无类型错误
 
-- [ ] **Step 3: 运行 build 验证(可选搜索索引)**
+- [x] **Step 3: 运行 build 验证(可选搜索索引)**
 
 Run: `pnpm build`
 Expected: 构建成功;若 `PUBLIC_SEARCH_ENABLED=true` 则 postbuild 跑 pagefind;若 `PUBLIC_MUSIC_ENABLED=true` 则 MusicHost 的 `transition:persist` 在生成的 HTML 中可见
 
-- [ ] **Step 4: 运行测试确保无回归**
+- [x] **Step 4: 运行测试确保无回归**
 
 Run: `pnpm test`
 Expected: 全部已有测试 PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/layout/BaseLayout.astro
@@ -2261,7 +2261,7 @@ git commit -m "feat(layout): integrate ClientRouter, Analytics, MusicHost into B
 - Consumes: spec 附录 C 环境变量总表
 - Produces: 完整的 `.env.example` 模板 — 所有 Integration 开关与配置项
 
-- [ ] **Step 1: 修改 .env.example**
+- [x] **Step 1: 修改 .env.example**
 
 在 `.env.example` 现有内容(`PUBLIC_SITE_URL`、`PUBLIC_SITE_NAME`、`PUBLIC_PREVIEW`)之后追加(spec 附录 C):
 
@@ -2297,12 +2297,12 @@ PUBLIC_MUSIC_PROVIDER=html5audio                 # html5audio(MVP 默认)| none;
 - `PUBLIC_SEARCH_PROVIDER=orama` 和 `PUBLIC_MUSIC_PROVIDER=howler` 在未实现前不是有效配置值,配置后会 throw(spec P1-8)
 - `.env.example` 入仓作模板,`.env` 不入仓(Plan 1 `.gitignore` 已配)
 
-- [ ] **Step 2: 运行 build 验证(默认配置)**
+- [x] **Step 2: 运行 build 验证(默认配置)**
 
 Run: `$env:PUBLIC_SEARCH_ENABLED='false'; $env:PUBLIC_MUSIC_ENABLED='false'; $env:PUBLIC_GISCUS_ENABLED='false'; $env:PUBLIC_UMAMI_ENABLED='false'; pnpm build`
 Expected: 构建成功;所有 Integration 关闭,零 DOM/零网络/零构建依赖;postbuild 跳过 pagefind
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .env.example
