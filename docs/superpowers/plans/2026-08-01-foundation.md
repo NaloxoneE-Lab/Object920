@@ -191,7 +191,7 @@ export default defineConfig({
 Run: `pnpm install`
 Expected: 成功安装 Astro 7.x 及 devDependencies
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add package.json .gitignore .env.example tsconfig.json vitest.config.ts
@@ -481,7 +481,7 @@ export default defineConfig({
 Run: `pnpm dev`
 Expected: Astro dev server 启动,访问 `localhost:4321` 显示默认欢迎页(Astro 自带),无报错
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add astro.config.mjs src/styles/tokens.css src/styles/global.css src/styles/animations.css
@@ -712,7 +712,7 @@ describe('getLocaleFromPath()', () => {
 Run: `pnpm test`
 Expected: 所有测试 PASS
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/i18n/ src/lib/__tests__/i18n-utils.test.ts
@@ -801,7 +801,7 @@ Expected: 移除成功(woff2 已在 public/fonts/)
 Run: `pnpm dev`,在浏览器 DevTools Network 面板确认 `/fonts/inter-latin.woff2` 加载成功
 Expected: 字体文件 200 OK
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add public/fonts/ src/styles/global.css
@@ -929,7 +929,7 @@ const isPreview = import.meta.env.PUBLIC_PREVIEW === 'true';
 
 创建一个简单的 1200x630 纯色 PNG 放 `public/images/og-default.png`(MVP 用占位,Plan 5 实现自动生成)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/config/site.ts src/components/layout/BaseHead.astro public/favicon.svg public/images/og-default.png
@@ -1426,7 +1426,7 @@ const { locale, title, description, ogImage, canonicalURL, noindex } = Astro.pro
 </html>
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/components/ src/config/
@@ -1537,7 +1537,7 @@ Run: `pnpm dev`
 - 访问 `/en/` → 显示英文首页占位
   Expected: 路由正常,布局渲染
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/pages/
@@ -1591,7 +1591,7 @@ jobs:
 Run: `pnpm ci`
 Expected: check → lint → test → build 全链通过
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
