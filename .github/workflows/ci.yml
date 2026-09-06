@@ -1,13 +1,15 @@
 # .github/workflows/ci.yml
 name: CI
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
+  pull_request:
+
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -15,10 +17,33 @@ jobs:
           version: 9.15.5
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24 # >=22.12 约束下使用 24 LTS 对齐本地验证环境
           cache: pnpm
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          install: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run check
-      - run: pnpm run lint
-      - run: pnpm run test
-      - run: pnpm run build
+
+      - name: Code checks (no secret)
+        run: pnpm check && pnpm lint && pnpm test
+
+      - name: Build (trusted context)
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.head.repo.full_name == github.repository)
+        run: pnpm build
+        env:
+          CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'YourUser/object920-content' }}
+          CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
+          FORCE_CONTENT_SYNC: 'true'
+          PUBLIC_SEARCH_ENABLED: 'true'
+          PUBLIC_SEARCH_PROVIDER: 'pagefind'
+          PUBLIC_SITE_URL: 'https://example.com'
+
+      - uses: actions/upload-artifact@v4
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          name: dist-preview

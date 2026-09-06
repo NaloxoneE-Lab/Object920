@@ -1,0 +1,52 @@
+# deploy/github-pages/.github/workflows/deploy.yml — 复制到 .github/workflows/ 使用
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          install: true
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          CONTENT_REPO: ${{ secrets.CONTENT_REPO }}
+          CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
+          FORCE_CONTENT_SYNC: 'true'
+          PUBLIC_SEARCH_ENABLED: 'true'
+          PUBLIC_SEARCH_PROVIDER: 'pagefind'
+          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL || 'https://example.github.io/object920' }}
+          DEPLOY_PLATFORM: 'github-pages'
+      - run: pnpm run generate:redirects
+        env:
+          DEPLOY_PLATFORM: 'github-pages'
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

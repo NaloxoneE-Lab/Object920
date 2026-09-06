@@ -1,0 +1,3 @@
+# deploy/cloudflare/_redirects — 模板参考
+# 部署时由 generate:redirects 从 redirects.json 动态生成
+# 格式: /old-url/ /new-url/ 301
