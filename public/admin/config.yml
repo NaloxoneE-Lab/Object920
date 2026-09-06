@@ -1,0 +1,285 @@
+# public/admin/config.yml
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+
+backend:
+  name: github
+  repo: NaloxoneE-Lab/object920-content
+  branch: main
+  # MVP:用 Access Token 登录,不需要 base_url
+  # 生产多用户(可选):部署 sveltia-cms-auth 后取消注释
+  # base_url: https://your-authenticator.workers.dev
+
+site_url: https://example.com
+display_url: https://example.com
+locale: 'zh'
+
+publish_mode: simple
+
+collections:
+  # === 文章(folder collection,entry-relative media)===
+  - name: articles
+    label: 文章
+    folder: 'articles'
+    slug: '{{fields._slug | default(title) | localize}}'
+    path: '{{slug}}/index'
+    media_folder: ''
+    public_folder: ''
+    create: true
+    i18n: true
+    i18n.structure: multiple_folders
+    i18n.locales: [zh, en]
+    i18n.canonical_slug: { key: translationKey }
+    fields:
+      - {
+          name: _slug,
+          widget: string,
+          required: false,
+          i18n: duplicate,
+          hint: '当前语言 URL slug;仅 ASCII 小写+连字符;留空时按 title 生成初始值;之后修改 title 不会改 slug;显式修改 = URL migration → redirects.json',
+        }
+      - { name: title, widget: string, i18n: true }
+      - {
+          name: translationKey,
+          widget: string,
+          required: false,
+          i18n: duplicate,
+          hint: '同一篇内容的不同语言版本必须使用相同 translationKey;没有翻译版本时可以留空',
+        }
+      - { name: pubDate, widget: datetime, i18n: duplicate }
+      - { name: updatedDate, widget: datetime, required: false, i18n: duplicate }
+      - { name: category, widget: string, default: 'uncategorized', i18n: duplicate }
+      - { name: tags, widget: list, i18n: true, default: [] }
+      - { name: cover, widget: image, required: false, i18n: duplicate }
+      - { name: coverAlt, widget: string, required: true, i18n: duplicate }
+      - { name: excerpt, widget: text, required: false, i18n: true }
+      - { name: draft, widget: boolean, default: false, i18n: duplicate }
+      - { name: seoTitle, widget: string, required: false, i18n: true }
+      - { name: seoDescription, widget: text, required: false, i18n: true }
+      - { name: ogImage, widget: string, required: false, i18n: duplicate }
+      - { name: ogImageLocal, widget: image, required: false, i18n: duplicate }
+      - { name: body, widget: markdown, i18n: true }
+
+  # === 工程(folder collection,entry-relative media)===
+  - name: projects
+    label: 工程
+    folder: 'projects'
+    slug: '{{fields._slug | default(title) | localize}}'
+    path: '{{slug}}/index'
+    media_folder: ''
+    public_folder: ''
+    create: true
+    i18n: true
+    i18n.structure: multiple_folders
+    i18n.locales: [zh, en]
+    i18n.canonical_slug: { key: translationKey }
+    fields:
+      - { name: _slug, widget: string, required: false, i18n: duplicate }
+      - { name: title, widget: string, i18n: true }
+      - {
+          name: translationKey,
+          widget: string,
+          required: false,
+          i18n: duplicate,
+          hint: '同一工程的不同语言版本必须使用相同 translationKey',
+        }
+      - { name: pubDate, widget: datetime, i18n: duplicate }
+      - { name: updatedDate, widget: datetime, required: false, i18n: duplicate }
+      - {
+          name: category,
+          widget: select,
+          options: ['hardware', 'software', 'repair', 'mod'],
+          default: 'hardware',
+          i18n: duplicate,
+        }
+      - { name: tags, widget: list, i18n: true, default: [] }
+      - {
+          name: status,
+          widget: select,
+          options: ['ongoing', 'completed', 'archived', 'planned'],
+          default: 'ongoing',
+          i18n: duplicate,
+        }
+      - { name: cover, widget: image, required: false, i18n: duplicate }
+      - { name: coverAlt, widget: string, required: true, i18n: duplicate }
+      - label: 图廊
+        name: gallery
+        widget: list
+        i18n: duplicate
+        required: false
+        fields:
+          - { name: image, widget: image }
+          - { name: alt, widget: string, required: true }
+          - { name: caption, widget: string, required: false }
+      - { name: excerpt, widget: text, required: false, i18n: true }
+      - label: 规格
+        name: specs
+        widget: list
+        i18n: true
+        required: false
+        fields:
+          - { name: label, widget: string, i18n: true }
+          - { name: value, widget: string, i18n: true }
+      - label: 数据手册
+        name: datasheets
+        widget: list
+        i18n: true
+        required: false
+        hint: '文件托管在 assets 仓库,这里只填文件名;历史资料显式填 ref(tag/commit)'
+        fields:
+          - { name: name, widget: string, i18n: true }
+          - { name: filename, widget: string, i18n: duplicate }
+          - { name: ref, widget: string, default: 'main', required: false, i18n: duplicate }
+          - { name: size, widget: string, required: false, i18n: duplicate }
+          - label: 镜像
+            name: mirror
+            widget: select
+            options: ['jsdelivr', 'raw', 'release']
+            multiple: true
+            default: ['jsdelivr', 'raw']
+            i18n: duplicate
+          - { name: releaseTag, widget: string, required: false, i18n: duplicate }
+      - label: 相关链接
+        name: relatedLinks
+        widget: list
+        i18n: true
+        required: false
+        fields:
+          - { name: label, widget: string, i18n: true }
+          - { name: url, widget: string }
+      - { name: draft, widget: boolean, default: false, i18n: duplicate }
+      - { name: ogImage, widget: string, required: false, i18n: duplicate }
+      - { name: ogImageLocal, widget: image, required: false, i18n: duplicate }
+      - { name: body, widget: markdown, i18n: true }
+
+  # === 番剧(file collection,只存远程 URL)===
+  - name: anime
+    label: 番剧
+    delete: false
+    files:
+      - label: 番剧清单
+        name: items
+        file: 'data/anime.json'
+        fields:
+          - label: 番剧列表
+            name: items
+            widget: list
+            fields:
+              - { name: id, widget: string }
+              - { name: title, widget: string }
+              - { name: titleOriginal, widget: string, required: false }
+              - { name: titleZh, widget: string, required: false }
+              - { name: cover, widget: string, required: false }
+              - { name: score, widget: number, required: false, min: 0, max: 10 }
+              - {
+                  name: status,
+                  widget: select,
+                  options:
+                    [
+                      { label: '看完', value: 'finished' },
+                      { label: '在看', value: 'watching' },
+                      { label: '想看', value: 'planned' },
+                      { label: '弃坑', value: 'dropped' },
+                    ],
+                }
+              - { name: watchedDate, widget: datetime, required: false }
+              - { name: tags, widget: list, default: [] }
+              - { name: episodes, widget: number, required: false }
+              - { name: year, widget: number, required: false }
+              - { name: studio, widget: string, required: false }
+              - { name: source, widget: string, required: false }
+              - { name: comment, widget: text, required: false }
+              - { name: highlight, widget: boolean, default: false }
+
+  # === 术曲(file collection,只存远程 URL)===
+  - name: vocaloid
+    label: 术曲
+    delete: false
+    files:
+      - label: 术曲清单
+        name: items
+        file: 'data/vocaloid.json'
+        fields:
+          - label: 术曲列表
+            name: items
+            widget: list
+            fields:
+              - { name: id, widget: string }
+              - { name: title, widget: string }
+              - { name: producer, widget: string }
+              - { name: vocaloid, widget: list, default: [] }
+              - { name: cover, widget: string, required: false }
+              - { name: score, widget: number, required: false, min: 0, max: 10 }
+              - {
+                  name: status,
+                  widget: select,
+                  options:
+                    [
+                      { label: '挚爱', value: 'favorite' },
+                      { label: '喜欢', value: 'liked' },
+                      { label: '一般', value: 'neutral' },
+                      { label: '归档', value: 'archived' },
+                    ],
+                }
+              - { name: listenedDate, widget: datetime, required: false }
+              - { name: tags, widget: list, default: [] }
+              - { name: year, widget: number, required: false }
+              - label: 平台链接
+                name: platform
+                widget: list
+                required: false
+                fields:
+                  - { name: name, widget: string }
+                  - { name: url, widget: string }
+              - { name: lyricSnippet, widget: text, required: false }
+              - { name: comment, widget: text, required: false }
+              - { name: highlight, widget: boolean, default: false }
+
+  # === 友链(file collection,只存远程 URL)===
+  - name: friends
+    label: 友链
+    delete: false
+    files:
+      - label: 友链清单
+        name: items
+        file: 'data/friends.json'
+        fields:
+          - label: 友链列表
+            name: items
+            widget: list
+            fields:
+              - { name: id, widget: string }
+              - { name: name, widget: string }
+              - { name: url, widget: string }
+              - { name: avatar, widget: string, required: false }
+              - { name: description, widget: string, default: '' }
+              - { name: tags, widget: list, default: [] }
+              - {
+                  name: status,
+                  widget: select,
+                  options:
+                    [
+                      { label: '活跃', value: 'active' },
+                      { label: '失联', value: 'inactive' },
+                      { label: '互友', value: 'mutual' },
+                    ],
+                  default: 'active',
+                }
+              - { name: addedDate, widget: datetime, required: false }
+
+  # === URL 迁移清单(spec 4.7 P0-3:改 slug 与登记 redirect 同一 CMS 会话/同一 commit 闭环)===
+  - name: redirects
+    label: URL 迁移
+    delete: false
+    files:
+      - label: redirects
+        name: redirects
+        file: 'redirects.json'
+        fields:
+          - label: 迁移记录
+            name: redirects
+            widget: list
+            required: false
+            hint: 'slug 修改时登记旧 URL → 新 URL(source/target 均为站内绝对路径,带尾斜杠)'
+            fields:
+              - { name: source, widget: string }
+              - { name: target, widget: string }
