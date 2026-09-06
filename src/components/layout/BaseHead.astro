@@ -1,0 +1,66 @@
+---
+// src/components/layout/BaseHead.astro
+import '@styles/global.css';
+import type { Locale } from '@i18n/config';
+import { siteConfig } from '@config/site';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonicalURL?: string;
+  noindex?: boolean;
+}
+
+const { title, description, ogImage, canonicalURL, noindex } = Astro.props;
+const fullURL = (path: string) => new URL(path, siteConfig.siteUrl).toString();
+const canonical = canonicalURL ?? fullURL(Astro.url.pathname);
+const resolvedOg = ogImage ?? '/images/og-default.png';
+const isPreview = import.meta.env.PUBLIC_PREVIEW === 'true';
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{title}</title>
+{description && <meta name="description" content={description} />}
+<link rel="canonical" href={canonical} />
+
+{(noindex || isPreview) && <meta name="robots" content="noindex, nofollow" />}
+
+<!-- favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<!-- theme-color -->
+<meta name="theme-color" content="var(--color-accent)" />
+
+<!-- OG -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+{description && <meta property="og:description" content={description} />}
+<meta property="og:image" content={fullURL(resolvedOg)} />
+<meta property="og:url" content={canonical} />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+{description && <meta name="twitter:description" content={description} />}
+<meta name="twitter:image" content={fullURL(resolvedOg)} />
+
+<!-- 字体 preload(只 preload Inter normal) -->
+<link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+<!-- 暗色模式防闪烁(必须 is:inline,head 最早位置) -->
+<script is:inline>
+  (function () {
+    const stored = localStorage.getItem('theme');
+    const system = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = stored || (system ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+
+<!-- RSS link(Plan 5 填充实际 href) -->
+<!-- <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss/zh.xml" /> -->
