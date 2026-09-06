@@ -1,0 +1,123 @@
+---
+// src/components/friends/FriendCard.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import type { CollectionEntry } from 'astro:content';
+interface Props {
+  entry: CollectionEntry<'friends'>;
+  locale: Locale;
+}
+const { entry, locale } = Astro.props;
+const { name, url, avatar, description, tags, status } = entry.data;
+const statusClass = `friend-status-${status}`;
+---
+
+<a href={url} class="friend-card" target="_blank" rel="noopener">
+  {
+    avatar ? (
+      <img src={avatar} alt={name} loading="lazy" class="friend-avatar" data-article-image />
+    ) : (
+      <div class="friend-avatar friend-avatar-placeholder">{name.charAt(0)}</div>
+    )
+  }
+  <div class="friend-body">
+    <div class="friend-head">
+      <h3 class="friend-name">{name}</h3>
+      <span class:list={['friend-status-badge', statusClass]}
+        >{t(locale, 'friends.status.' + status)}</span
+      >
+    </div>
+    {description && <p class="friend-desc">{description}</p>}
+    {
+      tags.length > 0 && (
+        <ul class="friend-tags">
+          {tags.map((tag) => (
+            <li class="friend-tag">{tag}</li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</a>
+<style>
+  .friend-card {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .friend-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .friend-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .friend-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+  .friend-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .friend-name {
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .friend-desc {
+    margin-top: var(--spacing-2xs);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  .friend-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+    list-style: none;
+    padding: 0;
+  }
+  .friend-tag {
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    background: var(--color-surface-raised);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    color: var(--color-text-muted);
+  }
+  .friend-status-badge {
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    white-space: nowrap;
+  }
+  .friend-status-mutual {
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    color: var(--color-accent);
+  }
+  .friend-status-active {
+    background: color-mix(in srgb, var(--color-info) 18%, transparent);
+    color: var(--color-info);
+  }
+  .friend-status-inactive {
+    background: color-mix(in srgb, var(--color-text-muted) 18%, transparent);
+    color: var(--color-text-muted);
+  }
+</style>

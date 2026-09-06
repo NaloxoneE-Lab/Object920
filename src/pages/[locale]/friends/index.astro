@@ -1,0 +1,44 @@
+---
+// src/pages/[locale]/friends/index.astro
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import FriendList from '@components/friends/FriendList.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+import { getCollection } from 'astro:content';
+export async function getStaticPaths() {
+  return locales.map((l) => ({ params: { locale: l } }));
+}
+const { locale } = Astro.params as { locale: Locale };
+const all = await getCollection('friends');
+const entries = all.sort(
+  (a, b) => (b.data.addedDate?.valueOf() ?? 0) - (a.data.addedDate?.valueOf() ?? 0),
+);
+---
+
+<BaseLayout locale={locale} title={t(locale, 'friends.title')}>
+  <h1 class="page-title">{t(locale, 'friends.title')}</h1>
+  <FriendList entries={entries} locale={locale} />
+  <section class="guestbook" aria-label={t(locale, 'friends.guestbook')}>
+    <h2>{t(locale, 'friends.guestbook')}</h2>
+    <!-- Plan 4: <Travellings locale={locale} /> 与 <Comments locale={locale} category="guestbook" /> 在此挂载 -->
+  </section>
+</BaseLayout>
+<style>
+  .page-title {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md) 0;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+  }
+  .guestbook {
+    max-width: var(--container-prose);
+    margin: var(--spacing-xl) auto;
+    padding: var(--spacing-md);
+  }
+  .guestbook h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+  }
+</style>
