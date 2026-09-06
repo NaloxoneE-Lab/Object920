@@ -15,6 +15,10 @@ jobs:
       contents: write # 临时:失败时推 debug 分支,诊断后收回
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 关键:持久化的 URL 作用域 extraheader(主仓 GITHUB_TOKEN)会覆盖
+          # pull-content 用 CONTENT_GITHUB_TOKEN 拉 content 仓的认证(spec 7.12)
+          persist-credentials: false
       - uses: pnpm/action-setup@v3
         with:
           version: 9.15.5
@@ -51,13 +55,15 @@ jobs:
 
       - name: Push build log tail to debug branch (temporary diagnostics)
         if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           tail -80 /tmp/build.log > build-debug.log 2>/dev/null || echo 'build.log missing' > build-debug.log
           git config user.email ci-bot@object920.local
           git config user.name ci-bot
           git fetch origin debug || true
-          (git checkout debug && git add build-debug.log && git commit -m "ci debug: $GITHUB_SHA") || (git checkout -b debug && git add build-debug.log && git commit -m "ci debug: $GITHUB_SHA")
-          git push origin debug || true
+          (git checkout debug && git add -f build-debug.log && git commit -m "ci debug: $GITHUB_SHA") || (git checkout -b debug && git add -f build-debug.log && git commit -m "ci debug: $GITHUB_SHA")
+          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" debug:debug || true
 
       - uses: actions/upload-artifact@v4
         if: >-
