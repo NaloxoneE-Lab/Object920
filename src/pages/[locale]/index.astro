@@ -1,0 +1,38 @@
+---
+// src/pages/[locale]/index.astro — 首页占位(Plan 3 填充 Hero + HomeSections)
+import BaseLayout from '@components/layout/BaseLayout.astro';
+import { t } from '@i18n/utils';
+import { locales, type Locale } from '@i18n/config';
+export function getStaticPaths() {
+  return locales.map(function (l) {
+    return { params: { locale: l } };
+  });
+}
+const { locale } = Astro.params as { locale: Locale };
+---
+
+<BaseLayout locale={locale} title={t(locale, 'site.title')}>
+  <div class="home-placeholder">
+    <h1>{t(locale, 'site.title')}</h1>
+    <p>{t(locale, 'site.tagline')}</p>
+    <p style="color: var(--color-text-muted); margin-top: var(--spacing-lg);">
+      首页内容待 Plan 3 填充
+    </p>
+  </div>
+</BaseLayout>
+<style>
+  .home-placeholder {
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-3xl) var(--spacing-md);
+    text-align: center;
+  }
+  .home-placeholder h1 {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+  }
+  .home-placeholder p {
+    margin-top: var(--spacing-sm);
+    color: var(--color-text-muted);
+  }
+</style>

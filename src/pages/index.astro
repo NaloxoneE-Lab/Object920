@@ -1,0 +1,33 @@
+---
+// src/pages/index.astro — 根路径语言协商重定向
+// redirectToDefaultLocale: false 让此页接管 / 路由
+---
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, follow" />
+    <title>Object920</title>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/zh/" />
+    </noscript>
+    <script is:inline>
+      (function () {
+        const langs = navigator.languages ?? [navigator.language];
+        const locales = ['zh', 'en', 'ru', 'ja'];
+        const target =
+          locales.find(function (l) {
+            return langs.some(function (pl) {
+              return pl.toLowerCase().startsWith(l);
+            });
+          }) ?? 'zh';
+        location.replace('/' + target + '/');
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting…</p>
+  </body>
+</html>
