@@ -4,25 +4,33 @@
   "version": "0.0.1",
   "packageManager": "pnpm@9.15.5",
   "engines": {
-    "node": ">=22.12 <23"
+    "node": ">=22.12"
   },
   "scripts": {
-    "pull:content": "node --env-file-if-exists=.env src/scripts/pull-content.mjs",
-    "predev": "node --env-file-if-exists=.env src/scripts/pull-content.mjs --if-missing",
-    "prebuild": "node --env-file-if-exists=.env src/scripts/pull-content.mjs && pnpm run check:datasheets",
-    "check:datasheets": "tsx --env-file-if-exists=.env src/scripts/check-datasheets.ts",
     "dev": "astro dev",
+    "predev": "node --env-file-if-exists=.env src/scripts/pull-content.mjs --if-missing",
     "build": "astro build",
+    "prebuild": "node --env-file-if-exists=.env src/scripts/pull-content.mjs && node --env-file-if-exists=.env src/scripts/build-meta.mjs && pnpm run check:datasheets",
+    "postbuild": "pnpm run build-meta -- --dist && pnpm run search:index && pnpm run generate-og && pnpm run generate:redirects && pnpm run check:links && pnpm run check:sitemap && pnpm run check:rss",
     "check": "astro check",
     "lint": "eslint . && prettier --check .",
     "lint:fix": "eslint . --fix && prettier --write .",
     "test": "vitest run",
     "ci": "pnpm run check && pnpm run lint && pnpm run test && pnpm run build",
-    "search:index": "node src/scripts/search-index.mjs",
-    "postbuild": "pnpm run search:index"
+    "pull:content": "node --env-file-if-exists=.env src/scripts/pull-content.mjs",
+    "build-meta": "node --env-file-if-exists=.env src/scripts/build-meta.mjs",
+    "check:datasheets": "tsx --env-file-if-exists=.env src/scripts/check-datasheets.ts",
+    "check:links": "node src/scripts/check-links.mjs",
+    "check:sitemap": "tsx --env-file-if-exists=.env src/scripts/check-sitemap.ts",
+    "check:rss": "tsx --env-file-if-exists=.env src/scripts/check-rss.ts",
+    "search:index": "node --env-file-if-exists=.env src/scripts/search-index.mjs",
+    "generate-og": "tsx --env-file-if-exists=.env src/scripts/generate-og.ts",
+    "generate:redirects": "tsx --env-file-if-exists=.env src/scripts/generate-redirects.ts",
+    "generate:deploy-config": "tsx --env-file-if-exists=.env src/scripts/generate-deploy-config.ts"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/rss": "^4.0.19",
     "@tailwindcss/typography": "^0.5",
     "astro": "^7.0.0",
     "tailwindcss": "^4"
@@ -30,6 +38,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
     "@eslint/js": "^10.0.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/hast": "^3.0.5",
     "@types/node": "^26.4.1",
@@ -38,6 +47,7 @@
     "pagefind": "^1.5.2",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.14.1",
+    "satori": "^0.33.4",
     "tsx": "^4.23.13",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.69.0",
