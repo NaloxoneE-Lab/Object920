@@ -1,6 +1,8 @@
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
+import { rehypeArticleImage } from './src/lib/rehype-article-image.ts';
+import { rehypeCodeblock } from './src/lib/rehype-codeblock.ts';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -22,11 +24,15 @@ export default defineConfig({
   markdown: {
     // Astro 7 默认 Sätteri(Rust)处理器,remark/rehype 插件会失效;
     // 必须显式使用 unified processor(来自 @astrojs/markdown-remark,直接依赖)
-    // Plan 3 在 rehypePlugins 中注入 rehype-article-image / rehype-codeblock
+    // 插件顺序纪律(spec 7.2.2):图片插件先于代码块插件
     processor: unified({
       remarkPlugins: [],
-      rehypePlugins: [],
+      rehypePlugins: [rehypeArticleImage, rehypeCodeblock],
     }),
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      wrap: true,
+    },
   },
   vite: {
     // Tailwind v4 官方接入方式:@tailwindcss/vite 插件处理 tokens.css 里的 @import "tailwindcss"
