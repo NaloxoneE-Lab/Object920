@@ -1,9 +1,13 @@
 ---
 // src/components/layout/BaseLayout.astro
+import { ClientRouter } from 'astro:transitions';
 import BaseHead from './BaseHead.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import Lightbox from '@components/ui/Lightbox.astro';
+import Analytics from '@components/integrations/analytics/Analytics.astro';
+import MusicHost from '@components/integrations/music/MusicHost.astro';
+import MusicPlayerWidget from '@components/integrations/music/MusicPlayerWidget.astro';
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 interface Props {
@@ -31,6 +35,8 @@ const { locale, title, description, ogImage, canonicalURL, noindex, robots } = A
       robots={robots}
     />
     <slot name="head-extras" />
+    <!-- ClientRouter:客户端导航 + View Transitions(spec 5.20 P0-8 / spec 7.7 P0-7) -->
+    <ClientRouter />
   </head>
   <body>
     <a href="#main" class="skip-link">{t(locale, 'common.skip-to-content')}</a>
@@ -40,6 +46,11 @@ const { locale, title, description, ogImage, canonicalURL, noindex, robots } = A
     </main>
     <Footer locale={locale} />
     <Lightbox locale={locale} />
+    <!-- 可插拔 Integration:自闭合标签,功能存在与否对页面结构透明(spec 1.4) -->
+    <Analytics />
+    <MusicHost>
+      <MusicPlayerWidget locale={locale} />
+    </MusicHost>
     <span id="copy-live" aria-live="polite" class="sr-only"></span>
     <script>
       import { initArticleImageEnhancer } from '@components/article/ArticleImageEnhancer.ts';

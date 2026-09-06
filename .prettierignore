@@ -5,3 +5,4 @@ node_modules
 docs
 pnpm-lock.yaml
 public/fonts
+src/components/integrations/analytics/Analytics.astro

@@ -3,6 +3,7 @@
 import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
+import SearchBox from '@components/integrations/search/SearchBox.astro';
 import LangSwitch from '../common/LangSwitch.astro';
 import ThemeToggle from '../ui/ThemeToggle.astro';
 import MobileNav from '../ui/MobileNav.astro';
@@ -25,6 +26,7 @@ const { locale } = Astro.props;
       }
     </nav>
     <div class="header-controls">
+      <SearchBox locale={locale} />
       <LangSwitch locale={locale} />
       <ThemeToggle locale={locale} />
     </div>
