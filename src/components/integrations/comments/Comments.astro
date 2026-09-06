@@ -1,0 +1,129 @@
+---
+// src/components/integrations/comments/Comments.astro
+// 从 analytics/ 拆出,保持 integration boundary 清晰(spec 7.4 P2-36)
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+
+interface Props {
+  locale: Locale;
+  category: string;
+  categoryId: string;
+  mapping?: 'pathname' | 'specific' | 'title' | 'url' | 'og:title';
+  term?: string;
+}
+
+const { locale, category, categoryId, mapping = 'pathname', term } = Astro.props;
+
+// 开关:enabled + repo + repoId 都满足才注入(spec 7.4)
+const enabled = import.meta.env.PUBLIC_GISCUS_ENABLED === 'true';
+const repo = import.meta.env.PUBLIC_GISCUS_REPO ?? '';
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? '';
+const ready = enabled && repo && repoId;
+
+// Giscus data-lang 映射(spec 7.4:zh→zh-CN,en→en,ru→ru,ja→ja)
+const giscusLang: Record<string, string> = {
+  zh: 'zh-CN',
+  en: 'en',
+  ru: 'ru',
+  ja: 'ja',
+};
+---
+
+{
+  ready && (
+    <section
+      class="comments-section"
+      data-comments
+      data-locale={giscusLang[locale] ?? 'en'}
+      data-category={category}
+      data-category-id={categoryId}
+      data-mapping={mapping}
+      data-term={term}
+    >
+      <h2 class="comments-heading">{t(locale, 'common.comments.guestbook')}</h2>
+      <div class="giscus-container" data-giscus-container />
+      <noscript>
+        <p>{t(locale, 'common.comments.error')}</p>
+      </noscript>
+    </section>
+  )
+}
+
+<style>
+  .comments-section {
+    margin-top: var(--spacing-xl);
+  }
+  .comments-heading {
+    font-size: var(--text-xl);
+    margin-bottom: var(--spacing-sm);
+  }
+  .giscus-container {
+    min-height: 4rem;
+  }
+  .giscus-error {
+    color: var(--color-danger);
+    padding: var(--spacing-xs);
+  }
+</style>
+
+<script>
+  // Giscus 生命周期管理(spec 7.4 P1-10 + spec 5.20):
+  // - script 只加载一次(singleton):浏览器缓存 client.js
+  // - 每次 astro:page-load:destroyGiscus() → mountGiscus() 重建 widget
+  // - theme-change CustomEvent:调用 updateGiscusTheme() 同步暗色
+
+  function initComments() {
+    const section = document.querySelector<HTMLElement>('[data-comments]');
+    if (!section) return;
+
+    const container = section.querySelector<HTMLElement>('[data-giscus-container]');
+    if (!container) return;
+
+    const enabled = import.meta.env.PUBLIC_GISCUS_ENABLED === 'true';
+    const repo = import.meta.env.PUBLIC_GISCUS_REPO ?? '';
+    const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? '';
+    const lang = section.dataset.locale ?? 'en';
+
+    if (!enabled || !repo || !repoId) return;
+
+    // 从 data 属性读取 category/mapping/term(由 Astro frontmatter 注入到 DOM)
+    // 这里重新从 import.meta.env 读取完整配置
+    const category = section.dataset.category ?? '';
+    const categoryId = section.dataset.categoryId ?? '';
+    const mapping = (section.dataset.mapping ?? 'pathname') as
+      'pathname' | 'specific' | 'title' | 'url' | 'og:title';
+    const term = section.dataset.term;
+
+    const currentTheme = document.documentElement.dataset.theme ?? 'light';
+
+    // 动态 import giscus 库(Astro 会 bundler 处理)
+    import('@lib/giscus').then(({ mountGiscus, updateGiscusTheme }) => {
+      mountGiscus(
+        {
+          repo,
+          repoId,
+          category,
+          categoryId,
+          mapping,
+          term,
+          theme: currentTheme as 'light' | 'dark',
+          lang,
+        },
+        container,
+      );
+
+      // 监听 theme-change 事件同步暗色(spec 7.4 P1-20/P2-29)
+      // 使用命名函数便于 page-load 时不重复绑定(每次 page-load DOM 重建,旧 listener 自动清理)
+      const onThemeChange = (e: Event) => {
+        const detail = (e as CustomEvent).detail;
+        if (detail?.theme) {
+          updateGiscusTheme(detail.theme as 'light' | 'dark');
+        }
+      };
+      document.addEventListener('theme-change', onThemeChange);
+    });
+  }
+
+  // 每次 astro:page-load 重建评论区 iframe(spec 5.20)
+  document.addEventListener('astro:page-load', initComments);
+</script>
