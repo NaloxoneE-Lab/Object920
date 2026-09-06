@@ -39,9 +39,17 @@ function clone() {
   const url = getCloneUrl();
   if (GITHUB_TOKEN) {
     // 走 http.extraheader 注入 Authorization,禁止拼 URL(会泄露在进程列表/日志)
-    run(
-      `git -c http.extraheader="Authorization: Bearer ${GITHUB_TOKEN}" clone --depth 1 ${url} src/content`,
-    );
+    try {
+      run(
+        `git -c http.extraheader="Authorization: Bearer ${GITHUB_TOKEN.trim()}" clone --depth 1 ${url} src/content`,
+      );
+    } catch {
+      console.error(
+        '[pull-content] 带认证克隆失败:请核对 CONTENT_GITHUB_TOKEN 是否为 fine-grained PAT、' +
+          'Repository access 是否勾选了本 content 仓、权限是否为 Contents: Read-only。',
+      );
+      throw new Error('authenticated clone failed');
+    }
   } else {
     run(`git clone --depth 1 ${url} src/content`);
   }

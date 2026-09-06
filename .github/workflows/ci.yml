@@ -12,7 +12,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # 临时:失败时推 debug 分支,诊断后收回
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,7 +42,7 @@ jobs:
           github.event_name == 'repository_dispatch' ||
           (github.event_name == 'pull_request' &&
            github.event.pull_request.head.repo.full_name == github.repository)
-        run: pnpm build 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
+        run: pnpm build
         env:
           CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
           CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
@@ -52,22 +52,6 @@ jobs:
           PUBLIC_SITE_URL: 'https://example.com'
           PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
           PUBLIC_ASSETS_REPO: 'object920-assets'
-
-      - name: Upload build log to release asset (temporary diagnostics)
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tail -80 /tmp/build.log > build-debug.log 2>/dev/null || echo 'build.log missing' > build-debug.log
-          TAG="debug-$GITHUB_RUN_ID"
-          curl -fsSL -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$GITHUB_REPOSITORY/releases \
-            -d "{\"tag_name\":\"$TAG\",\"name\":\"debug $TAG\"}" > /dev/null || true
-          upload_url=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$TAG" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
-          curl -fsSL -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: text/plain" \
-            --data-binary @build-debug.log "$upload_url?name=build-debug.log" > /dev/null
-          echo "debug log: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/build-debug.log"
 
       - uses: actions/upload-artifact@v4
         if: >-
@@ -111,7 +95,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
       - name: Build with deploy site URL
         if: steps.guard.outputs.enabled == 'true'
-        run: pnpm build 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
+        run: pnpm build
         env:
           CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
           CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
