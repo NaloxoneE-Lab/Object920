@@ -1,33 +1,49 @@
 // src/scripts/search-index.mjs
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const enabled = process.env.PUBLIC_SEARCH_ENABLED !== 'false';
-const provider = process.env.PUBLIC_SEARCH_PROVIDER || 'pagefind';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..', '..');
 
-if (!enabled) {
-  console.log('[search-index] Skipped: PUBLIC_SEARCH_ENABLED is false');
-  process.exit(0);
+const VALID_PROVIDERS = ['pagefind', 'none'];
+
+/**
+ * Determine what action to take based on search config.
+ * @param {Record<string,string|undefined>} env
+ * @returns {'skip' | 'run-pagefind'}
+ * @throws {Error} on invalid/unimplemented provider
+ */
+export function resolveSearchAction(env = process.env) {
+  if (env.PUBLIC_SEARCH_ENABLED === 'false') return 'skip'; // spec 默认开启,显式 false 才禁用
+  const provider = env.PUBLIC_SEARCH_PROVIDER ?? 'pagefind';
+  if (!VALID_PROVIDERS.includes(provider)) {
+    throw new Error(
+      `Unsupported search provider "${provider}". Valid: ${VALID_PROVIDERS.join(', ')}. Orama not yet implemented.`,
+    );
+  }
+  return provider === 'none' ? 'skip' : 'run-pagefind';
 }
 
-if (provider !== 'pagefind') {
-  console.log(`[search-index] Skipped: provider is "${provider}", not "pagefind"`);
-  process.exit(0);
-}
-
-// npm scripts 的 cwd 是项目根;import.meta.url 相对定位在 src/scripts/ 下会算错层级
-const distDir = resolve(process.cwd(), 'dist');
-if (!existsSync(distDir)) {
-  console.error('[search-index] dist/ not found — run astro build first');
-  process.exit(1);
-}
-
-console.log('[search-index] Running pagefind --site dist');
-try {
-  execSync('npx pagefind --site dist', { stdio: 'inherit' });
-  console.log('[search-index] Pagefind index generated successfully');
-} catch (err) {
-  console.error('[search-index] Pagefind failed:', err.message);
-  process.exit(1);
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  try {
+    const action = resolveSearchAction();
+    if (action === 'skip') {
+      console.log('[search-index] search disabled or provider=none, skipping');
+      process.exit(0);
+    }
+    const distDir = resolve(projectRoot, 'dist');
+    if (!existsSync(distDir)) {
+      console.error('[search-index] dist/ not found — run astro build first');
+      process.exit(1);
+    }
+    console.log('[search-index] running pagefind --site dist');
+    execSync('npx pagefind --site dist', { cwd: projectRoot, stdio: 'inherit' });
+    console.log('[search-index] pagefind index generated');
+  } catch (err) {
+    console.error('[search-index] FAILED:', err.message);
+    process.exit(1);
+  }
 }
