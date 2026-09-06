@@ -12,7 +12,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # 临时:失败时推 debug 分支,诊断后收回
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -38,7 +38,7 @@ jobs:
           github.event_name == 'repository_dispatch' ||
           (github.event_name == 'pull_request' &&
            github.event.pull_request.head.repo.full_name == github.repository)
-        run: pnpm build
+        run: pnpm build 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
         env:
           CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
           CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
@@ -48,6 +48,16 @@ jobs:
           PUBLIC_SITE_URL: 'https://example.com'
           PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
           PUBLIC_ASSETS_REPO: 'object920-assets'
+
+      - name: Push build log tail to debug branch (temporary diagnostics)
+        if: failure()
+        run: |
+          tail -80 /tmp/build.log > build-debug.log 2>/dev/null || echo 'build.log missing' > build-debug.log
+          git config user.email ci-bot@object920.local
+          git config user.name ci-bot
+          git fetch origin debug || true
+          (git checkout debug && git add build-debug.log && git commit -m "ci debug: $GITHUB_SHA") || (git checkout -b debug && git add build-debug.log && git commit -m "ci debug: $GITHUB_SHA")
+          git push origin debug || true
 
       - uses: actions/upload-artifact@v4
         if: >-
@@ -91,7 +101,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
       - name: Build with deploy site URL
         if: steps.guard.outputs.enabled == 'true'
-        run: pnpm build
+        run: pnpm build 2>&1 | tee /tmp/build.log; exit ${PIPESTATUS[0]}
         env:
           CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
           CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
