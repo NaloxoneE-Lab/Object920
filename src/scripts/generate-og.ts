@@ -108,7 +108,8 @@ async function main() {
       slug,
     );
 
-    if (cache[cacheKey] === hash) {
+    // spec 7.9 P1-18:文件缺失 或 hash 不一致都要重生成(降级过的条目无 PNG 文件)
+    if (cache[cacheKey] === hash && existsSync(resolve(OUTPUT_DIR, `${cacheKey}.png`))) {
       newCache[cacheKey] = hash;
       skipped++;
       continue;
@@ -125,7 +126,7 @@ async function main() {
     const hasCjk = /[\u4e00-\u9fff\u3040-\u30ff]/.test(
       entry.data.title + (entry.data.description ?? ''),
     );
-    if (hasCjk && !fonts.some((f) => f.lang === 'zh' || f.lang === 'ja')) {
+    if (hasCjk && !fonts.some((f) => f.name === 'NotoSansSC')) {
       console.warn(`[generate-og] CJK text but no CJK font, degrading: ${cacheKey}`);
       degraded++;
       newCache[cacheKey] = hash;

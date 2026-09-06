@@ -35,21 +35,21 @@ export interface OgFont {
   data: Buffer;
   weight: 400 | 700;
   style: 'normal';
-  lang: string;
+  lang?: string; // satori 仅接受特定 locale 值;拉丁字体不传
 }
 
 export function loadOgFonts(locale: string): OgFont[] {
   const fonts: OgFont[] = [];
   const interRegular = tryReadFont(resolve(FONTS_DIR, 'Inter-Regular.ttf'));
-  if (interRegular)
-    fonts.push({ name: 'Inter', data: interRegular, weight: 400, style: 'normal', lang: 'en' });
+  if (interRegular) fonts.push({ name: 'Inter', data: interRegular, weight: 400, style: 'normal' });
   const interBold = tryReadFont(resolve(FONTS_DIR, 'Inter-Bold.ttf'));
-  if (interBold)
-    fonts.push({ name: 'Inter', data: interBold, weight: 700, style: 'normal', lang: 'en' });
+  if (interBold) fonts.push({ name: 'Inter', data: interBold, weight: 700, style: 'normal' });
   if (locale === 'zh' || locale === 'ja') {
     const cjk = tryReadFont(resolve(FONTS_DIR, 'NotoSansSC-Regular.ttf'));
-    if (cjk)
-      fonts.push({ name: 'NotoSansSC', data: cjk, weight: 400, style: 'normal', lang: locale });
+    if (cjk) {
+      const satoriLang = locale === 'ja' ? 'ja-JP' : 'zh-CN'; // satori 仅接受特定 locale 值
+      fonts.push({ name: 'NotoSansSC', data: cjk, weight: 400, style: 'normal', lang: satoriLang });
+    }
   }
   return fonts;
 }
