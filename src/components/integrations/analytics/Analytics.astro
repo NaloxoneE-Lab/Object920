@@ -1,0 +1,21 @@
+---
+// src/components/integrations/analytics/Analytics.astro
+// 零 props,全靠环境变量;未启用 → 零 DOM(spec 7.8)
+const enabled = import.meta.env.PUBLIC_UMAMI_ENABLED === 'true';
+const scriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL ?? '';
+const websiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID ?? '';
+const ready = enabled && scriptUrl && websiteId;
+---
+{ready && (
+  <script is:inline define:vars={{ scriptUrl, websiteId }}>
+    (function () {
+      // eslint-disable-next-line no-var -- define:vars 脚本里 const 会触发 prettier-plugin-astro 解析错误
+      var s = document.createElement('script');
+      s.src = scriptUrl;
+      s.defer = true;
+      s.setAttribute('data-website-id', websiteId);
+      s.onerror = function () { console.warn('[Umami] analytics script failed to load'); };
+      document.head.appendChild(s);
+    })();
+  </script>
+)}

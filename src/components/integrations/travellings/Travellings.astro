@@ -1,0 +1,81 @@
+---
+// src/components/integrations/travellings/Travellings.astro
+import { t } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+
+// 默认开;显式 'false' 才关闭(spec 7.6)
+const enabled = import.meta.env.PUBLIC_TRAVELLINGS_ENABLED !== 'false';
+---
+
+{
+  enabled && (
+    <div class="travellings-card">
+      <a
+        href="https://travellings.cn/go.html"
+        target="_blank"
+        rel="noopener"
+        class="travellings-link"
+        aria-label={
+          t(locale, 'common.travellings.title') +
+          ' — ' +
+          t(locale, 'common.travellings.description')
+        }
+      >
+        <span class="travellings-logo" aria-hidden="true">
+          🚇
+        </span>
+        <span class="travellings-text">
+          <span class="travellings-title">{t(locale, 'common.travellings.title')}</span>
+          <span class="travellings-desc">{t(locale, 'common.travellings.description')}</span>
+        </span>
+        <span class="travellings-go">{t(locale, 'common.travellings.button')} →</span>
+      </a>
+    </div>
+  )
+}
+
+<style>
+  .travellings-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .travellings-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .travellings-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+  .travellings-logo {
+    font-size: 1.75rem;
+  }
+  .travellings-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .travellings-title {
+    font-weight: 700;
+    font-size: var(--text-md);
+  }
+  .travellings-desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .travellings-go {
+    font-size: var(--text-sm);
+    color: var(--color-accent);
+    white-space: nowrap;
+  }
+</style>
