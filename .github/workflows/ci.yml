@@ -53,17 +53,21 @@ jobs:
           PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
           PUBLIC_ASSETS_REPO: 'object920-assets'
 
-      - name: Push build log tail to debug branch (temporary diagnostics)
+      - name: Upload build log to release asset (temporary diagnostics)
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           tail -80 /tmp/build.log > build-debug.log 2>/dev/null || echo 'build.log missing' > build-debug.log
-          git config user.email ci-bot@object920.local
-          git config user.name ci-bot
-          git fetch origin debug || true
-          (git checkout debug && git add -f build-debug.log && git commit -m "ci debug: $GITHUB_SHA") || (git checkout -b debug && git add -f build-debug.log && git commit -m "ci debug: $GITHUB_SHA")
-          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" debug:debug || true
+          TAG="debug-$GITHUB_RUN_ID"
+          curl -fsSL -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/releases \
+            -d "{\"tag_name\":\"$TAG\",\"name\":\"debug $TAG\"}" > /dev/null || true
+          upload_url=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$TAG" | python3 -c "import json,sys; print(json.load(sys.stdin)['upload_url'].split('{')[0])")
+          curl -fsSL -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: text/plain" \
+            --data-binary @build-debug.log "$upload_url?name=build-debug.log" > /dev/null
+          echo "debug log: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/build-debug.log"
 
       - uses: actions/upload-artifact@v4
         if: >-
