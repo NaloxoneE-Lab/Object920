@@ -1,0 +1,101 @@
+// src/scripts/generate-redirects.ts
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { resolve, join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+  normalizeRedirectManifest,
+  validateRedirectManifest,
+  validateGeneratedRoutes,
+  generateRedirectsFile,
+  generateVercelRedirects,
+  generateStaticRedirectHtml,
+  type RedirectMap,
+} from '../lib/redirects';
+import { getSiteConfig } from '../config/site';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..', '..');
+const REDIRECTS_PATH = resolve(projectRoot, 'src', 'content', 'redirects.json');
+const DIST_DIR = resolve(projectRoot, 'dist');
+
+function scanRoutes(): Set<string> {
+  const routes = new Set<string>();
+  if (!existsSync(DIST_DIR)) return routes;
+  function scan(dir: string, prefix: string) {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const url = `${prefix}/${entry}`;
+      if (statSync(full).isDirectory()) scan(full, url);
+      else if (entry === 'index.html') routes.add(prefix.endsWith('/') ? prefix : `${prefix}/`);
+    }
+  }
+  scan(DIST_DIR, '');
+  return routes;
+}
+
+async function main() {
+  if (!existsSync(REDIRECTS_PATH)) {
+    console.log('[generate-redirects] no redirects.json, skipping');
+    process.exit(0);
+  }
+
+  let redirects: RedirectMap;
+  try {
+    redirects = normalizeRedirectManifest(JSON.parse(readFileSync(REDIRECTS_PATH, 'utf-8')));
+  } catch (err) {
+    console.error('[generate-redirects] invalid JSON:', (err as Error).message);
+    process.exit(1);
+  }
+
+  const r1 = validateRedirectManifest(redirects);
+  if (!r1.valid) {
+    r1.errors.forEach((e) => console.error(`  - ${e}`));
+    console.error('[generate-redirects] manifest validation failed');
+    process.exit(1);
+  }
+
+  const r2 = validateGeneratedRoutes(redirects, scanRoutes());
+  if (!r2.valid) {
+    r2.errors.forEach((e) => console.error(`  - ${e}`));
+    console.error('[generate-redirects] route validation failed');
+    process.exit(1);
+  }
+
+  const siteConfig = getSiteConfig();
+  const platform = process.env.DEPLOY_PLATFORM ?? 'all';
+
+  if (platform === 'all' || platform === 'cloudflare' || platform === 'netlify') {
+    writeFileSync(resolve(DIST_DIR, '_redirects'), generateRedirectsFile(redirects) + '\n');
+    console.log('[generate-redirects] wrote dist/_redirects');
+  }
+  if (platform === 'all' || platform === 'vercel') {
+    const existing = resolve(projectRoot, 'vercel.json');
+    let config: Record<string, unknown> = {};
+    if (existsSync(existing))
+      try {
+        config = JSON.parse(readFileSync(existing, 'utf-8'));
+      } catch {
+        /* fresh */
+      }
+    config.redirects = generateVercelRedirects(redirects);
+    writeFileSync(existing, JSON.stringify(config, null, 2) + '\n');
+    console.log('[generate-redirects] wrote vercel.json');
+  }
+  if (platform === 'all' || platform === 'github-pages') {
+    for (const [source, target] of Object.entries(redirects)) {
+      const dir = resolve(DIST_DIR, source.slice(1));
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        resolve(dir, 'index.html'),
+        generateStaticRedirectHtml(source, target, siteConfig.siteUrl),
+      );
+    }
+    console.log('[generate-redirects] wrote GitHub Pages static HTML');
+  }
+  console.log('[generate-redirects] done');
+}
+
+main().catch((err) => {
+  console.error('[generate-redirects] error:', err);
+  process.exit(1);
+});
