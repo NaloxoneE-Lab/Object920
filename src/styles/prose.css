@@ -1,0 +1,170 @@
+/* src/styles/prose.css — 文章 prose 排版微调(@tailwindcss/typography 基础之上) */
+.prose {
+  max-width: var(--container-prose);
+  margin-inline: auto;
+  color: var(--color-text);
+  font-size: var(--text-md);
+  line-height: var(--leading-prose);
+}
+
+.prose :where(h2, h3, h4) {
+  color: var(--color-text);
+  font-weight: 600;
+  scroll-margin-top: var(--spacing-2xl);
+}
+.prose h2 {
+  font-size: var(--text-2xl);
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
+}
+.prose h3 {
+  font-size: var(--text-xl);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
+}
+
+.prose :where(p) {
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.prose :where(a) {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose a:hover {
+  color: var(--color-accent-hover);
+}
+
+.prose :where(strong) {
+  font-weight: 600;
+}
+
+.prose :where(blockquote) {
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--spacing-md);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: var(--spacing-md) 0;
+}
+
+.prose :where(ul, ol) {
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+}
+.prose li {
+  margin-top: var(--spacing-2xs);
+}
+
+.prose :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-md) 0;
+  font-size: var(--text-sm);
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-2xs) var(--spacing-xs);
+  text-align: left;
+}
+.prose th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+
+.prose :where(figure) {
+  margin: var(--spacing-md) 0;
+}
+.prose :where(figcaption) {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-2xs);
+}
+
+.prose :where(code) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-surface);
+  padding: 0.15em 0.35em;
+  border-radius: var(--radius-sm);
+}
+.prose pre {
+  font-family: var(--font-mono);
+  margin: var(--spacing-md) 0;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--spacing-lg) 0;
+}
+
+.prose img {
+  border-radius: var(--radius-md);
+  height: auto;
+}
+
+/* Shiki 双主题切换(markdown.shikiConfig themes: { light, dark }) */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .astro-code,
+  :root:not([data-theme]) .astro-code span {
+    color: var(--shiki-dark);
+    background-color: var(--shiki-dark-bg);
+  }
+}
+
+/* 代码块包裹(由 rehype-codeblock 注入) */
+.code-block {
+  position: relative;
+  margin: var(--spacing-md) 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-2xs) var(--spacing-xs);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+}
+.code-block-lang {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.code-block-copy {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  padding: var(--spacing-3xs) var(--spacing-2xs);
+  border-radius: var(--radius-sm);
+  transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+}
+.code-block-copy:hover {
+  color: var(--color-text);
+}
+.code-block pre {
+  margin: 0;
+  border-radius: 0;
+}
