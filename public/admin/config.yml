@@ -50,7 +50,7 @@ collections:
     i18n: true
     editor:
       preview: false # 无自定义预览模板时默认预览意义不大,编辑区更专注
-    summary: '**{{title}}** · {{pubDate | date('YYYY-MM-DD')}} · {{category}}'
+    summary: "**{{title}}** · {{pubDate | date('YYYY-MM-DD')}} · {{category}}"
     sortable_fields: [pubDate, title, category, slug]
     view_filters:
       - { label: 已发布, field: draft, pattern: false }
@@ -99,7 +99,7 @@ collections:
     i18n: true
     editor:
       preview: false
-    summary: '**{{title}}** · {{status}} · {{pubDate | date('YYYY-MM-DD')}}'
+    summary: "**{{title}}** · {{status}} · {{pubDate | date('YYYY-MM-DD')}}"
     sortable_fields: [pubDate, title, status]
     view_filters:
       - { label: 进行中, field: status, pattern: ongoing }
