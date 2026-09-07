@@ -12,7 +12,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # temp diag
     steps:
       - uses: actions/checkout@v4
         with:
