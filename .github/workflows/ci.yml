@@ -58,7 +58,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tail -60 /tmp/build.log > build-debug.log 2>/dev/null || echo missing > build-debug.log
+          echo "=== content repo API status probe ===" > build-debug.log
+          code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.CONTENT_GITHUB_TOKEN }}" https://api.github.com/repos/NaloxoneE-Lab/object920-content)
+          echo "GET /repos/NaloxoneE-Lab/object920-content → HTTP $code (200=token 有效且有权限; 401=token 无效; 404=token 无该仓权限)" >> build-debug.log
+          echo "=== build log tail ===" >> build-debug.log
+          tail -60 /tmp/build.log >> build-debug.log 2>/dev/null
           TAG="debug2-$GITHUB_RUN_ID"
           curl -fsSL -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$GITHUB_REPOSITORY/releases \

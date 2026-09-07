@@ -1,9 +1,10 @@
 // src/scripts/pull-content.mjs
 import { execSync } from 'node:child_process';
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, rmSync, writeFileSync, chmodSync, unlinkSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const CONTENT_DIR = resolve(process.cwd(), 'src/content');
+const projectRoot = process.cwd();
 const CONTENT_REPO = process.env.CONTENT_REPO ?? 'YourUser/object920-content';
 const GITHUB_TOKEN = process.env.CONTENT_GITHUB_TOKEN;
 const FORCE_SYNC = process.env.FORCE_CONTENT_SYNC === 'true';
@@ -38,17 +39,30 @@ function clone() {
   console.log(`[pull-content] Cloning ${CONTENT_REPO}...`);
   const url = getCloneUrl();
   if (GITHUB_TOKEN) {
-    // 走 http.extraheader 注入 Authorization,禁止拼 URL(会泄露在进程列表/日志)
+    // GIT_ASKPASS + Basic:token 走环境变量(不进进程列表/URL),git 以 x-access-token:token 构造凭据
+    const askpass = resolve(projectRoot ?? process.cwd(), '.git-askpass.tmp');
+    writeFileSync(askpass, '#!/bin/sh\necho "$OBJECT920_GIT_TOKEN"\n');
+    chmodSync(askpass, 0o755);
+    const env = {
+      ...process.env,
+      OBJECT920_GIT_TOKEN: GITHUB_TOKEN.trim(),
+      GIT_ASKPASS: askpass,
+      GIT_TERMINAL_PROMPT: '0',
+    };
     try {
-      run(
-        `git -c http.extraheader="Authorization: Bearer ${GITHUB_TOKEN.trim()}" clone --depth 1 ${url} src/content`,
-      );
+      run(`git clone --depth 1 ${url} src/content`, { env });
     } catch {
       console.error(
         '[pull-content] 带认证克隆失败:请核对 CONTENT_GITHUB_TOKEN 是否为 fine-grained PAT、' +
           'Repository access 是否勾选了本 content 仓、权限是否为 Contents: Read-only。',
       );
       throw new Error('authenticated clone failed');
+    } finally {
+      try {
+        unlinkSync(askpass);
+      } catch {
+        /* already gone */
+      }
     }
   } else {
     run(`git clone --depth 1 ${url} src/content`);
