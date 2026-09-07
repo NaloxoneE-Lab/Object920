@@ -12,7 +12,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # 临时诊断:release 上传需要,取日志后收回
     steps:
       - uses: actions/checkout@v4
         with:
