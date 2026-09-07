@@ -48,6 +48,15 @@ collections:
     public_folder: ''
     create: true
     i18n: true
+    editor:
+      preview: false # 无自定义预览模板时默认预览意义不大,编辑区更专注
+    summary: '**{{title}}** · {{pubDate | date('YYYY-MM-DD')}} · {{category}}'
+    sortable_fields: [pubDate, title, category, slug]
+    view_filters:
+      - { label: 已发布, field: draft, pattern: false }
+      - { label: 草稿, field: draft, pattern: true }
+    view_groups:
+      - { label: 分类, field: category }
     fields:
       - {
           name: _slug,
@@ -88,6 +97,17 @@ collections:
     public_folder: ''
     create: true
     i18n: true
+    editor:
+      preview: false
+    summary: '**{{title}}** · {{status}} · {{pubDate | date('YYYY-MM-DD')}}'
+    sortable_fields: [pubDate, title, status]
+    view_filters:
+      - { label: 进行中, field: status, pattern: ongoing }
+      - { label: 已完成, field: status, pattern: completed }
+      - { label: 已归档, field: status, pattern: archived }
+      - { label: 计划中, field: status, pattern: planned }
+    view_groups:
+      - { label: 状态, field: status }
     fields:
       - { name: _slug, widget: string, required: false, i18n: duplicate }
       - { name: title, widget: string, i18n: true }
@@ -171,6 +191,7 @@ collections:
   - name: anime
     label: 番剧
     delete: false
+    summary: '{{title}} {{score}}'
     files:
       - label: 番剧清单
         name: items
@@ -210,6 +231,7 @@ collections:
   - name: vocaloid
     label: 术曲
     delete: false
+    summary: '{{title}} - {{producer}}'
     files:
       - label: 术曲清单
         name: items
@@ -254,6 +276,7 @@ collections:
   - name: friends
     label: 友链
     delete: false
+    summary: '**{{name}}** · {{status}}'
     files:
       - label: 友链清单
         name: items
