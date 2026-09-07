@@ -11,16 +11,6 @@ const emptyToUndefined = (value: unknown): unknown => {
   return value;
 };
 
-const stripEmptyStrings = (obj: unknown): unknown => {
-  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return obj;
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
-    const v = emptyToUndefined(value);
-    if (v !== undefined) out[key] = v;
-  }
-  return out;
-};
-
 const optionalString = () => z.preprocess(emptyToUndefined, z.string().optional());
 
 const articles = defineCollection({
