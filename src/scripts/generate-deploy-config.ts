@@ -88,7 +88,7 @@ server {
 
   gzip on;
   gzip_comp_level 5;
-  gzip_types text/html text/css application/javascript application/json application/xml image/svg+xml;
+  gzip_types text/css application/javascript application/json application/xml image/svg+xml; # text/html 由 nginx 默认处理,写上反而告警
 
 ${mainHeaders}
 
