@@ -42,7 +42,7 @@ collections:
     folder: 'articles'
     # slug 用可编辑 _slug 字段;留空回退 title(Sveltia default filter 已验证存在)。
     # 注意:{{fields._slug}} 可编辑模式下 required;如需留空自动生成,创建时填一下即可
-    slug: "{{fields._slug | default(title) | localize}}"
+    slug: '{{fields._slug | default(title) | localize}}'
     path: '{{slug}}/index'
     media_folder: ''
     public_folder: ''
@@ -82,7 +82,7 @@ collections:
   - name: projects
     label: 工程
     folder: 'projects'
-    slug: "{{fields._slug | default(title) | localize}}"
+    slug: '{{fields._slug | default(title) | localize}}'
     path: '{{slug}}/index'
     media_folder: ''
     public_folder: ''
