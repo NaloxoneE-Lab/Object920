@@ -13,6 +13,20 @@ site_url: https://example.com
 display_url: https://example.com
 locale: 'zh'
 
+# Sveltia 要求 i18n 为【对象】定义在顶层(spec 4.7 原平铺写法 i18n.structure: 无效,已实测修正):
+# collection 级 i18n: true 仅表示继承此全局配置
+i18n:
+  structure: multiple_folders
+  locales: [zh, en]
+  default_locale: zh
+  canonical_slug:
+    key: translationKey
+
+# slug 全局选项:ascii 编码保证 slug 合法性(spec P2-16);具体 slug 由各 collection 的 _slug 驱动
+slug:
+  encoding: ascii
+  clean_accents: true
+
 # 全局 media_folder 必须定义(Sveltia 0.197.2 启动校验,除非用外部媒体库);
 # 空串 = 仓库根。各 folder collection 已用 media_folder: '' 覆盖为 entry-relative(spec 4.7),
 # 此处仅为通过全局校验,不产生实际媒体落点
@@ -26,15 +40,14 @@ collections:
   - name: articles
     label: 文章
     folder: 'articles'
-    slug: '{{fields._slug | default(title) | localize}}'
+    # slug 用可编辑 _slug 字段;留空回退 title(Sveltia default filter 已验证存在)。
+    # 注意:{{fields._slug}} 可编辑模式下 required;如需留空自动生成,创建时填一下即可
+    slug: "{{fields._slug | default(title) | localize}}"
     path: '{{slug}}/index'
     media_folder: ''
     public_folder: ''
     create: true
     i18n: true
-    i18n.structure: multiple_folders
-    i18n.locales: [zh, en]
-    i18n.canonical_slug: { key: translationKey }
     fields:
       - {
           name: _slug,
@@ -69,15 +82,12 @@ collections:
   - name: projects
     label: 工程
     folder: 'projects'
-    slug: '{{fields._slug | default(title) | localize}}'
+    slug: "{{fields._slug | default(title) | localize}}"
     path: '{{slug}}/index'
     media_folder: ''
     public_folder: ''
     create: true
     i18n: true
-    i18n.structure: multiple_folders
-    i18n.locales: [zh, en]
-    i18n.canonical_slug: { key: translationKey }
     fields:
       - { name: _slug, widget: string, required: false, i18n: duplicate }
       - { name: title, widget: string, i18n: true }
