@@ -13,6 +13,12 @@ site_url: https://example.com
 display_url: https://example.com
 locale: 'zh'
 
+# 全局 media_folder 必须定义(Sveltia 0.197.2 启动校验,除非用外部媒体库);
+# 空串 = 仓库根。各 folder collection 已用 media_folder: '' 覆盖为 entry-relative(spec 4.7),
+# 此处仅为通过全局校验,不产生实际媒体落点
+media_folder: ''
+public_folder: ''
+
 publish_mode: simple
 
 collections:
