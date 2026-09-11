@@ -147,25 +147,29 @@ jobs:
           # GitHub(海外 runner)→ 阿里云的 SSH 长连接极不稳(rsync 逐文件往返会被拖死),
           # 改为:本地打 tar 包 → 单连接 scp(压缩后 ~2MB,失败重传代价小)→ ECS 本地
           # rsync --delete 原子换装;ConnectTimeout 让僵死连接 15s 内判死
-          SSH_OPTS="-i /tmp/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
+          SSH_OPTS="-i /tmp/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
           tar -C dist -czf /tmp/object920-dist.tgz .
+          # 注意:if 条件为假且无 else 分支时 $? 恒为 0(POSIX),真实退出码必须在 else 内捕获,
+          # 否则失败会被吞成 return 0、部署假成功(0.197.x 历史教训)
           retry() {
             n=1
             while :; do
-              if "$@"; then
+              if out=$("$@" 2>&1); then
+                LAST_OUT="$out"
                 return 0
+              else
+                rc=$?
               fi
-              rc=$?
               if [ "$n" -ge 3 ]; then
-                echo "::error::gave up after $n attempts (last exit $rc): $*" >&2
+                echo "::error::gave up after $n attempts (last exit $rc): ${out:0:400}"
                 return "$rc"
               fi
-              echo "::warning::attempt $n failed (exit $rc), retry in 15s: $*" >&2
+              echo "::warning::attempt $n failed (exit $rc): ${out:0:300}"
               n=$((n + 1))
               sleep 15
             done
           }
-          retry scp $SSH_OPTS /tmp/object920-dist.tgz $ECS_USER@$ECS_HOST:/tmp/object920-dist.tgz
+          retry scp $SSH_OPTS /tmp/object920-dist.tgz $ECS_USER@$ECS_HOST:/tmp/object920-dist.tgz || exit $?
           retry ssh $SSH_OPTS $ECS_USER@$ECS_HOST '
             set -e
             mkdir -p /var/www/object920-incoming
@@ -175,5 +179,7 @@ jobs:
             cp /var/www/object920/nginx/object920-redirects.conf /etc/nginx/conf.d/object920-redirects.conf
             rm -rf /var/www/object920-incoming /tmp/object920-dist.tgz
             nginx -t && systemctl reload nginx
-          '
+            echo REMOTE_DEPLOY_OK
+          ' || exit $?
+          echo "::notice::remote output: ${LAST_OUT:0:400}"
           rm -f /tmp/deploy_key /tmp/object920-dist.tgz
