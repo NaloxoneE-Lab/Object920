@@ -1,0 +1,293 @@
+/* public/admin/preview.css — CMS 预览窗格专用样式
+ * 仅注入预览 iframe,不影响编辑器 UI;设计值内联自 src/styles/tokens.css + prose.css,
+ * 主站 token 变更时需手动同步 */
+
+:root {
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --warning: #f59e0b;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --font-sans:
+    'Inter', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Hiragino Sans',
+    'Yu Gothic', 'Noto Sans CJK JP', sans-serif;
+  --font-mono:
+    'JetBrains Mono', 'Fira Code', ui-monospace, 'SFMono-Regular', 'Consolas', 'Microsoft YaHei',
+    'Noto Sans CJK SC', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #60a5fa;
+    --bg: #0f0f12;
+    --surface: #1a1a1f;
+    --text: #e8e8ea;
+    --muted: #9ca3af;
+    --border: #2d2d35;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.75;
+}
+
+.preview-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+.preview-page.is-project {
+  max-width: 1080px;
+}
+
+/* 元信息行:日期 · 分类 */
+.meta-line {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+.meta-line + .meta-line {
+  margin-top: -0.75rem;
+}
+
+.page-title {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin: 0 0 2rem;
+}
+
+.cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: 0 0 1.5rem;
+}
+
+.draft-badge {
+  display: inline-block;
+  background: var(--warning);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  margin-bottom: 1rem;
+}
+
+.tag-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: -1rem 0 1.5rem;
+}
+.tag {
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.chip {
+  display: inline-block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  margin-right: 0.5rem;
+}
+.chip-accent {
+  color: var(--accent);
+}
+
+/* 正文 prose:与主站 .prose 一致 */
+.prose {
+  color: var(--text);
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+.prose h2,
+.prose h3,
+.prose h4 {
+  color: var(--text);
+  font-weight: 600;
+}
+.prose h2 {
+  font-size: 1.875rem;
+  margin: 4rem 0 1.5rem;
+}
+.prose h3 {
+  font-size: 1.5rem;
+  margin: 3rem 0 1rem;
+}
+.prose p {
+  margin: 1.5rem 0;
+}
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose a:hover {
+  color: var(--accent-hover);
+}
+.prose strong {
+  font-weight: 600;
+}
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 2rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 2rem 0;
+}
+.prose ul,
+.prose ol {
+  padding-left: 2rem;
+  margin: 1.5rem 0;
+}
+.prose li {
+  margin-top: 0.5rem;
+}
+.prose img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  height: auto;
+}
+.prose figure {
+  margin: 2rem 0;
+}
+.prose figcaption {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface);
+  padding: 0.15em 0.35em;
+  border-radius: var(--radius-sm);
+}
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin: 2rem 0;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 1rem;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+.prose th {
+  background: var(--surface);
+  font-weight: 600;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3rem 0;
+}
+
+/* 图廊 / 规格表 / 数据手册 / 相关链接:对应工程页各 section */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.gallery-item {
+  margin: 0;
+}
+.gallery-item img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.gallery-item figcaption {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.875rem;
+}
+.spec-table th,
+.spec-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+.spec-table th {
+  background: var(--surface);
+  font-weight: 600;
+  width: 30%;
+}
+
+.datasheet-list {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  font-size: 0.875rem;
+}
+.datasheet-list li {
+  padding: 0.25rem 0;
+}
+.ds-size {
+  color: var(--muted);
+}
+
+.related-links h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 3rem 0 1rem;
+}
+.related-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.related-links a {
+  color: var(--accent);
+}

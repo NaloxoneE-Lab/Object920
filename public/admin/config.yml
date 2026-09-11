@@ -48,8 +48,9 @@ collections:
     public_folder: ''
     create: true
     i18n: true
+    # 预览模板见 public/admin/index.js(registerPreviewTemplate),按主站文章页排版还原
     editor:
-      preview: false # 无自定义预览模板时默认预览意义不大,编辑区更专注
+      preview: true
     summary: "**{{title}}** · {{pubDate | date('YYYY-MM-DD')}} · {{category}}"
     sortable_fields: [pubDate, title, category, slug]
     view_filters:
@@ -97,8 +98,9 @@ collections:
     public_folder: ''
     create: true
     i18n: true
+    # 预览模板见 public/admin/index.js,按主站工程页排版还原
     editor:
-      preview: false
+      preview: true
     summary: "**{{title}}** · {{status}} · {{pubDate | date('YYYY-MM-DD')}}"
     sortable_fields: [pubDate, title, status]
     view_filters:

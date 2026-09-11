@@ -6,13 +6,16 @@
     <meta name="robots" content="noindex" />
     <!-- /admin/ 独立 CSP(spec 8.5 P0-13/P2-24):不继承主站 CSP,主站 CSP 不得含 unpkg.com -->
     <!-- 此模板是当前 Sveltia 版本(0.197.2)的 baseline,升级后需用 DevTools 重新核对 violation -->
+    <!-- frame-src 须含 blob::Sveltia 预览窗格以 blob: URL 加载 iframe(实测缺失会被拦截白屏) -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' https://unpkg.com; manifest-src 'self'"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' https://unpkg.com blob:; manifest-src 'self'"
     />
     <title>Sveltia CMS</title>
   </head>
   <body>
     <script src="https://unpkg.com/@sveltia/cms@0.197.2/dist/sveltia-cms.js"></script>
+    <!-- 自定义预览模板(articles/projects),依赖上方脚本注入的 CMS 全局 -->
+    <script src="/admin/index.js"></script>
   </body>
 </html>
