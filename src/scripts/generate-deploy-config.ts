@@ -8,7 +8,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DIST_DIR = resolve(projectRoot, 'dist');
 
 const ADMIN_CSP =
-  "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' https://unpkg.com; manifest-src 'self';";
+  "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net; connect-src 'self' https://api.github.com https://unpkg.com https://cdn.jsdelivr.net; frame-src 'self' https://unpkg.com blob:; manifest-src 'self';";
 
 async function main() {
   const platform = process.argv.find((a) => a.startsWith('--platform='))?.split('=')[1];
