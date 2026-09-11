@@ -14,6 +14,16 @@ jobs:
     permissions:
       contents: write # temp diag
     steps:
+      # 部署链路诊断:GitHub runner → ECS 各端口可达性(22=SSH,80=HTTP,443=HTTPS)
+      - name: Probe ECS ports from runner
+        run: |
+          for port in 22 80 443; do
+            if timeout 8 bash -c "echo > /dev/tcp/47.114.43.241/$port" 2>/dev/null; then
+              echo "::notice::port $port reachable from GitHub runner"
+            else
+              echo "::warning::port $port NOT reachable from GitHub runner"
+            fi
+          done
       - uses: actions/checkout@v4
         with:
           # 关键:持久化的 URL 作用域 extraheader(主仓 GITHUB_TOKEN)会覆盖
