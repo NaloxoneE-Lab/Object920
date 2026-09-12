@@ -1,0 +1,11 @@
+# deploy/cf-relay/wrangler.toml — wrangler 部署用(也可在 Cloudflare 控制台粘贴 worker.js)
+name = "object920-deploy"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# 先创建桶:wrangler r2 bucket create object920-deploy
+[[r2_buckets]]
+binding = "DEPLOY_BUCKET"
+bucket_name = "object920-deploy"
+
+# Secret:wrangler secret put DEPLOY_TOKEN(openssl rand -hex 24 生成)

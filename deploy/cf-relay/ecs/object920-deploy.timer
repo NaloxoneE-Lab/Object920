@@ -1,0 +1,10 @@
+[Unit]
+Description=Poll for Object920 deploys every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+RandomizedDelaySec=15
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target
