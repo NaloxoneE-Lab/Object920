@@ -103,6 +103,7 @@ export default {
   'home.pinned': '置顶文章',
   'home.watching': '最近在看',
   'home.listening': '最近在听',
+  'hero.scrollDown': '向下滚动',
   'about.title': '关于',
   'about.intro': '站点介绍',
   'about.introText': 'Object920 是一个个人网站,记录技术文章、工程展示、番剧与术曲收藏。',

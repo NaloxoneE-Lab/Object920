@@ -103,6 +103,7 @@ export default {
   'home.pinned': 'ピン留めの記事',
   'home.watching': '最近見ている',
   'home.listening': '最近聴いている',
+  'hero.scrollDown': '下へスクロール',
   'about.title': 'サイト概要',
   'about.intro': 'サイト紹介',
   'about.introText':

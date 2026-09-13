@@ -103,6 +103,7 @@ export default {
   'home.pinned': 'Pinned Posts',
   'home.watching': 'Recently Watching',
   'home.listening': 'Recently Listening',
+  'hero.scrollDown': 'Scroll down',
   'about.title': 'About',
   'about.intro': 'Site Introduction',
   'about.introText':

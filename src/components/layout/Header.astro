@@ -16,7 +16,7 @@ const { locale } = Astro.props;
 
 <header class="header">
   <div class="header-inner">
-    <a href={`/${locale}/`} class="header-logo">{siteConfig.siteName}</a>
+    <a href={`/${locale}/`} class="header-logo">{siteConfig.brand ?? siteConfig.siteName}</a>
     <nav class="header-nav" aria-label={t(locale, 'nav.home')}>
       {
         siteConfig.navItems.map((item) => (

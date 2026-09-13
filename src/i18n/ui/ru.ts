@@ -103,6 +103,7 @@ export default {
   'home.pinned': 'Закреплённые записи',
   'home.watching': 'Сейчас смотрю',
   'home.listening': 'Сейчас слушаю',
+  'hero.scrollDown': 'Прокрутить вниз',
   'about.title': 'О сайте',
   'about.intro': 'Знакомство с сайтом',
   'about.introText':
