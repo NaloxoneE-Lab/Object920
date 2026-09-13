@@ -46,7 +46,7 @@ const langName: Record<ContentLocale, string> = { zh: '中文', en: 'English' };
   <div class="project-layout">
     {
       mode === 'render' && Content && entry && (
-        <article>
+        <article data-pagefind-body>
           <h1 class="project-title">{entry.data.title}</h1>
           <ArticleProse contentLocale={contentLocale} Content={Content} />
           <Gallery entry={entry} locale={locale} />

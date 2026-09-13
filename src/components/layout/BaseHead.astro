@@ -14,7 +14,7 @@ interface Props {
   robots?: string;
 }
 
-const { title, description, ogImage, canonicalURL, noindex, robots } = Astro.props;
+const { title, description, ogImage, canonicalURL, noindex, robots, locale } = Astro.props;
 const fullURL = (path: string) => new URL(path, siteConfig.siteUrl).toString();
 const canonical = canonicalURL ?? fullURL(Astro.url.pathname);
 const resolvedOg = ogImage ?? '/images/og-default.png';
@@ -71,5 +71,9 @@ const robotsContent =
   })();
 </script>
 
-<!-- RSS link(Plan 5 填充实际 href) -->
-<!-- <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss/zh.xml" /> -->
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title={siteConfig.siteName}
+  href={`/rss/${locale}.xml`}
+/>

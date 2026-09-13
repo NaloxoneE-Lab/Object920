@@ -58,7 +58,7 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
       mode === 'render' && Content && (
         <div class="article-grid">
           <Toc headings={headings ?? []} locale={locale} />
-          <article class="article-main">
+          <article class="article-main" data-pagefind-body>
             <h1 class="article-title">{entry?.data.title}</h1>
             {entry?.data.pubDate && (
               <p class="article-date">
