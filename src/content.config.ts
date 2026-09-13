@@ -96,9 +96,17 @@ const anime = defineCollection({
       const animeFile = 'src/content/data/anime.json';
       const notesFile = 'src/content/data/anime-notes.json';
       watcher?.add([animeFile, notesFile]);
-      const raw = JSON.parse(readFileSync(animeFile, 'utf-8')) as {
-        items?: Array<{ id: string } & Record<string, unknown>>;
-      };
+      // CI 的 pnpm check(astro sync 触发 loader)不拉取 content 仓:文件缺失按空集合处理,
+      // 真实构建时 prebuild 的 pull-content 保证文件存在
+      const hasData = existsSync(animeFile);
+      if (!hasData) {
+        logger.warn('src/content/data/anime.json 不存在(content 仓未拉取),番剧集合按空处理');
+      }
+      const raw = hasData
+        ? (JSON.parse(readFileSync(animeFile, 'utf-8')) as {
+            items?: Array<{ id: string } & Record<string, unknown>>;
+          })
+        : { items: [] };
       const notes = existsSync(notesFile)
         ? ((JSON.parse(readFileSync(notesFile, 'utf-8')).items as AnimeNote[] | undefined) ?? [])
         : [];
