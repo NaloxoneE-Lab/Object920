@@ -6,7 +6,7 @@ export default {
   'nav.home': '首页',
   'nav.articles': '文章',
   'nav.projects': '工程',
-  'nav.favorites': '番&术',
+  'nav.favorites': '喜欢',
   'nav.friends': '朋友',
   'nav.about': '关于',
 

@@ -6,7 +6,7 @@ export default {
   'nav.home': 'Home',
   'nav.articles': 'Articles',
   'nav.projects': 'Projects',
-  'nav.favorites': 'Anime & Vocaloid',
+  'nav.favorites': 'Favorites',
   'nav.friends': 'Friends',
   'nav.about': 'About',
 

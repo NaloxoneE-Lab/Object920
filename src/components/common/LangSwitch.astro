@@ -1,41 +1,121 @@
 ---
 // src/components/common/LangSwitch.astro
+// 地球图标按钮 + 弹出语言菜单(桌面 header 与移动抽屉共用)
 import { locales, type Locale } from '@i18n/config';
 import { t, getLocalizedPath } from '@i18n/utils';
+import Icon from './Icon.astro';
 interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
 ---
 
-<nav aria-label={t(locale, 'langswitch.label')} class="langswitch">
-  {
-    locales.map((l) => (
-      <a
-        href={getLocalizedPath(Astro.url.pathname, l)}
-        aria-current={l === locale ? 'true' : undefined}
-        class:list={['langswitch-item', { active: l === locale }]}
-      >
-        {t(locale, `langswitch.${l}`)}
-      </a>
-    ))
-  }
-</nav>
+<div class="langswitch">
+  <button
+    type="button"
+    class="langswitch-btn"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-label={t(locale, 'langswitch.label')}
+    title={t(locale, 'langswitch.label')}
+  >
+    <Icon name="globe" size={20} />
+  </button>
+  <nav class="langswitch-menu" hidden aria-label={t(locale, 'langswitch.label')}>
+    {
+      locales.map((l) => (
+        <a
+          href={getLocalizedPath(Astro.url.pathname, l)}
+          aria-current={l === locale ? 'true' : undefined}
+          class:list={['langswitch-item', { active: l === locale }]}
+        >
+          {t(locale, `langswitch.${l}`)}
+        </a>
+      ))
+    }
+  </nav>
+</div>
+
+<script>
+  // 点击图标开合;点击外部或 Escape 关闭(vanilla,无框架)
+  const setup = (wrap: HTMLElement) => {
+    const btn = wrap.querySelector<HTMLButtonElement>('.langswitch-btn');
+    const menu = wrap.querySelector<HTMLElement>('.langswitch-menu');
+    if (!btn || !menu) return;
+    const setOpen = (open: boolean) => {
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
+      setOpen(menu.hidden);
+    });
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target as Node)) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+  };
+  document.querySelectorAll<HTMLElement>('.langswitch').forEach(setup);
+</script>
+
 <style>
   .langswitch {
+    position: relative;
+  }
+  .langswitch-btn {
     display: flex;
-    gap: var(--spacing-2xs);
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .langswitch-btn:hover,
+  .langswitch-btn[aria-expanded='true'] {
+    color: var(--color-accent);
+  }
+  .langswitch-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-3xs);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+  }
+  .langswitch-menu[hidden] {
+    display: none;
   }
   .langswitch-item {
-    padding: var(--spacing-3xs) var(--spacing-2xs);
+    padding: var(--spacing-3xs) var(--spacing-sm);
     font-size: var(--text-xs);
     color: var(--color-text-muted);
     text-decoration: none;
     border-radius: var(--radius-sm);
-    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+    white-space: nowrap;
+    transition:
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      background calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .langswitch-item:hover {
     color: var(--color-text);
+    background: var(--color-surface-raised);
   }
   .langswitch-item.active {
     color: var(--color-accent);
