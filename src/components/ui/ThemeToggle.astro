@@ -1,5 +1,7 @@
 ---
 // src/components/ui/ThemeToggle.astro
+// 调色板图标按钮 + 弹出主题选择菜单(为多配色主题预留:加 themes 数组项即可)
+// 桌面 header 与移动抽屉共用
 import Icon from '../common/Icon.astro';
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
@@ -7,63 +9,180 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
+const themes = [
+  { id: 'light', label: t(locale, 'theme.light') },
+  { id: 'dark', label: t(locale, 'theme.dark') },
+];
 ---
 
-<button class="theme-toggle" aria-label={t(locale, 'theme.toggle')} aria-pressed="false">
-  <Icon name="sun" size={20} class="icon-light" />
-  <Icon name="moon" size={20} class="icon-dark" />
-</button>
+<div class="themeswitch">
+  <button
+    type="button"
+    class="themeswitch-btn"
+    data-theme-toggle
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-label={t(locale, 'theme.label')}
+    title={t(locale, 'theme.label')}
+  >
+    <Icon name="palette" size={20} />
+  </button>
+  <div
+    class="themeswitch-menu"
+    data-theme-menu
+    hidden
+    role="menu"
+    aria-label={t(locale, 'theme.label')}
+  >
+    {
+      themes.map((th) => (
+        <button
+          type="button"
+          role="menuitemradio"
+          class="themeswitch-item"
+          data-theme-option={th.id}
+          aria-checked="false"
+        >
+          {th.label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
 <script>
-  // ClientRouter 导航会重建 DOM,绑定须随 astro:page-load 重进;
-  // 桌面与移动抽屉各有一份实例,统一按 class 绑定(不可用 id:会重复)
-  function syncPressed(btn: HTMLButtonElement) {
-    const current = document.documentElement.getAttribute('data-theme');
-    btn.setAttribute('aria-pressed', current === 'dark' ? 'true' : 'false');
+  // 主题应用:与旧 ThemeToggle 保持同一事件契约(theme-change,giscus 依赖它同步暗色)
+  function currentTheme(): string {
+    return document.documentElement.getAttribute('data-theme') ?? 'light';
   }
-  function initThemeToggles() {
-    document.querySelectorAll<HTMLButtonElement>('.theme-toggle').forEach((btn) => {
-      if (btn.dataset.initialized === 'true') return;
-      btn.dataset.initialized = 'true';
-      syncPressed(btn);
-      btn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: next } }));
-        // 两份实例(桌面 + 移动抽屉)状态同步
-        document
-          .querySelectorAll<HTMLButtonElement>('.theme-toggle')
-          .forEach((b) => syncPressed(b));
+  function applyTheme(theme: string) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme } }));
+  }
+  function syncMenus() {
+    const cur = currentTheme();
+    document.querySelectorAll<HTMLElement>('.themeswitch').forEach((wrap) => {
+      wrap.querySelectorAll<HTMLButtonElement>('[data-theme-option]').forEach((opt) => {
+        const active = opt.dataset.themeOption === cur;
+        opt.classList.toggle('active', active);
+        opt.setAttribute('aria-checked', String(active));
       });
     });
   }
-  document.addEventListener('astro:page-load', initThemeToggles);
+  function setWrapOpen(wrap: HTMLElement, open: boolean) {
+    const menu = wrap.querySelector<HTMLElement>('[data-theme-menu]');
+    const btn = wrap.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+    if (!menu || !btn) return;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) syncMenus();
+  }
+  function initThemeSwitches() {
+    document.querySelectorAll<HTMLElement>('.themeswitch').forEach((wrap) => {
+      if (wrap.dataset.initialized === 'true') return;
+      wrap.dataset.initialized = 'true';
+      const btn = wrap.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+      const menu = wrap.querySelector<HTMLElement>('[data-theme-menu]');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
+        setWrapOpen(wrap, menu.hidden);
+      });
+      menu.addEventListener('click', (e) => {
+        const opt = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-theme-option]');
+        if (!opt) return;
+        applyTheme(opt.dataset.themeOption as string);
+        syncMenus();
+        setWrapOpen(wrap, false);
+        btn.focus();
+      });
+    });
+    syncMenus();
+  }
+  // document 级监听只绑一次,处理函数内动态查询当前 DOM,避免随导航累积
+  const CLOSE_FLAG = '__theme_menu_close_bound__';
+  const closeWindow = window as unknown as Record<string, unknown>;
+  if (!closeWindow[CLOSE_FLAG]) {
+    closeWindow[CLOSE_FLAG] = true;
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll<HTMLElement>('.themeswitch').forEach((wrap) => {
+        if (!wrap.contains(e.target as Node)) setWrapOpen(wrap, false);
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll<HTMLElement>('.themeswitch').forEach((wrap) => {
+        const menu = wrap.querySelector<HTMLElement>('[data-theme-menu]');
+        if (menu && !menu.hidden) {
+          setWrapOpen(wrap, false);
+          wrap.querySelector<HTMLButtonElement>('[data-theme-toggle]')?.focus();
+        }
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initThemeSwitches);
 </script>
+
 <style>
-  .theme-toggle {
+  .themeswitch {
+    position: relative;
+  }
+  .themeswitch-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: transparent;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: none;
     color: var(--color-text-muted);
     cursor: pointer;
-    border-radius: var(--radius-md);
     transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
-  .theme-toggle:hover {
+  .themeswitch-btn:hover,
+  .themeswitch-btn[aria-expanded='true'] {
+    color: var(--color-accent);
+  }
+  .themeswitch-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-3xs);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+  }
+  .themeswitch-menu[hidden] {
+    display: none;
+  }
+  .themeswitch-item {
+    padding: var(--spacing-3xs) var(--spacing-sm);
+    border: none;
+    background: none;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-align: left;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      background calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  .themeswitch-item:hover {
     color: var(--color-text);
+    background: var(--color-surface-raised);
   }
-  .theme-toggle :global(.icon-dark) {
-    display: none;
-  }
-  :global([data-theme='dark']) .theme-toggle :global(.icon-light) {
-    display: none;
-  }
-  :global([data-theme='dark']) .theme-toggle :global(.icon-dark) {
-    display: block;
+  .themeswitch-item.active {
+    color: var(--color-accent);
+    font-weight: 600;
   }
 </style>
