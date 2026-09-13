@@ -54,7 +54,11 @@ async function main() {
     process.exit(1);
   }
 
-  const r2 = validateGeneratedRoutes(redirects, scanRoutes());
+  // 幂等性:脚本自己会把重定向 HTML 写进 dist(GH Pages 用途),重复运行时
+  // scanRoutes 会把它们当成真实路由,导致"source still exists"误报——排除之
+  const routes = scanRoutes();
+  for (const source of Object.keys(redirects)) routes.delete(source);
+  const r2 = validateGeneratedRoutes(redirects, routes);
   if (!r2.valid) {
     r2.errors.forEach((e) => console.error(`  - ${e}`));
     console.error('[generate-redirects] route validation failed');
