@@ -64,7 +64,7 @@ export function buildCsp(
   env: CspEnv = (import.meta.env as CspEnv) ?? {},
   opts: BuildCspOptions = {},
 ): string {
-  const scriptDomains = ["'self'", "'unsafe-inline'"];
+  const scriptDomains = ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"];
   const connectDomains = ["'self'"];
   const frameDomains: string[] = [];
   const mediaDomains = ["'self'"];

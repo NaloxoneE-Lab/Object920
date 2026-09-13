@@ -6,7 +6,7 @@ describe('buildCsp', () => {
   it('returns base CSP with no integrations enabled', () => {
     const csp = buildCsp({});
     expect(csp).toContain("default-src 'self'");
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self' data: https:");
     expect(csp).toContain("font-src 'self'");
