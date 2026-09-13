@@ -189,46 +189,34 @@ collections:
       - { name: ogImageLocal, widget: image, required: false, i18n: duplicate }
       - { name: body, widget: markdown, i18n: true }
 
-  # === 番剧(file collection,只存远程 URL)===
+  # === 番剧(data/anime.json 由 CI 从 Bangumi 同步生成,不在 CMS 编辑;这里只管个人手记)===
   - name: anime
     label: 番剧
     delete: false
-    summary: '{{title}} {{score}}'
+    summary: '{{bangumiId}}'
     files:
-      - label: 番剧清单
-        name: items
-        file: 'data/anime.json'
+      - label: 番剧手记
+        name: notes
+        file: 'data/anime-notes.json'
         fields:
-          - label: 番剧列表
+          - label: 手记列表
             name: items
             widget: list
-            summary: '{{title}} ({{status}})'
+            summary: '{{bangumiId}}'
             fields:
-              - { name: id, widget: string }
-              - { name: title, widget: string }
-              - { name: titleOriginal, widget: string, required: false }
-              - { name: titleZh, widget: string, required: false }
-              - { name: cover, widget: string, required: false }
-              - { name: score, widget: number, required: false, min: 0, max: 10 }
-              - {
-                  name: status,
-                  widget: select,
-                  options:
-                    [
-                      { label: '看完', value: 'finished' },
-                      { label: '在看', value: 'watching' },
-                      { label: '想看', value: 'planned' },
-                      { label: '弃坑', value: 'dropped' },
-                    ],
-                }
-              - { name: watchedDate, widget: datetime, required: false }
-              - { name: tags, widget: list, default: [] }
-              - { name: episodes, widget: number, required: false }
-              - { name: year, widget: number, required: false }
-              - { name: studio, widget: string, required: false }
-              - { name: source, widget: string, required: false }
-              - { name: comment, widget: text, required: false }
-              - { name: highlight, widget: boolean, default: false }
+              - label: Bangumi 条目 ID
+                name: bangumiId
+                widget: number
+                hint: bgm.tv/subject/ 后面的数字;没有对应收藏时该条手记不生效
+                required: true
+              - label: 站内短评(优先于 Bangumi 短评)
+                name: comment
+                widget: text
+                required: false
+              - label: 重点标记(首页精选)
+                name: highlight
+                widget: boolean
+                default: false
 
   # === 术曲(file collection,只存远程 URL)===
   - name: vocaloid

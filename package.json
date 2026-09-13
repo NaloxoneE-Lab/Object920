@@ -18,6 +18,7 @@
     "test": "vitest run",
     "ci": "pnpm run check && pnpm run lint && pnpm run test && pnpm run build",
     "pull:content": "node --env-file-if-exists=.env src/scripts/pull-content.mjs",
+    "sync:anime": "node --env-file-if-exists=.env src/scripts/sync-bangumi.mjs",
     "build-meta": "node --env-file-if-exists=.env src/scripts/build-meta.mjs",
     "check:datasheets": "tsx --env-file-if-exists=.env src/scripts/check-datasheets.ts",
     "check:links": "node src/scripts/check-links.mjs",

@@ -33,3 +33,56 @@ export function validateCollectionItemIds(collection: string, items: ItemWithId[
     seen.add(item.id);
   }
 }
+
+// === Bangumi 同步数据 + 本地手记合并 ===
+// anime.json 由 src/scripts/sync-bangumi.mjs 生成;anime-notes.json 手写。
+// note.comment 优先于 bgm 短评(bgm 上不想写的私房话留站内),highlight 只存在于 note。
+
+export interface AnimeNote {
+  bangumiId?: unknown;
+  comment?: unknown;
+  highlight?: unknown;
+}
+
+// Record 交叉保证 loader 里可直接传给 parseData(data: Record<string, unknown>)
+export type AnimeMergable = { id: string } & Record<string, unknown>;
+
+export function mergeAnimeNotes<T extends AnimeMergable>(
+  items: T[],
+  notes: AnimeNote[],
+): { items: T[]; unmatchedNotes: AnimeNote[] } {
+  const noteById = new Map<string, AnimeNote>();
+  for (const note of notes) {
+    if (
+      typeof note.bangumiId !== 'number' ||
+      !Number.isInteger(note.bangumiId) ||
+      note.bangumiId <= 0
+    ) {
+      throw new Error(
+        `[mergeAnimeNotes] anime-notes.json: bangumiId 必须为正整数,得到 ${JSON.stringify(note)}`,
+      );
+    }
+    if (noteById.has(`bgm-${note.bangumiId}`)) {
+      throw new Error(`[mergeAnimeNotes] anime-notes.json: bangumiId=${note.bangumiId} 重复`);
+    }
+    noteById.set(`bgm-${note.bangumiId}`, note);
+  }
+  const merged = items.map((item) => {
+    const note = noteById.get(item.id);
+    if (!note) return item;
+    const noteComment = typeof note.comment === 'string' ? note.comment.trim() : undefined;
+    return {
+      ...item,
+      comment: noteComment || (typeof item.comment === 'string' ? item.comment : undefined),
+      highlight:
+        typeof note.highlight === 'boolean'
+          ? note.highlight
+          : typeof item.highlight === 'boolean'
+            ? item.highlight
+            : false,
+    };
+  });
+  const itemIds = new Set(items.map((i) => i.id));
+  const unmatchedNotes = notes.filter((n) => !itemIds.has(`bgm-${n.bangumiId}`));
+  return { items: merged, unmatchedNotes };
+}

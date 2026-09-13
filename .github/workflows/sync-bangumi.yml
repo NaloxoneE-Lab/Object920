@@ -1,0 +1,52 @@
+# .github/workflows/sync-bangumi.yml
+# 从 Bangumi API 同步动画收藏到 content 仓(data/anime.json + data/covers/)。
+# content 仓推送后由其 validate-redirects workflow 自动 repository_dispatch 触发主站构建部署,
+# 本 workflow 无需再通知主仓。
+#
+# 前置配置(一次性):
+#   1. 仓库 Variables 加 BANGUMI_USER = bgm.tv 主页 URL(bgm.tv/user/xxx)中的 xxx
+#      (设置过自定义 URL 的是用户名,否则是数字 ID;API 按 URL slug 查询,昵称无效)
+#   2. secret CONTENT_GITHUB_TOKEN 需要 content 仓 Contents: Read and write
+#      (ci.yml 只读使用同一 token;升级权限不影响 CI)
+name: Sync Bangumi anime
+on:
+  schedule:
+    - cron: '0 3 * * *' # 每日 03:00 UTC(北京 11:00)
+  workflow_dispatch:
+concurrency:
+  group: bangumi-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # 主仓:同步脚本
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # content 仓克隆到 src/content(与本地 pull-content.mjs 的路径约定一致)
+      - uses: actions/checkout@v4
+        with:
+          repository: NaloxoneE-Lab/object920-content
+          token: ${{ secrets.CONTENT_GITHUB_TOKEN }}
+          path: src/content
+
+      - name: Run sync
+        env:
+          BANGUMI_USER: ${{ vars.BANGUMI_USER }}
+        run: node src/scripts/sync-bangumi.mjs
+
+      - name: Commit & push
+        working-directory: src/content
+        run: |
+          git config user.name "bangumi-sync[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "[sync-bangumi] No changes since last sync"
+            exit 0
+          fi
+          git commit -m "chore(anime): sync Bangumi collections ($(date -u +%F))"
+          git push
