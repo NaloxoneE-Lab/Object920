@@ -15,7 +15,7 @@ export const siteConfig = {
     { key: 'nav.home', href: '/' },
     { key: 'nav.articles', href: '/articles/' },
     { key: 'nav.projects', href: '/projects/' },
-    { key: 'nav.collection', href: '/collection/' },
+    { key: 'nav.favorites', href: '/favorites/' },
     { key: 'nav.friends', href: '/friends/' },
     { key: 'nav.about', href: '/about/' },
   ],

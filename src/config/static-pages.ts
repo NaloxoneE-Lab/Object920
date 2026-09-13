@@ -9,7 +9,7 @@ export interface StaticPageMetaEntry {
 export const staticPageMeta: Record<string, StaticPageMetaEntry> = {
   '/about/': {},
   '/friends/': {},
-  '/collection/': {},
-  '/collection/anime/': {},
-  '/collection/vocaloid/': {},
+  '/favorites/': {},
+  '/favorites/anime/': {},
+  '/favorites/vocaloid/': {},
 };

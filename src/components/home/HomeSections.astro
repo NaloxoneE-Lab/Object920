@@ -2,8 +2,8 @@
 // src/components/home/HomeSections.astro
 import ArticleCard from '@components/article/ArticleCard.astro';
 import ProjectCard from '@components/project/ProjectCard.astro';
-import AnimeCard from '@components/collection/AnimeCard.astro';
-import VocaloidCard from '@components/collection/VocaloidCard.astro';
+import AnimeCard from '@components/favorites/AnimeCard.astro';
+import VocaloidCard from '@components/favorites/VocaloidCard.astro';
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
@@ -64,7 +64,7 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
       <section class="home-section">
         <div class="home-section-head">
           <h2>{t(locale, 'home.animePicks')}</h2>
-          <a href={`/${locale}/collection/anime/`} class="home-section-more">
+          <a href={`/${locale}/favorites/anime/`} class="home-section-more">
             {t(locale, 'articles.viewAll')} →
           </a>
         </div>
@@ -81,7 +81,7 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
       <section class="home-section">
         <div class="home-section-head">
           <h2>{t(locale, 'home.vocaloidPicks')}</h2>
-          <a href={`/${locale}/collection/vocaloid/`} class="home-section-more">
+          <a href={`/${locale}/favorites/vocaloid/`} class="home-section-more">
             {t(locale, 'articles.viewAll')} →
           </a>
         </div>

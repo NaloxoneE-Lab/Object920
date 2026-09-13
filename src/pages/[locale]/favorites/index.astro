@@ -1,5 +1,5 @@
 ---
-// src/pages/[locale]/collection/index.astro
+// src/pages/[locale]/favorites/index.astro
 // 「番 & 术」索引页:通往番剧墙/术曲墙的导航页(纯导航,不输出 lastmod)
 import BaseLayout from '@components/layout/BaseLayout.astro';
 import { t } from '@i18n/utils';
@@ -13,22 +13,22 @@ const animeCount = (await getCollection('anime')).length;
 const vocaloidCount = (await getCollection('vocaloid')).length;
 const cards = [
   {
-    href: '/collection/anime/',
-    title: t(locale, 'collection.anime'),
-    desc: t(locale, 'collection.animeDesc'),
+    href: '/favorites/anime/',
+    title: t(locale, 'favorites.anime'),
+    desc: t(locale, 'favorites.animeDesc'),
     count: animeCount,
   },
   {
-    href: '/collection/vocaloid/',
-    title: t(locale, 'collection.vocaloid'),
-    desc: t(locale, 'collection.vocaloidDesc'),
+    href: '/favorites/vocaloid/',
+    title: t(locale, 'favorites.vocaloid'),
+    desc: t(locale, 'favorites.vocaloidDesc'),
     count: vocaloidCount,
   },
 ];
 ---
 
-<BaseLayout locale={locale} title={t(locale, 'collection.title')}>
-  <h1 class="page-title">{t(locale, 'collection.title')}</h1>
+<BaseLayout locale={locale} title={t(locale, 'favorites.title')}>
+  <h1 class="page-title">{t(locale, 'favorites.title')}</h1>
   <div class="collection-grid">
     {
       cards.map((card) => (

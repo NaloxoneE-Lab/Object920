@@ -1,8 +1,7 @@
 ---
-// src/pages/[locale]/collection/anime.astro
+// src/pages/[locale]/favorites/vocaloid.astro
 import BaseLayout from '@components/layout/BaseLayout.astro';
-import StatusFilter from '@components/collection/StatusFilter.astro';
-import AnimeWall from '@components/collection/AnimeWall.astro';
+import VocaloidWall from '@components/favorites/VocaloidWall.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
@@ -10,17 +9,17 @@ export async function getStaticPaths() {
   return locales.map((l) => ({ params: { locale: l } }));
 }
 const { locale } = Astro.params as { locale: Locale };
-const all = await getCollection('anime');
+const all = await getCollection('vocaloid');
 const entries = all.sort(
-  (a, b) => (b.data.watchedDate?.valueOf() ?? 0) - (a.data.watchedDate?.valueOf() ?? 0),
+  (a, b) => (b.data.listenedDate?.valueOf() ?? 0) - (a.data.listenedDate?.valueOf() ?? 0),
 );
 ---
 
-<BaseLayout locale={locale} title={t(locale, 'anime.title')}>
-  <h1 class="page-title">{t(locale, 'anime.title')}</h1>
-  <StatusFilter locale={locale} />
-  <AnimeWall entries={entries} locale={locale} />
+<BaseLayout locale={locale} title={t(locale, 'vocaloid.title')}>
+  <h1 class="page-title">{t(locale, 'vocaloid.title')}</h1>
+  <VocaloidWall entries={entries} locale={locale} />
 </BaseLayout>
+
 <style>
   .page-title {
     max-width: var(--container-page);
