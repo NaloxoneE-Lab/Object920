@@ -103,9 +103,16 @@ ${mainHeaders}
     add_header Cache-Control "public, max-age=31536000, immutable";
   }
 
+  # pagefind 哈希产物:永久缓存
+  location ~* ^/pagefind/.+\\.(pf_index|pf_fragment|pf_meta|pagefind)$ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+  }
+
+  # pagefind 运行时入口(js/entry.json/ui):禁缓存 ——
+  # pagefind 以自身为 Worker,Worker 继承其响应头 CSP,缓存旧响应会拦掉新策略放行的能力
   location /pagefind/ {
 ${mainHeaders}
-    add_header Cache-Control "public, max-age=86400";
+    add_header Cache-Control "no-cache";
   }
 
   # Sveltia CMS:独立 CSP,不继承主站(spec 8.5)

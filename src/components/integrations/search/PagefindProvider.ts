@@ -27,8 +27,10 @@ type PagefindLoader = () => Promise<PagefindModule>;
 
 // /pagefind/pagefind.js 是 postbuild 生成的运行时产物,构建期不存在。
 // 必须经变量间接引用:字面量 + `as string` 断言会让 esbuild 丢掉 @vite-ignore
-// 注解,vite:import-analysis 便会尝试静态解析并在 dev 模式直接报错(spec 7.10)
-const PAGEFIND_ENTRY = '/pagefind/pagefind.js';
+// 注解,vite:import-analysis 便会尝试静态解析并在 dev 模式直接报错(spec 7.10)。
+// ?v= 用于击穿浏览器对旧 pagefind.js 的缓存:pagefind 以自身为 Worker,Worker 继承
+// 其响应头里的 CSP——缓存旧响应会把旧 CSP 一起带给 Worker,拦掉新放行的 WASM
+const PAGEFIND_ENTRY = '/pagefind/pagefind.js?v=2';
 
 export class PagefindProvider implements SearchProvider {
   private state: SearchProviderState = 'idle';

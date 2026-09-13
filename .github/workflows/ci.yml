@@ -130,6 +130,7 @@ jobs:
           pnpm run generate:deploy-config -- --platform=nginx
         env:
           DEPLOY_PLATFORM: nginx
+          PUBLIC_MUSIC_ENABLED: 'true'
           PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
       - name: Rsync to ECS
         if: steps.guard.outputs.enabled == 'true'
