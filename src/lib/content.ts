@@ -86,3 +86,79 @@ export function mergeAnimeNotes<T extends AnimeMergable>(
   const unmatchedNotes = notes.filter((n) => !itemIds.has(`bgm-${n.bangumiId}`));
   return { items: merged, unmatchedNotes };
 }
+
+// === 网易云同步数据 + 手动条目 + 本地手记合并 ===
+// vocaloid.json 由 src/scripts/sync-vocaloid.mjs 生成;vocaloid-manual.json(不在网易云的
+// 曲目)与 vocaloid-notes.json 手写。note 按 item.id 叠加:评分/感想/歌词片段/状态/重点,
+// 未给出的字段保留自动值;highlight 只存在于 note。
+
+export interface VocaloidNote {
+  id?: unknown;
+  status?: unknown;
+  score?: unknown;
+  comment?: unknown;
+  lyricSnippet?: unknown;
+  highlight?: unknown;
+  producer?: unknown;
+  vocaloid?: unknown;
+}
+
+const VOCALOID_STATUSES = new Set(['favorite', 'liked', 'neutral', 'archived']);
+
+export function mergeVocaloidNotes<T extends AnimeMergable>(
+  items: T[],
+  notes: VocaloidNote[],
+): { items: T[]; unmatchedNotes: VocaloidNote[] } {
+  const noteById = new Map<string, VocaloidNote>();
+  for (const note of notes) {
+    if (typeof note.id !== 'string' || note.id.trim() === '') {
+      throw new Error(
+        `[mergeVocaloidNotes] vocaloid-notes.json: id 必须为非空字符串,得到 ${JSON.stringify(note)}`,
+      );
+    }
+    if (noteById.has(note.id)) {
+      throw new Error(`[mergeVocaloidNotes] vocaloid-notes.json: id="${note.id}" 重复`);
+    }
+    if (
+      note.status != null &&
+      (typeof note.status !== 'string' || !VOCALOID_STATUSES.has(note.status))
+    ) {
+      throw new Error(
+        `[mergeVocaloidNotes] vocaloid-notes.json: id="${note.id}" status 必须是 favorite/liked/neutral/archived`,
+      );
+    }
+    noteById.set(note.id, note);
+  }
+  const merged = items.map((item) => {
+    const note = noteById.get(item.id);
+    if (!note) return item;
+    const noteComment = typeof note.comment === 'string' ? note.comment.trim() : undefined;
+    const noteVocaloid = Array.isArray(note.vocaloid)
+      ? note.vocaloid.filter((v): v is string => typeof v === 'string' && v.trim() !== '')
+      : undefined;
+    return {
+      ...item,
+      status: typeof note.status === 'string' ? note.status : item.status,
+      score: typeof note.score === 'number' ? note.score : item.score,
+      producer:
+        typeof note.producer === 'string' && note.producer.trim() !== ''
+          ? note.producer.trim()
+          : item.producer,
+      vocaloid: noteVocaloid ?? item.vocaloid,
+      lyricSnippet:
+        typeof note.lyricSnippet === 'string' && note.lyricSnippet.trim() !== ''
+          ? note.lyricSnippet
+          : item.lyricSnippet,
+      comment: noteComment || (typeof item.comment === 'string' ? item.comment : undefined),
+      highlight:
+        typeof note.highlight === 'boolean'
+          ? note.highlight
+          : typeof item.highlight === 'boolean'
+            ? item.highlight
+            : false,
+    };
+  });
+  const itemIds = new Set(items.map((i) => i.id));
+  const unmatchedNotes = notes.filter((n) => !itemIds.has(n.id as string));
+  return { items: merged, unmatchedNotes };
+}

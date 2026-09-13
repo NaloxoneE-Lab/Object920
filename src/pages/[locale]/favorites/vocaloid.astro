@@ -5,14 +5,12 @@ import VocaloidWall from '@components/favorites/VocaloidWall.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
+import { sortVocaloidByRecency } from '@lib/home-sections';
 export async function getStaticPaths() {
   return locales.map((l) => ({ params: { locale: l } }));
 }
 const { locale } = Astro.params as { locale: Locale };
-const all = await getCollection('vocaloid');
-const entries = all.sort(
-  (a, b) => (b.data.listenedDate?.valueOf() ?? 0) - (a.data.listenedDate?.valueOf() ?? 0),
-);
+const entries = sortVocaloidByRecency(await getCollection('vocaloid'));
 ---
 
 <BaseLayout locale={locale} title={t(locale, 'vocaloid.title')}>

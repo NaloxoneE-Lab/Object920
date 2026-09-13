@@ -1,5 +1,6 @@
 ---
 // src/components/favorites/VocaloidCard.astro
+// 卡面只留封面 + 单行标题;评分/作者/感想/平台链接等详情点卡片进弹窗查看。
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 import type { CollectionEntry } from 'astro:content';
@@ -8,106 +9,300 @@ interface Props {
   locale: Locale;
 }
 const { entry, locale } = Astro.props;
-const { title, producer, vocaloid, cover, score, platform, lyricSnippet, comment, highlight } =
-  entry.data;
+const {
+  id,
+  title,
+  producer,
+  vocaloid,
+  cover,
+  score,
+  status,
+  year,
+  platform,
+  lyricSnippet,
+  comment,
+  highlight,
+} = entry.data;
+const statusClass = `vocaloid-status-${status}`;
+const dialogId = `vocaloid-detail-${id}`;
 ---
 
-<article class:list={['vocaloid-card', { highlight }]} data-vocaloid-card>
-  {
-    cover && (
-      <img src={cover} alt={title} loading="lazy" class="vocaloid-cover" data-article-image />
-    )
-  }
-  <div class="vocaloid-body">
-    <h3 class="vocaloid-title">{title}</h3>
-    <p class="vocaloid-producer">{t(locale, 'vocaloid.producer')}: {producer}</p>
-    {vocaloid.length > 0 && <p class="vocaloid-vocaloid">{vocaloid.join(' / ')}</p>}
+<div class:list={['vocaloid-card', { highlight }]} data-vocaloid-card>
+  <button
+    type="button"
+    class="vocaloid-card-open"
+    data-vocaloid-dialog-open={dialogId}
+    aria-haspopup="dialog"
+    aria-controls={dialogId}
+  >
     {
-      score != null && (
-        <p class="vocaloid-score">
-          {t(locale, 'anime.score')}: {score}
-        </p>
+      cover && (
+        <span class="vocaloid-cover-wrap">
+          <img
+            src={cover.src}
+            alt={title}
+            loading="lazy"
+            class="vocaloid-cover"
+            data-article-image
+          />
+        </span>
       )
     }
+    <span class="vocaloid-card-title">{title}</span>
+  </button>
+</div>
+<dialog class="vocaloid-detail" id={dialogId} aria-label={title}>
+  <button
+    type="button"
+    class="vocaloid-detail-close"
+    data-vocaloid-dialog-close
+    aria-label={t(locale, 'common.close')}
+  >
+    ×
+  </button>
+  <div class="vocaloid-detail-layout">
     {
-      platform.length > 0 && (
-        <ul class="vocaloid-platforms">
-          {platform.map((p) => (
-            <li>
-              <a href={p.url} target="_blank" rel="noopener">
-                {p.name}
-              </a>
-            </li>
-          ))}
-        </ul>
+      cover && (
+        <img
+          class="vocaloid-detail-cover"
+          src={cover.src}
+          alt={title}
+          loading="lazy"
+          data-article-image
+        />
       )
     }
-    {
-      (lyricSnippet || comment) && (
-        <details class="vocaloid-details">
-          <summary>{t(locale, 'vocaloid.comment')}</summary>
-          {lyricSnippet && <blockquote class="vocaloid-lyric">{lyricSnippet}</blockquote>}
-          {comment && <p class="vocaloid-comment">{comment}</p>}
-        </details>
-      )
-    }
+    <div class="vocaloid-detail-body">
+      <h3 class="vocaloid-detail-title">{title}</h3>
+      <div class="vocaloid-detail-meta">
+        <span class:list={['vocaloid-status-badge', statusClass]}>
+          {t(locale, 'vocaloid.status.' + status)}
+        </span>
+        <span class="vocaloid-detail-pair">
+          <span class="vocaloid-detail-k">{t(locale, 'vocaloid.producer')}</span>
+          <span class="vocaloid-detail-v">{producer}</span>
+        </span>
+        {
+          vocaloid.length > 0 && (
+            <span class="vocaloid-detail-pair">
+              <span class="vocaloid-detail-v">{vocaloid.join(' / ')}</span>
+            </span>
+          )
+        }
+        {
+          score != null && (
+            <span class="vocaloid-detail-pair">
+              <span class="vocaloid-detail-k">{t(locale, 'anime.score')}</span>
+              <span class="vocaloid-detail-v">{score}</span>
+            </span>
+          )
+        }
+        {
+          year && (
+            <span class="vocaloid-detail-pair">
+              <span class="vocaloid-detail-k">{t(locale, 'anime.year')}</span>
+              <span class="vocaloid-detail-v">{year}</span>
+            </span>
+          )
+        }
+      </div>
+      {lyricSnippet && <blockquote class="vocaloid-detail-lyric">{lyricSnippet}</blockquote>}
+      {comment && <p class="vocaloid-detail-comment">{comment}</p>}
+      {
+        platform.length > 0 && (
+          <ul class="vocaloid-detail-platforms">
+            {platform.map((p) => (
+              <li>
+                <a href={p.url} target="_blank" rel="noopener">
+                  {p.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
   </div>
-</article>
+</dialog>
+
+<script>
+  // 与 AnimeCard 同一套开合约定,独立旗标避免互相覆盖
+  const DIALOG_FLAG = '__vocaloid_dialog_bound__';
+  const w = window as unknown as Record<string, unknown>;
+  if (!w[DIALOG_FLAG]) {
+    w[DIALOG_FLAG] = true;
+    document.addEventListener('click', (e) => {
+      const target = e.target as Element | null;
+      const opener = target?.closest?.('[data-vocaloid-dialog-open]');
+      if (opener) {
+        const dlg = document.getElementById(
+          opener.getAttribute('data-vocaloid-dialog-open') ?? '',
+        ) as HTMLDialogElement | null;
+        dlg?.showModal();
+        return;
+      }
+      const closer = target?.closest?.('[data-vocaloid-dialog-close]');
+      if (closer) closer.closest('dialog')?.close();
+      if (target instanceof HTMLDialogElement && target.open) target.close();
+    });
+  }
+</script>
+
 <style>
   .vocaloid-card {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
     background: var(--color-surface);
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-spring),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .vocaloid-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
   }
   .vocaloid-card.highlight {
     box-shadow: var(--shadow-glow);
     border-color: var(--color-accent);
   }
-  .vocaloid-cover {
+  .vocaloid-card-open {
+    display: block;
     width: 100%;
-    aspect-ratio: 1 / 1;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .vocaloid-cover-wrap {
+    display: block;
+  }
+  .vocaloid-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
     object-fit: cover;
   }
-  .vocaloid-body {
-    padding: var(--spacing-sm);
-  }
-  .vocaloid-title {
-    font-size: var(--text-md);
+  .vocaloid-card-title {
+    display: block;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--text-sm);
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .vocaloid-producer,
-  .vocaloid-vocaloid,
-  .vocaloid-score {
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    margin-top: var(--spacing-2xs);
+  .vocaloid-detail {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: var(--spacing-lg);
+    max-width: min(420px, calc(100vw - var(--spacing-xl) * 2));
+    box-shadow: var(--shadow-lg);
   }
-  .vocaloid-platforms {
-    list-style: none;
+  .vocaloid-detail::backdrop {
+    background: rgb(0 0 0 / 55%);
+  }
+  .vocaloid-detail-close {
+    position: absolute;
+    top: var(--spacing-2xs);
+    right: var(--spacing-2xs);
+    width: var(--spacing-lg);
+    height: var(--spacing-lg);
     padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .vocaloid-detail-close:hover {
+    color: var(--color-text);
+  }
+  .vocaloid-detail-layout {
+    display: flex;
+    gap: var(--spacing-md);
+  }
+  .vocaloid-detail-cover {
+    width: 120px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+  }
+  .vocaloid-detail-title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    padding-right: var(--spacing-lg);
+  }
+  .vocaloid-detail-meta {
+    margin-top: var(--spacing-xs);
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-2xs);
-    margin-top: var(--spacing-xs);
-  }
-  .vocaloid-platforms a {
-    color: var(--color-accent);
-    text-decoration: none;
-    font-size: var(--text-2xs);
-  }
-  .vocaloid-details {
-    margin-top: var(--spacing-xs);
-  }
-  .vocaloid-lyric {
-    margin: var(--spacing-2xs) 0;
-    padding-left: var(--spacing-xs);
-    border-left: 2px solid var(--color-border);
-    font-style: italic;
+    align-items: center;
+    gap: var(--spacing-2xs) var(--spacing-sm);
     font-size: var(--text-xs);
   }
-  .vocaloid-comment {
+  .vocaloid-detail-pair {
+    display: inline-flex;
+    gap: var(--spacing-3xs);
+  }
+  .vocaloid-detail-k {
+    color: var(--color-text-muted);
+  }
+  .vocaloid-detail-v {
+    color: var(--color-text);
+  }
+  .vocaloid-status-badge {
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    border-radius: var(--radius-sm);
+  }
+  .vocaloid-status-favorite {
+    background: color-mix(in srgb, var(--color-warning) 82%, transparent);
+    color: #fff;
+  }
+  .vocaloid-status-liked {
+    background: color-mix(in srgb, var(--color-success) 82%, transparent);
+    color: #fff;
+  }
+  .vocaloid-status-neutral {
+    background: color-mix(in srgb, var(--color-text-muted) 82%, transparent);
+    color: #fff;
+  }
+  .vocaloid-status-archived {
+    background: color-mix(in srgb, var(--color-text-muted) 82%, transparent);
+    color: #fff;
+  }
+  .vocaloid-detail-lyric {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    border-left: 2px solid var(--color-border);
     font-size: var(--text-xs);
     color: var(--color-text-muted);
+    white-space: pre-line;
+  }
+  .vocaloid-detail-comment {
+    margin-top: var(--spacing-sm);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    white-space: pre-line;
+  }
+  .vocaloid-detail-platforms {
+    margin-top: var(--spacing-sm);
+    padding: 0;
+    list-style: none;
+    display: flex;
+    gap: var(--spacing-sm);
+    font-size: var(--text-xs);
+  }
+  .vocaloid-detail-platforms a {
+    color: var(--color-accent);
+    text-decoration: none;
   }
 </style>

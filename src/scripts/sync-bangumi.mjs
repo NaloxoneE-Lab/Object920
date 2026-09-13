@@ -149,11 +149,12 @@ for (const [i, coll] of collections.entries()) {
   await sleep(REQUEST_DELAY_MS);
 }
 
-// 清理已被取消收藏的条目的孤儿封面
+// 清理已被取消收藏的条目的孤儿封面;只认纯数字命名——covers/ 下还有其他集合
+// (术曲在 covers/vocaloid/ 子目录、手写 manual 封面),绝不能误删
 const keptIds = new Set(items.map((it) => it.bangumiId));
 for (const f of readdirSync(coversDir)) {
-  const sid = Number(f.replace(/\.jpg$/, ''));
-  if (!keptIds.has(sid)) {
+  const m = f.match(/^(\d+)\.jpg$/);
+  if (m && !keptIds.has(Number(m[1]))) {
     rmSync(join(coversDir, f));
     console.log(`[sync-bangumi] 移除孤儿封面 ${f}`);
   }

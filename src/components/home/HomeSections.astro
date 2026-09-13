@@ -1,9 +1,14 @@
 ---
 // src/components/home/HomeSections.astro
 import ArticleCard from '@components/article/ArticleCard.astro';
-import ProjectCard from '@components/project/ProjectCard.astro';
 import AnimeCard from '@components/favorites/AnimeCard.astro';
 import VocaloidCard from '@components/favorites/VocaloidCard.astro';
+import {
+  pickLatestArticles,
+  pickPinnedArticles,
+  pickRecentAnime,
+  pickRecentVocaloid,
+} from '@lib/home-sections';
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
@@ -12,19 +17,33 @@ interface Props {
 }
 const { locale } = Astro.props;
 
-const articles = (await getCollection('articles'))
-  .filter((e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-const projects = (await getCollection('projects'))
-  .filter((e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-const anime = (await getCollection('anime')).filter((e) => e.data.highlight).slice(0, 4);
-const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highlight).slice(0, 4);
+const localeArticles = (await getCollection('articles')).filter(
+  (e) => e.id.startsWith(locale + '/') && (!e.data.draft || import.meta.env.DEV),
+);
+const pinned = pickPinnedArticles(localeArticles);
+const articles = pickLatestArticles(localeArticles);
+const anime = pickRecentAnime(await getCollection('anime'));
+const vocaloid = pickRecentVocaloid(await getCollection('vocaloid'));
 ---
 
 <div class="home-sections">
+  {
+    pinned.length > 0 && (
+      <section class="home-section">
+        <div class="home-section-head">
+          <h2>{t(locale, 'home.pinned')}</h2>
+          <a href={`/${locale}/articles/`} class="home-section-more">
+            {t(locale, 'articles.viewAll')} →
+          </a>
+        </div>
+        <div class="home-section-grid">
+          {pinned.map((e) => (
+            <ArticleCard entry={e} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )
+  }
   {
     articles.length > 0 && (
       <section class="home-section">
@@ -43,27 +62,10 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
     )
   }
   {
-    projects.length > 0 && (
-      <section class="home-section">
-        <div class="home-section-head">
-          <h2>{t(locale, 'home.latestProjects')}</h2>
-          <a href={`/${locale}/projects/`} class="home-section-more">
-            {t(locale, 'projects.viewAll')} →
-          </a>
-        </div>
-        <div class="home-section-grid">
-          {projects.map((e) => (
-            <ProjectCard entry={e} locale={locale} />
-          ))}
-        </div>
-      </section>
-    )
-  }
-  {
     anime.length > 0 && (
       <section class="home-section">
         <div class="home-section-head">
-          <h2>{t(locale, 'home.animePicks')}</h2>
+          <h2>{t(locale, 'home.watching')}</h2>
           <a href={`/${locale}/favorites/anime/`} class="home-section-more">
             {t(locale, 'articles.viewAll')} →
           </a>
@@ -80,7 +82,7 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
     vocaloid.length > 0 && (
       <section class="home-section">
         <div class="home-section-head">
-          <h2>{t(locale, 'home.vocaloidPicks')}</h2>
+          <h2>{t(locale, 'home.listening')}</h2>
           <a href={`/${locale}/favorites/vocaloid/`} class="home-section-more">
             {t(locale, 'articles.viewAll')} →
           </a>
@@ -93,13 +95,6 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
       </section>
     )
   }
-  <section class="home-section">
-    <div class="home-section-head">
-      <h2>{t(locale, 'home.aboutSummary')}</h2>
-      <a href={`/${locale}/about/`} class="home-section-more">→</a>
-    </div>
-    <p class="home-about-text">{t(locale, 'home.aboutText')}</p>
-  </section>
 </div>
 <style>
   .home-sections {
@@ -132,9 +127,5 @@ const vocaloid = (await getCollection('vocaloid')).filter((e) => e.data.highligh
   }
   .home-section-grid-small {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-  .home-about-text {
-    color: var(--color-text-muted);
-    font-size: var(--text-md);
   }
 </style>
