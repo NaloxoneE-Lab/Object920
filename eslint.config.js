@@ -24,6 +24,7 @@ export default tseslint.config(
         URLSearchParams: 'readonly',
         Response: 'readonly',
         Request: 'readonly',
+        Headers: 'readonly', // fetch 规范全局;deploy/cf-relay/worker.js 在 CF Workers 运行时使用
         fetch: 'readonly',
         crypto: 'readonly',
       },
