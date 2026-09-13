@@ -31,6 +31,9 @@ type PagefindLoader = () => Promise<PagefindModule>;
 // ?v= 用于击穿浏览器对旧 pagefind.js 的缓存:pagefind 以自身为 Worker,Worker 继承
 // 其响应头里的 CSP——缓存旧响应会把旧 CSP 一起带给 Worker,拦掉新放行的 WASM
 const PAGEFIND_ENTRY = '/pagefind/pagefind.js?v=2';
+// pagefind 的 Worker 脚本;历史部署曾对 /pagefind/ 全目录下发 86400s 缓存,
+// 旧访问者 HTTP 缓存里滞留着带旧 CSP 头的本文件(见 initialize 内缓存自愈)
+const PAGEFIND_WORKER_ENTRY = '/pagefind/pagefind-worker.js';
 
 export class PagefindProvider implements SearchProvider {
   private state: SearchProviderState = 'idle';
@@ -45,6 +48,13 @@ export class PagefindProvider implements SearchProvider {
     if (this.state === 'initializing' || this.state === 'ready') return;
     this.state = 'initializing';
     try {
+      // 缓存自愈:Worker 继承其脚本响应头里的 CSP,滞留的旧缓存会拦掉新放行的
+      // WASM;首次初始化时强制刷新一次该缓存(必须在 Worker 创建前),失败不阻塞
+      try {
+        await fetch(PAGEFIND_WORKER_ENTRY, { cache: 'reload' });
+      } catch {
+        /* 离线等场景自愈失败,交由下方原错误路径兜底 */
+      }
       this.pagefind = await this.loader();
       this.state = 'ready';
     } catch {
