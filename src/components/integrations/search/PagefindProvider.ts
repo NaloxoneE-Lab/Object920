@@ -25,15 +25,18 @@ interface PagefindModule {
 
 type PagefindLoader = () => Promise<PagefindModule>;
 
+// /pagefind/pagefind.js 是 postbuild 生成的运行时产物,构建期不存在。
+// 必须经变量间接引用:字面量 + `as string` 断言会让 esbuild 丢掉 @vite-ignore
+// 注解,vite:import-analysis 便会尝试静态解析并在 dev 模式直接报错(spec 7.10)
+const PAGEFIND_ENTRY = '/pagefind/pagefind.js';
+
 export class PagefindProvider implements SearchProvider {
   private state: SearchProviderState = 'idle';
   private pagefind: PagefindModule | null = null;
   private readonly loader: PagefindLoader;
 
   constructor(loader?: PagefindLoader) {
-    // /pagefind/pagefind.js 是 postbuild 生成的运行时产物,构建期不存在;
-    // @vite-ignore 阻止 Vite 静态解析(spec 7.10)
-    this.loader = loader ?? (() => import(/* @vite-ignore */ '/pagefind/pagefind.js' as string));
+    this.loader = loader ?? (() => import(/* @vite-ignore */ PAGEFIND_ENTRY));
   }
 
   async initialize(): Promise<void> {

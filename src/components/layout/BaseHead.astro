@@ -58,10 +58,16 @@ const robotsContent =
 <!-- 暗色模式防闪烁(必须 is:inline,head 最早位置) -->
 <script is:inline>
   (function () {
-    const stored = localStorage.getItem('theme');
-    const system = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = stored || (system ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
+    function applyTheme() {
+      var stored = localStorage.getItem('theme');
+      var system = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = stored || (system ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    applyTheme();
+    // ClientRouter 导航会用新页面的 SSR 属性覆盖 <html>,客户端设置的
+    // data-theme 会被剥掉;after-swap 重新应用(用户显式选择优先于系统)
+    document.addEventListener('astro:after-swap', applyTheme);
   })();
 </script>
 

@@ -9,32 +9,36 @@ interface Props {
 const { locale } = Astro.props;
 ---
 
-<button
-  id="theme-toggle"
-  class="theme-toggle"
-  aria-label={t(locale, 'theme.toggle')}
-  aria-pressed="false"
->
+<button class="theme-toggle" aria-label={t(locale, 'theme.toggle')} aria-pressed="false">
   <Icon name="sun" size={20} class="icon-light" />
   <Icon name="moon" size={20} class="icon-dark" />
 </button>
 <script>
-  const btn = document.getElementById('theme-toggle');
-  if (btn) {
-    const update = () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      btn.setAttribute('aria-pressed', current === 'dark' ? 'true' : 'false');
-    };
-    update();
-    btn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: next } }));
-      update();
+  // ClientRouter 导航会重建 DOM,绑定须随 astro:page-load 重进;
+  // 桌面与移动抽屉各有一份实例,统一按 class 绑定(不可用 id:会重复)
+  function syncPressed(btn: HTMLButtonElement) {
+    const current = document.documentElement.getAttribute('data-theme');
+    btn.setAttribute('aria-pressed', current === 'dark' ? 'true' : 'false');
+  }
+  function initThemeToggles() {
+    document.querySelectorAll<HTMLButtonElement>('.theme-toggle').forEach((btn) => {
+      if (btn.dataset.initialized === 'true') return;
+      btn.dataset.initialized = 'true';
+      syncPressed(btn);
+      btn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: next } }));
+        // 两份实例(桌面 + 移动抽屉)状态同步
+        document
+          .querySelectorAll<HTMLButtonElement>('.theme-toggle')
+          .forEach((b) => syncPressed(b));
+      });
     });
   }
+  document.addEventListener('astro:page-load', initThemeToggles);
 </script>
 <style>
   .theme-toggle {

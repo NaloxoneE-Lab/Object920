@@ -38,29 +38,44 @@ const { locale } = Astro.props;
 
 <script>
   // 点击图标开合;点击外部或 Escape 关闭(vanilla,无框架)
-  const setup = (wrap: HTMLElement) => {
-    const btn = wrap.querySelector<HTMLButtonElement>('.langswitch-btn');
+  // ClientRouter 导航重建 DOM:元素级绑定随 astro:page-load 重进;
+  // document 级监听只绑一次,处理函数内动态查询当前 DOM,避免随导航累积
+  function setWrapOpen(wrap: HTMLElement, open: boolean) {
     const menu = wrap.querySelector<HTMLElement>('.langswitch-menu');
-    if (!btn || !menu) return;
-    const setOpen = (open: boolean) => {
-      menu.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
-    };
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
-      setOpen(menu.hidden);
+    const btn = wrap.querySelector<HTMLButtonElement>('.langswitch-btn');
+    if (!menu || !btn) return;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  }
+  function initLangSwitches() {
+    document.querySelectorAll<HTMLElement>('.langswitch').forEach((wrap) => {
+      if (wrap.dataset.initialized === 'true') return;
+      wrap.dataset.initialized = 'true';
+      const btn = wrap.querySelector<HTMLButtonElement>('.langswitch-btn');
+      const menu = wrap.querySelector<HTMLElement>('.langswitch-menu');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
+        setWrapOpen(wrap, menu.hidden);
+      });
     });
-    document.addEventListener('click', (e) => {
-      if (!wrap.contains(e.target as Node)) setOpen(false);
+  }
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll<HTMLElement>('.langswitch').forEach((wrap) => {
+      if (!wrap.contains(e.target as Node)) setWrapOpen(wrap, false);
     });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !menu.hidden) {
-        setOpen(false);
-        btn.focus();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll<HTMLElement>('.langswitch').forEach((wrap) => {
+      const menu = wrap.querySelector<HTMLElement>('.langswitch-menu');
+      if (menu && !menu.hidden) {
+        setWrapOpen(wrap, false);
+        wrap.querySelector<HTMLButtonElement>('.langswitch-btn')?.focus();
       }
     });
-  };
-  document.querySelectorAll<HTMLElement>('.langswitch').forEach(setup);
+  });
+  document.addEventListener('astro:page-load', initLangSwitches);
 </script>
 
 <style>

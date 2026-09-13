@@ -8,7 +8,8 @@ const env: Record<string, string | undefined> =
 export const siteConfig = {
   siteUrl: env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'https://example.com',
   siteName: env.PUBLIC_SITE_NAME ?? process.env.PUBLIC_SITE_NAME ?? 'Object920',
-  author: 'YourName',
+  author: 'NaloxoneE',
+  github: 'https://github.com/NaloxoneE-Lab',
   description: '个人网站 — 文章、工程、番剧与术曲',
   // 导航菜单项(走 i18n key)
   navItems: [

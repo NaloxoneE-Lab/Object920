@@ -2,6 +2,8 @@
 // src/pages/[locale]/friends/index.astro
 import BaseLayout from '@components/layout/BaseLayout.astro';
 import FriendList from '@components/friends/FriendList.astro';
+import Travellings from '@components/integrations/travellings/Travellings.astro';
+import Comments from '@components/integrations/comments/Comments.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
@@ -20,7 +22,8 @@ const entries = all.sort(
   <FriendList entries={entries} locale={locale} />
   <section class="guestbook" aria-label={t(locale, 'friends.guestbook')}>
     <h2>{t(locale, 'friends.guestbook')}</h2>
-    <!-- Plan 4: <Travellings locale={locale} /> 与 <Comments locale={locale} category="guestbook" /> 在此挂载 -->
+    <Travellings locale={locale} />
+    <Comments locale={locale} category="guestbook" />
   </section>
 </BaseLayout>
 <style>
