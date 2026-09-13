@@ -5,6 +5,7 @@ import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
 import LangSwitch from '../common/LangSwitch.astro';
+import MusicPlayerWidget from '@components/integrations/music/MusicPlayerWidget.astro';
 import ThemeToggle from './ThemeToggle.astro';
 interface Props {
   locale: Locale;
@@ -38,6 +39,7 @@ const { locale } = Astro.props;
       }
     </ul>
     <div class="mobile-nav-controls">
+      <MusicPlayerWidget locale={locale} />
       <LangSwitch locale={locale} />
       <ThemeToggle locale={locale} />
     </div>

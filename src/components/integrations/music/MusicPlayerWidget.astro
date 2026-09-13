@@ -1,8 +1,11 @@
 ---
 // src/components/integrations/music/MusicPlayerWidget.astro
-// UI boundary(spec 5.12 P1-11):只 import resolver + 接口类型,不 import 具体 Provider
+// header/抽屉里的音符图标 + 弹出播放器面板(UI boundary spec 5.12 P1-11:
+// 只 import resolver + 接口类型 + 静态歌单配置,不 import 具体 Provider)
 import { t } from '@i18n/utils';
+import Icon from '@components/common/Icon.astro';
 import type { Locale } from '@i18n/config';
+import { playlists } from '@config/music';
 
 interface Props {
   locale: Locale;
@@ -10,6 +13,7 @@ interface Props {
 const { locale } = Astro.props;
 
 const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
+const defaultPlaylist = playlists[0];
 ---
 
 {
@@ -17,44 +21,285 @@ const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
     <div class="music-widget" data-music-widget>
       <button
         type="button"
-        class="music-btn music-play-btn"
-        aria-label={t(locale, 'music.play')}
-        data-music-play
+        class="music-widget-btn"
+        data-music-toggle
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label={t(locale, 'music.label')}
+        title={t(locale, 'music.label')}
       >
-        <span data-music-icon-play aria-hidden="true">
-          ▶
-        </span>
-        <span data-music-icon-pause hidden aria-hidden="true">
-          ⏸
-        </span>
+        <Icon name="music" size={20} />
       </button>
-      <span class="music-track-name" data-music-track-name aria-live="polite">
-        —
-      </span>
-      <button
-        type="button"
-        class="music-btn music-next-btn"
-        aria-label={t(locale, 'music.next')}
-        data-music-next
-      >
-        <span aria-hidden="true">⏭</span>
-      </button>
+      <div class="music-panel" data-music-panel hidden>
+        <p class="music-playlist-name">{defaultPlaylist?.name}</p>
+        <p
+          class="music-track"
+          data-music-track-name
+          data-unavailable-text={t(locale, 'music.unavailable')}
+          aria-live="polite"
+        >
+          —
+        </p>
+        <div class="music-controls">
+          <button
+            type="button"
+            class="music-skip-btn"
+            data-music-prev
+            aria-label={t(locale, 'music.prev')}
+          >
+            ⏮
+          </button>
+          <button
+            type="button"
+            class="music-skip-btn music-play-btn"
+            data-music-play
+            aria-label={t(locale, 'music.play')}
+          >
+            <span data-music-icon-play aria-hidden="true">
+              ▶
+            </span>
+            <span data-music-icon-pause hidden aria-hidden="true">
+              ⏸
+            </span>
+          </button>
+          <button
+            type="button"
+            class="music-skip-btn"
+            data-music-next
+            aria-label={t(locale, 'music.next')}
+          >
+            ⏭
+          </button>
+        </div>
+        <label class="music-volume">
+          <span>{t(locale, 'music.volume')}</span>
+          <input type="range" min="0" max="1" step="0.05" data-music-volume />
+        </label>
+        {defaultPlaylist && (
+          <ul class:list={['music-playlist']} data-music-playlist>
+            {defaultPlaylist.tracks.map((track) => (
+              <li>
+                <button type="button" class="music-track-btn" data-music-track-btn={track.id}>
+                  <span class="music-track-title">{track.title}</span>
+                  {track.artist && <span class="music-track-artist">{track.artist}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
 
+<script>
+  import type { MusicPlayer, MusicPlayerState } from './MusicPlayer';
+  import { playlists } from '@config/music';
+
+  // Provider singleton(模块缓存,ClientRouter 导航后不重建)(spec 5.12/5.20)
+  let provider: MusicPlayer | null | undefined = undefined;
+  let unsubStateChange: (() => void) | null = null;
+  // 歌单元数据(展示当前曲名用;构建期静态数据)
+  const tracksById = new Map<string, { title: string; artist?: string }>();
+  for (const pl of playlists) {
+    for (const tr of pl.tracks) {
+      tracksById.set(tr.id, { title: tr.title, artist: tr.artist });
+    }
+  }
+
+  function setPanelOpen(widget: HTMLElement, open: boolean) {
+    const panel = widget.querySelector<HTMLElement>('[data-music-panel]');
+    const btn = widget.querySelector<HTMLButtonElement>('[data-music-toggle]');
+    if (!panel || !btn) return;
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  }
+
+  function initMusicWidget() {
+    const widget = document.querySelector<HTMLElement>('[data-music-widget]');
+    const audio = document.querySelector<HTMLAudioElement>('[data-music-audio]');
+    if (!widget || !audio) return;
+
+    // 控件绑定(一次):弹层开合不依赖 provider,立即可用
+    if (widget.dataset.bound !== 'true') {
+      widget.dataset.bound = 'true';
+      const toggleBtn = widget.querySelector<HTMLButtonElement>('[data-music-toggle]');
+      const panel = widget.querySelector<HTMLElement>('[data-music-panel]');
+      toggleBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (panel) setPanelOpen(widget, panel.hidden);
+      });
+      widget.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('[data-music-play]')) {
+          const isPlaying = provider?.getState().isPlaying ?? false;
+          if (isPlaying) provider?.pause();
+          else providerAction(widget, (p) => p.play());
+        } else if (target.closest('[data-music-next]')) {
+          providerAction(widget, (p) => p.next());
+        } else if (target.closest('[data-music-prev]')) {
+          providerAction(widget, (p) => p.prev());
+        } else {
+          const trackBtn = target.closest<HTMLButtonElement>('[data-music-track-btn]');
+          if (trackBtn) providerAction(widget, (p) => p.play(trackBtn.dataset.musicTrackBtn));
+        }
+      });
+      widget.querySelector('[data-music-volume]')?.addEventListener('input', (e) => {
+        provider?.setVolume(Number((e.target as HTMLInputElement).value));
+      });
+    }
+
+    // 创建 provider singleton(只创建一次)(spec 5.20)
+    if (provider === undefined) {
+      // 动态 import resolver(避免 frontmatter 和 client bundle 路径不一致)
+      import('./createMusicProvider').then(({ createMusicProvider }) => {
+        provider = createMusicProvider(audio);
+        if (provider) bindProvider(widget, provider);
+      });
+    } else if (provider) {
+      // provider 已存在(ClientRouter 导航后),重新绑定控件
+      bindProvider(widget, provider);
+    }
+  }
+
+  function providerAction(
+    widget: HTMLElement,
+    fn: (p: MusicPlayer) => Promise<void> | void,
+  ): Promise<void> {
+    if (!provider) return Promise.resolve();
+    return (async () => {
+      try {
+        // 首次播放时懒初始化(spec 5.12:默认不播放,用户点击才播)
+        const isReady = await provider!.ready();
+        if (!isReady) await provider!.initialize();
+        await fn(provider!);
+      } catch {
+        const trackName = widget.querySelector<HTMLElement>('[data-music-track-name]');
+        if (trackName) trackName.textContent = trackName.dataset.unavailableText ?? '—';
+      }
+    })();
+  }
+
+  function bindProvider(widget: HTMLElement, p: MusicPlayer) {
+    // 清理旧订阅(spec 5.20)
+    unsubStateChange?.();
+    unsubStateChange = null;
+
+    updateUI(widget, p, p.getState());
+    // 订阅状态变化(控件监听更新 UI)
+    unsubStateChange = p.onStateChange((state) => updateUI(widget, p, state));
+  }
+
+  function updateUI(widget: HTMLElement, p: MusicPlayer, state: MusicPlayerState) {
+    const playBtn = widget.querySelector<HTMLButtonElement>('[data-music-play]');
+    const iconPlay = widget.querySelector<HTMLElement>('[data-music-icon-play]');
+    const iconPause = widget.querySelector<HTMLElement>('[data-music-icon-pause]');
+    const trackName = widget.querySelector<HTMLElement>('[data-music-track-name]');
+    const volume = widget.querySelector<HTMLInputElement>('[data-music-volume]');
+    if (iconPlay) iconPlay.hidden = state.isPlaying;
+    if (iconPause) iconPause.hidden = !state.isPlaying;
+    if (playBtn) {
+      playBtn.setAttribute('aria-label', state.isPlaying ? '暂停背景音乐' : '播放背景音乐');
+    }
+    // 拖动音量时状态事件不应反向覆盖滑块
+    if (volume && document.activeElement !== volume) volume.value = String(state.volume);
+    // 歌单曲目高亮当前曲
+    widget.querySelectorAll<HTMLButtonElement>('[data-music-track-btn]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.musicTrackBtn === state.currentTrackId);
+    });
+    if (trackName) {
+      const track = state.currentTrackId ? tracksById.get(state.currentTrackId) : null;
+      trackName.textContent = track ? track.title : '—';
+    }
+  }
+
+  // 弹层关闭:与 LangSwitch 同约定 —— 点击外部关闭、Escape 关闭并还焦;
+  // document 级监听只绑一次,处理函数内动态查询当前 DOM,避免随导航累积
+  const CLOSE_FLAG = '__music_panel_close_bound__';
+  const closeWindow = window as unknown as Record<string, unknown>;
+  if (!closeWindow[CLOSE_FLAG]) {
+    closeWindow[CLOSE_FLAG] = true;
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll<HTMLElement>('[data-music-widget]').forEach((widget) => {
+        if (!widget.contains(e.target as Node)) setPanelOpen(widget, false);
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll<HTMLElement>('[data-music-widget]').forEach((widget) => {
+        const panel = widget.querySelector<HTMLElement>('[data-music-panel]');
+        if (panel && !panel.hidden) {
+          setPanelOpen(widget, false);
+          widget.querySelector<HTMLButtonElement>('[data-music-toggle]')?.focus();
+        }
+      });
+    });
+  }
+
+  // 每次 astro:page-load 重新绑定控件(spec 5.20)
+  document.addEventListener('astro:page-load', initMusicWidget);
+</script>
+
 <style>
   .music-widget {
+    position: relative;
+  }
+  .music-widget-btn {
     display: flex;
     align-items: center;
-    gap: var(--spacing-2xs);
-    background: var(--color-surface-raised);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-full);
-    padding: var(--spacing-3xs) var(--spacing-2xs);
-    box-shadow: var(--shadow-md);
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
-  .music-btn {
+  .music-widget-btn:hover,
+  .music-widget-btn[aria-expanded='true'] {
+    color: var(--color-accent);
+  }
+  .music-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 230px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+    padding: var(--spacing-xs);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+  }
+  .music-panel[hidden] {
+    display: none;
+  }
+  .music-playlist-name {
+    font-size: var(--text-2xs);
+    color: var(--color-text-muted);
+  }
+  .music-track {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .music-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+  }
+  .music-skip-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -64,111 +309,62 @@ const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
     border-radius: var(--radius-full);
     background: transparent;
     color: var(--color-text);
+    font-size: var(--text-xs);
     cursor: pointer;
     transition: background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
-  .music-btn:hover {
-    background: var(--color-surface);
+  .music-skip-btn:hover {
+    background: var(--color-surface-raised);
   }
   .music-play-btn {
     background: var(--color-accent);
     color: var(--color-text-on-accent);
+    font-size: var(--text-sm);
   }
   .music-play-btn:hover {
     background: var(--color-accent-hover);
   }
-  .music-track-name {
-    font-size: var(--text-xs);
+  .music-volume {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    font-size: var(--text-2xs);
     color: var(--color-text-muted);
-    max-width: 12rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  }
+  .music-volume input {
+    flex: 1;
+    accent-color: var(--color-accent);
+  }
+  .music-playlist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3xs);
+  }
+  .music-track-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    width: 100%;
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-2xs);
+    text-align: left;
+    cursor: pointer;
+  }
+  .music-track-btn:hover {
+    background: var(--color-surface-raised);
+  }
+  .music-track-btn.active {
+    color: var(--color-accent);
+  }
+  .music-track-title {
+    font-weight: 600;
   }
 </style>
-
-<script>
-  import type { MusicPlayer, MusicPlayerState } from './MusicPlayer';
-
-  // Provider singleton(模块缓存,ClientRouter 导航后不重建)(spec 5.12/5.20)
-  let provider: MusicPlayer | null | undefined = undefined;
-  let unsubStateChange: (() => void) | null = null;
-
-  function initMusicWidget() {
-    const widget = document.querySelector<HTMLElement>('[data-music-widget]');
-    if (!widget) return;
-
-    const audio = document.querySelector<HTMLAudioElement>('[data-music-audio]');
-    if (!audio) return;
-
-    // 创建 provider singleton(只创建一次)(spec 5.20)
-    if (provider === undefined) {
-      // 动态 import resolver(避免 frontmatter 和 client bundle 路径不一致)
-      import('./createMusicProvider').then(({ createMusicProvider }) => {
-        provider = createMusicProvider(audio);
-        if (!provider) return;
-        bindWidget(widget, provider);
-      });
-    } else if (provider) {
-      // provider 已存在(ClientRouter 导航后),重新绑定控件
-      bindWidget(
-        widget, // provider 在 openPanel 初始化成功后必非空
-        provider,
-      );
-    }
-  }
-
-  function bindWidget(widget: HTMLElement, p: MusicPlayer) {
-    // 清理旧订阅(spec 5.20)
-    unsubStateChange?.();
-    unsubStateChange = null;
-
-    const playBtn = widget.querySelector<HTMLButtonElement>('[data-music-play]');
-    const trackName = widget.querySelector<HTMLElement>('[data-music-track-name]');
-    const iconPlay = widget.querySelector<HTMLElement>('[data-music-icon-play]');
-    const iconPause = widget.querySelector<HTMLElement>('[data-music-icon-pause]');
-
-    // 恢复 UI 状态(spec 5.20:每次 page-load 从 getState() 恢复)
-    updateUI(p.getState());
-
-    // 订阅状态变化(控件监听更新 UI)
-    unsubStateChange = p.onStateChange(updateUI);
-
-    // 事件委托绑定控件(spec 5.20:data-initialized guard 防重复)
-    if (widget.dataset.bound === 'true') return;
-    widget.dataset.bound = 'true';
-
-    widget.addEventListener('click', async (e) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-music-play]')) {
-        const state = p.getState();
-        if (state.isPlaying) {
-          p.pause();
-        } else {
-          // 首次播放时懒初始化(spec 5.12:默认不播放,用户点击才播)
-          const isReady = await p.ready();
-          if (!isReady) {
-            await p.initialize();
-          }
-          await p.play();
-        }
-      } else if (target.closest('[data-music-next]')) {
-        await p.next();
-      }
-    });
-
-    function updateUI(state: MusicPlayerState) {
-      if (iconPlay) iconPlay.hidden = state.isPlaying;
-      if (iconPause) iconPause.hidden = !state.isPlaying;
-      if (playBtn) {
-        playBtn.setAttribute('aria-label', state.isPlaying ? '暂停背景音乐' : '播放背景音乐');
-      }
-      if (trackName) {
-        trackName.textContent = state.currentTrackId ?? '—';
-      }
-    }
-  }
-
-  // 每次 astro:page-load 重新绑定控件(spec 5.20)
-  document.addEventListener('astro:page-load', initMusicWidget);
-</script>

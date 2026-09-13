@@ -18,6 +18,7 @@ export default {
   'langswitch.untranslated': 'Ещё не переведено',
 
   'theme.toggle': 'Переключить тёмную тему',
+  'theme.label': 'Тема',
   'theme.light': 'Светлая',
   'theme.dark': 'Тёмная',
 
@@ -133,4 +134,5 @@ export default {
   'music.volume': 'Громкость',
   'music.unavailable': 'Музыка недоступна',
   'music.playlist': 'Плейлист',
+  'music.label': 'Фоновая музыка',
 } as const;

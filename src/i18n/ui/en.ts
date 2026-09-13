@@ -18,6 +18,7 @@ export default {
   'langswitch.untranslated': 'Not translated yet',
 
   'theme.toggle': 'Toggle dark mode',
+  'theme.label': 'Theme',
   'theme.light': 'Light',
   'theme.dark': 'Dark',
 
@@ -132,4 +133,5 @@ export default {
   'music.volume': 'Volume',
   'music.unavailable': 'Music unavailable',
   'music.playlist': 'Playlist',
+  'music.label': 'Background music',
 } as const;

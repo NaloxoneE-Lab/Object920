@@ -18,8 +18,9 @@ export default {
   'langswitch.untranslated': '暂未翻译',
 
   'theme.toggle': '切换暗色模式',
-  'theme.light': '亮色',
-  'theme.dark': '暗色',
+  'theme.label': '主题',
+  'theme.light': '浅色',
+  'theme.dark': '深色',
 
   'common.empty': '暂无内容',
   'common.loading': '加载中...',
@@ -130,4 +131,5 @@ export default {
   'music.volume': '音量',
   'music.unavailable': '音乐不可用',
   'music.playlist': '歌单',
+  'music.label': '背景音乐',
 } as const;

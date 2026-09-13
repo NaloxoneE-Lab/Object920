@@ -15,10 +15,9 @@ const enabled = import.meta.env.PUBLIC_MUSIC_ENABLED === 'true';
 }
 
 <style>
+  /* 播放器 UI 已迁到 header/抽屉的 MusicPlayerWidget 弹窗,
+     宿主只保留 <audio> 持久化,不参与布局 */
   .music-host {
-    position: fixed;
-    bottom: var(--spacing-sm);
-    left: var(--spacing-sm);
-    z-index: var(--z-overlay);
+    display: contents;
   }
 </style>
