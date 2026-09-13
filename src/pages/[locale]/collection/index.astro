@@ -1,7 +1,7 @@
 ---
-// src/pages/[locale]/collection/vocaloid.astro
+// src/pages/[locale]/collection/index.astro
+// 「番 & 术」索引页:通往番剧墙/术曲墙的导航页(纯导航,不输出 lastmod)
 import BaseLayout from '@components/layout/BaseLayout.astro';
-import VocaloidWall from '@components/collection/VocaloidWall.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
 import { getCollection } from 'astro:content';
@@ -9,16 +9,39 @@ export async function getStaticPaths() {
   return locales.map((l) => ({ params: { locale: l } }));
 }
 const { locale } = Astro.params as { locale: Locale };
-const all = await getCollection('vocaloid');
-const entries = all.sort(
-  (a, b) => (b.data.listenedDate?.valueOf() ?? 0) - (a.data.listenedDate?.valueOf() ?? 0),
-);
+const animeCount = (await getCollection('anime')).length;
+const vocaloidCount = (await getCollection('vocaloid')).length;
+const cards = [
+  {
+    href: '/collection/anime/',
+    title: t(locale, 'collection.anime'),
+    desc: t(locale, 'collection.animeDesc'),
+    count: animeCount,
+  },
+  {
+    href: '/collection/vocaloid/',
+    title: t(locale, 'collection.vocaloid'),
+    desc: t(locale, 'collection.vocaloidDesc'),
+    count: vocaloidCount,
+  },
+];
 ---
 
-<BaseLayout locale={locale} title={t(locale, 'vocaloid.title')}>
-  <h1 class="page-title">{t(locale, 'vocaloid.title')}</h1>
-  <VocaloidWall entries={entries} locale={locale} />
+<BaseLayout locale={locale} title={t(locale, 'collection.title')}>
+  <h1 class="page-title">{t(locale, 'collection.title')}</h1>
+  <div class="collection-grid">
+    {
+      cards.map((card) => (
+        <a href={`/${locale}${card.href}`} class="collection-card">
+          <h2 class="collection-card-title">{card.title}</h2>
+          <p class="collection-card-desc">{card.desc}</p>
+          <span class="collection-card-count">{card.count}</span>
+        </a>
+      ))
+    }
+  </div>
 </BaseLayout>
+
 <style>
   .page-title {
     max-width: var(--container-page);
@@ -26,5 +49,50 @@ const entries = all.sort(
     padding: var(--spacing-lg) var(--spacing-md) 0;
     font-size: var(--text-3xl);
     font-weight: 700;
+  }
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--spacing-md);
+    max-width: var(--container-page);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  .collection-card {
+    position: relative;
+    display: block;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-spring),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .collection-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-accent);
+  }
+  .collection-card-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+  }
+  .collection-card-desc {
+    margin-top: var(--spacing-xs);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+  .collection-card-count {
+    display: inline-block;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-3xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
   }
 </style>
