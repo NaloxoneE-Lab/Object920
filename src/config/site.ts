@@ -12,9 +12,10 @@ export const siteConfig = {
   // header 品牌字(docs/design/hero-home-spec.md §3.1);siteName 仍用于 <title>/meta
   brand: 'Naloxonee',
   github: 'https://github.com/NaloxoneE-Lab',
-  // Hero 背景图(可选):spec 使用版权未确认的占位雪景,上线自有授权图后填路径
-  // (如 '/images/hero-bg.webp');留空则用自绘浅色渐变,暗色主题自动切换深色渐变
-  heroBackground: undefined as string | undefined,
+  // Hero 背景图(docs/design/hero-home-spec.md §2 的 Penpot 雪景,webp 28KB):
+  // 版权未确认(wallhaven 占位),替换自有授权图时直接覆盖 public/images/hero-bg.webp;
+  // 置 undefined 则回退自绘渐变
+  heroBackground: '/images/hero-bg.webp',
   description: '个人网站 — 文章、工程、番剧与术曲',
   // 导航菜单项(走 i18n key)
   navItems: [

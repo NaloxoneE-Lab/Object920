@@ -25,7 +25,15 @@ const bg = siteConfig.heroBackground;
 ---
 
 <section class="sakura-hero" data-sakura-hero>
-  {bg && <img class="sakura-bg" src={bg} alt="" fetchpriority="high" />}
+  {
+    bg && (
+      <>
+        <img class="sakura-bg" src={bg} alt="" fetchpriority="high" />
+        {/* 背景图整体偏浅:暗色主题下压暗保浅色墨字可读(spec §2/§3) */}
+        <div class="sakura-bg-overlay" aria-hidden="true" />
+      </>
+    )
+  }
   <nav class="sakura-menu" aria-label={t(locale, 'nav.home')}>
     {
       menuItems.map((item) => (
@@ -101,6 +109,15 @@ const bg = siteConfig.heroBackground;
     height: 100%;
     object-fit: cover;
     z-index: 0;
+  }
+  .sakura-bg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: transparent;
+  }
+  :global([data-theme='dark']) .sakura-bg-overlay {
+    background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
   }
   .sakura-menu {
     position: relative;
