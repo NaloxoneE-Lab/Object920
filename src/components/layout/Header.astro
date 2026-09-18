@@ -45,16 +45,18 @@ const { locale } = Astro.props;
     border-bottom: 1px solid var(--color-border);
   }
   .header-inner {
-    max-width: var(--container-page);
-    margin: 0 auto;
+    /* 与首页 Hero 顶栏同规格(docs/design/hero-home-spec.md §3):
+       高 64px,logo 距左 40px,最右图标距右≈40px(34px 按钮 + 右 32px) */
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-xs) var(--spacing-md);
+    padding: 0 32px 0 40px;
   }
   .header-logo {
-    font-size: var(--text-lg);
-    font-weight: 700;
+    /* 同 Hero 顶栏 logo:24px / 400 */
+    font-size: 24px;
+    font-weight: 400;
     color: var(--color-text);
     text-decoration: none;
   }
@@ -72,14 +74,32 @@ const { locale } = Astro.props;
     color: var(--color-text);
   }
   .header-controls {
+    /* 与 Hero 顶栏图标组同规格:墨色 85%、归一 34px、圆心距 44px、搜索光学 -2px */
+    --color-text-muted: color-mix(in srgb, var(--color-text) 85%, transparent);
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: 10px;
+  }
+  .header-controls > * {
+    width: 34px;
+    display: flex;
+    justify-content: center;
+  }
+  .header-controls :global(.search-box) {
+    width: 34px;
+  }
+  .header-controls :global(.search-box .search-toggle) {
+    width: 34px;
+    height: 34px;
+    translate: 0 -2px;
   }
   @media (max-width: 768px) {
     .header-nav,
     .header-controls {
       display: none;
+    }
+    .header-inner {
+      padding: 0 var(--spacing-md);
     }
   }
 </style>
