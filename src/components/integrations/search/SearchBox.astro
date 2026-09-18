@@ -157,13 +157,16 @@ const provider = enabled ? createSearchProvider() : null;
   let providerReady = false;
 
   function initSearchBox() {
-    const box = document.querySelector<HTMLElement>('[data-search-box]');
-    if (!box) return;
+    // 绑定全部实例(header 与 hero 顶栏各有一份;此前 querySelector 只绑第一个
+    // ——首页顶栏搜索失灵的根因)
+    document.querySelectorAll<HTMLElement>('[data-search-box]').forEach((box) => {
+      if (box.dataset.initialized === 'true') return;
+      box.dataset.initialized = 'true';
+      initOneSearchBox(box);
+    });
+  }
 
-    // Singleton guard:防止重复绑定(spec 5.20)
-    if (box.dataset.initialized === 'true') return;
-    box.dataset.initialized = 'true';
-
+  function initOneSearchBox(box: HTMLElement) {
     const toggle = box.querySelector<HTMLButtonElement>('[data-search-toggle]')!;
     const panel = box.querySelector<HTMLElement>('[data-search-panel]')!;
     const input = box.querySelector<HTMLInputElement>('[data-search-input]')!;

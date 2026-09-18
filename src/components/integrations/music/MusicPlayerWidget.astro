@@ -116,50 +116,55 @@ const defaultPlaylist = playlists[0];
   }
 
   function initMusicWidget() {
-    const widget = document.querySelector<HTMLElement>('[data-music-widget]');
     const audio = document.querySelector<HTMLAudioElement>('[data-music-audio]');
-    if (!widget || !audio) return;
+    if (!audio) return;
 
-    // 控件绑定(一次):弹层开合不依赖 provider,立即可用
-    if (widget.dataset.bound !== 'true') {
-      widget.dataset.bound = 'true';
-      const toggleBtn = widget.querySelector<HTMLButtonElement>('[data-music-toggle]');
-      const panel = widget.querySelector<HTMLElement>('[data-music-panel]');
-      toggleBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (panel) setPanelOpen(widget, panel.hidden);
-      });
-      widget.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.closest('[data-music-play]')) {
-          const isPlaying = provider?.getState().isPlaying ?? false;
-          if (isPlaying) provider?.pause();
-          else providerAction(widget, (p) => p.play());
-        } else if (target.closest('[data-music-next]')) {
-          providerAction(widget, (p) => p.next());
-        } else if (target.closest('[data-music-prev]')) {
-          providerAction(widget, (p) => p.prev());
-        } else {
-          const trackBtn = target.closest<HTMLButtonElement>('[data-music-track-btn]');
-          if (trackBtn) providerAction(widget, (p) => p.play(trackBtn.dataset.musicTrackBtn));
-        }
-      });
-      widget.querySelector('[data-music-volume]')?.addEventListener('input', (e) => {
-        provider?.setVolume(Number((e.target as HTMLInputElement).value));
-      });
-    }
+    // 绑定全部实例(header / hero 顶栏 / 移动抽屉各有一份,首页同屏最多三个;
+    // 此前 querySelector 只绑第一个,其余实例按钮无事件——首页顶栏音乐失灵的根因)
+    document.querySelectorAll<HTMLElement>('[data-music-widget]').forEach((widget) => {
+      if (widget.dataset.bound !== 'true') bindWidgetUI(widget);
+    });
 
     // 创建 provider singleton(只创建一次)(spec 5.20)
     if (provider === undefined) {
       // 动态 import resolver(避免 frontmatter 和 client bundle 路径不一致)
       import('./createMusicProvider').then(({ createMusicProvider }) => {
         provider = createMusicProvider(audio);
-        if (provider) bindProvider(widget, provider);
+        if (provider) subscribeProvider(provider);
       });
     } else if (provider) {
-      // provider 已存在(ClientRouter 导航后),重新绑定控件
-      bindProvider(widget, provider);
+      // provider 已存在(ClientRouter 导航后),重订状态同步
+      subscribeProvider(provider);
     }
+  }
+
+  function bindWidgetUI(widget: HTMLElement) {
+    // 控件绑定(一次,per 实例):弹层开合不依赖 provider,立即可用
+    widget.dataset.bound = 'true';
+    const toggleBtn = widget.querySelector<HTMLButtonElement>('[data-music-toggle]');
+    const panel = widget.querySelector<HTMLElement>('[data-music-panel]');
+    toggleBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panel) setPanelOpen(widget, panel.hidden);
+    });
+    widget.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-music-play]')) {
+        const isPlaying = provider?.getState().isPlaying ?? false;
+        if (isPlaying) provider?.pause();
+        else providerAction(widget, (p) => p.play());
+      } else if (target.closest('[data-music-next]')) {
+        providerAction(widget, (p) => p.next());
+      } else if (target.closest('[data-music-prev]')) {
+        providerAction(widget, (p) => p.prev());
+      } else {
+        const trackBtn = target.closest<HTMLButtonElement>('[data-music-track-btn]');
+        if (trackBtn) providerAction(widget, (p) => p.play(trackBtn.dataset.musicTrackBtn));
+      }
+    });
+    widget.querySelector('[data-music-volume]')?.addEventListener('input', (e) => {
+      provider?.setVolume(Number((e.target as HTMLInputElement).value));
+    });
   }
 
   function providerAction(
@@ -180,14 +185,19 @@ const defaultPlaylist = playlists[0];
     })();
   }
 
-  function bindProvider(widget: HTMLElement, p: MusicPlayer) {
-    // 清理旧订阅(spec 5.20)
+  function subscribeProvider(p: MusicPlayer) {
+    // 清理旧订阅(spec 5.20);状态回调刷新页面上全部实例
     unsubStateChange?.();
     unsubStateChange = null;
 
-    updateUI(widget, p, p.getState());
-    // 订阅状态变化(控件监听更新 UI)
-    unsubStateChange = p.onStateChange((state) => updateUI(widget, p, state));
+    updateAllUI(p, p.getState());
+    unsubStateChange = p.onStateChange((state) => updateAllUI(p, state));
+  }
+
+  function updateAllUI(p: MusicPlayer, state: MusicPlayerState) {
+    document.querySelectorAll<HTMLElement>('[data-music-widget]').forEach((widget) => {
+      updateUI(widget, p, state);
+    });
   }
 
   function updateUI(widget: HTMLElement, p: MusicPlayer, state: MusicPlayerState) {
