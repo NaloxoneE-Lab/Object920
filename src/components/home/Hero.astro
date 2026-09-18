@@ -1,18 +1,22 @@
 ---
 // src/components/home/Hero.astro
-// 仿Sakura 首页 Hero(docs/design/hero-home-spec.md):
-// 全屏浅色背景 + 左侧 galgame 式文字菜单(hover 细线加粗)+ 底部滚动指示。
-// 背景默认自绘渐变(spec 的雪景占位图版权未确认,siteConfig.heroBackground 可换自有授权图)。
-// 字体用系统栈近似(Noto Sans SC/PingFang/雅黑 + Rubik 回退),不引外部字体服务:
-// CSP font-src 'self' 且规避 CJK 子集化与授权问题(与 spec §7 的偏差,已在交接报告注明)。
+// 仿Sakura 首页 Hero — 严格按 docs/design/hero-home-spec.md + Penpot 画板实测几何:
+//   顶栏 64px 透明层(logo x=40/24px/400;图标组右缘距右 40px、圆心距 44px、搜索光学 -2px)
+//   左侧菜单 x=240、首项顶 y=228、行距 76px(34px 行高 + 42px 间隔)、细线在项顶+44px/56px 宽
+//   背景 wallhaven-2y3e56(仅背景图层,从 Penpot fill 导出,2254×1268 webp)
+//   底部双箭头错位 28px(上层 100%/下层 40%),上层顶 y≈678
+// 桌面(≥768px)隐藏站点 Header(spec §1"页面即首页,无独立导航条");移动端保留 Header+抽屉(spec §8)
 import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
+import MusicPlayerWidget from '@components/integrations/music/MusicPlayerWidget.astro';
+import SearchBox from '@components/integrations/search/SearchBox.astro';
+import LangSwitch from '@components/common/LangSwitch.astro';
+import ThemeToggle from '@components/ui/ThemeToggle.astro';
 import type { Locale } from '@i18n/config';
 interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-// spec §4:五个主菜单项(排除"首页"自身),英文角标是固定设计元素
 const menuItems = siteConfig.navItems.filter((item) => item.key !== 'nav.home');
 const enLabels: Record<string, string> = {
   'nav.articles': 'ARTICLES',
@@ -29,11 +33,21 @@ const bg = siteConfig.heroBackground;
     bg && (
       <>
         <img class="sakura-bg" src={bg} alt="" fetchpriority="high" />
-        {/* 背景图整体偏浅:暗色主题下压暗保浅色墨字可读(spec §2/§3) */}
         <div class="sakura-bg-overlay" aria-hidden="true" />
       </>
     )
   }
+
+  <header class="sakura-topbar">
+    <a href={`/${locale}/`} class="sakura-logo">{siteConfig.brand}</a>
+    <div class="sakura-topbar-icons">
+      <MusicPlayerWidget locale={locale} />
+      <SearchBox locale={locale} />
+      <LangSwitch locale={locale} />
+      <ThemeToggle locale={locale} />
+    </div>
+  </header>
+
   <nav class="sakura-menu" aria-label={t(locale, 'nav.home')}>
     {
       menuItems.map((item) => (
@@ -47,6 +61,7 @@ const bg = siteConfig.heroBackground;
       ))
     }
   </nav>
+
   <button
     type="button"
     class="sakura-scroll"
@@ -55,8 +70,8 @@ const bg = siteConfig.heroBackground;
   >
     <svg
       width="42"
-      height="58"
-      viewBox="0 0 42 58"
+      height="62"
+      viewBox="0 0 42 62"
       fill="none"
       stroke="currentColor"
       stroke-width="2.5"
@@ -64,14 +79,14 @@ const bg = siteConfig.heroBackground;
       stroke-linejoin="round"
       aria-hidden="true"
     >
-      <path class="sakura-chevron-back" d="M6 22 L21 36 L36 22" opacity="0.4"></path>
-      <path d="M6 8 L21 22 L36 8"></path>
+      <path d="M5 8 L21 24 L37 8"></path>
+      <path d="M5 36 L21 52 L37 36" opacity="0.4"></path>
     </svg>
   </button>
 </section>
 
 <script>
-  // 滚动指示:平滑滚到 hero 下方栏目区;绑定随 astro:page-load 重进(实例守卫)
+  // 滚动指示:平滑滚过 hero;绑定随 astro:page-load 重进(实例守卫)
   document.addEventListener('astro:page-load', () => {
     const hero = document.querySelector<HTMLElement>('[data-sakura-hero]');
     if (!hero || hero.dataset.scrollBound === 'true') return;
@@ -89,12 +104,10 @@ const bg = siteConfig.heroBackground;
 
 <style>
   .sakura-hero {
-    /* 墨色按 spec:#1A1A1D(亮)/ #E8E8EA(暗),以 RGB 分量形式便于透明度组合 */
+    /* 墨色按 spec:#1A1A1D(亮)/ #E8E8EA(暗),RGB 分量便于透明度组合 */
     --hero-ink: 26 26 29;
     position: relative;
-    min-height: calc(100svh - 66px);
-    display: flex;
-    align-items: center;
+    min-height: 100svh;
     overflow: hidden;
     background: linear-gradient(160deg, #faf6f4 0%, #f5edea 55%, #efe4e2 100%);
   }
@@ -110,6 +123,7 @@ const bg = siteConfig.heroBackground;
     object-fit: cover;
     z-index: 0;
   }
+  /* 背景图整体偏浅:暗色主题压暗保浅色墨字可读 */
   .sakura-bg-overlay {
     position: absolute;
     inset: 0;
@@ -119,16 +133,67 @@ const bg = siteConfig.heroBackground;
   :global([data-theme='dark']) .sakura-bg-overlay {
     background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
   }
+
+  /* === 顶栏(64px 透明层,spec §3)=== */
+  .sakura-topbar {
+    /* 覆盖图标控件取色:墨色替代主题 muted/text;弹层面板仍用正常主题色 */
+    --color-text-muted: rgb(var(--hero-ink) / 0.85);
+    --color-text: rgb(var(--hero-ink));
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px 0 40px; /* 右 32:34px 按钮 + 右缘 40 ≈ 设计稿图标圆心 x=1391 */
+  }
+  .sakura-logo {
+    font-size: 24px;
+    font-weight: 400;
+    color: rgb(var(--hero-ink));
+    text-decoration: none;
+  }
+  .sakura-topbar-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 34px 按钮圆心距 = 44px */
+  }
+  /* 控件包裹层收窄到按钮宽度,保证圆心严格等距 44px
+     (子组件样式属各自 scoped 域,须 :global 覆写) */
+  .sakura-topbar-icons > * {
+    width: 34px;
+    display: flex;
+    justify-content: center;
+  }
+  .sakura-topbar-icons :global(.search-box) {
+    width: 34px;
+  }
+  /* 搜索光学中心比其余高 2px(spec §3.2);按钮归一 34px 保证圆心等距 44px */
+  .sakura-topbar :global(.search-box .search-toggle) {
+    width: 34px;
+    height: 34px;
+    translate: 0 -2px;
+  }
+
+  /* === 左侧菜单(设计稿实测:x=240,首项顶 228,行距 76,细线 项顶+44/56px)=== */
   .sakura-menu {
-    position: relative;
+    position: absolute;
+    left: clamp(24px, 16.67vw, 240px);
+    /* 菜单块高 4*76+34=338,块中心比板中心高 8px → 50%-169-8 */
+    top: calc(50% - 177px);
     z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 42px;
-    padding-left: clamp(24px, 16.7vw, 240px);
-    padding-right: var(--spacing-md);
   }
   .sakura-item {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    height: 34px;
     text-decoration: none;
     color: rgb(var(--hero-ink) / 0.9);
   }
@@ -140,18 +205,20 @@ const bg = siteConfig.heroBackground;
     transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .sakura-item-en {
-    margin-left: 6px;
+    margin-left: 5px; /* 设计稿:en x=302,zh 右缘 297 */
     font-size: 11px;
     font-weight: 400;
+    line-height: 14px;
     letter-spacing: 2px;
     font-family: Rubik, 'Segoe UI', system-ui, sans-serif;
     color: rgb(var(--hero-ink) / 0.35);
   }
   .sakura-item-line {
-    display: block;
+    position: absolute;
+    top: 44px; /* 项顶 + 44(设计稿细线顶=首项顶+44) */
+    left: 0;
     width: 56px;
     height: 1px;
-    margin-top: 15px;
     background: rgb(var(--hero-ink) / 0.1);
     transition:
       height calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
@@ -165,16 +232,18 @@ const bg = siteConfig.heroBackground;
   .sakura-item:hover .sakura-item-zh {
     color: rgb(var(--hero-ink) / 1);
   }
+
+  /* === 底部滚动指示(双箭头错位 28px,上层顶 y≈678 → bottom≈8.6vh)=== */
   .sakura-scroll {
     position: absolute;
-    bottom: var(--spacing-sm);
+    bottom: clamp(32px, 7.6vh, 88px); /* 设计稿:svg 顶 y≈678 @810 */
     left: 50%;
     translate: -50% 0;
     z-index: 1;
     padding: var(--spacing-2xs);
     border: none;
     background: none;
-    color: rgb(var(--hero-ink) / 0.9);
+    color: rgb(var(--hero-ink));
     cursor: pointer;
     animation: sakura-float 2.6s var(--ease-out) infinite;
   }
@@ -192,16 +261,32 @@ const bg = siteConfig.heroBackground;
       animation: none;
     }
   }
-  @media (max-width: 768px) {
+
+  /* 首页桌面隐藏站点 Header(spec §1:页面即首页,无独立导航条);移动保留(spec §8) */
+  @media (min-width: 768px) {
+    :global(body.page-home .header) {
+      display: none;
+    }
+  }
+  @media (max-width: 767.98px) {
+    .sakura-topbar {
+      display: none;
+    }
     .sakura-hero {
       min-height: calc(100svh - 60px);
     }
     .sakura-menu {
-      gap: 28px;
+      gap: 34px;
+    }
+    .sakura-item {
+      height: 28px;
     }
     .sakura-item-zh {
       font-size: 22px;
       line-height: 28px;
+    }
+    .sakura-item-line {
+      top: 38px;
     }
   }
 </style>

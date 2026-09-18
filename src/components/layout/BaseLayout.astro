@@ -17,8 +17,10 @@ interface Props {
   canonicalURL?: string;
   noindex?: boolean;
   robots?: string;
+  /** 首页:桌面端隐藏站点 Header,由 Hero 自绘 64px 透明顶栏(spec §1) */
+  home?: boolean;
 }
-const { locale, title, description, ogImage, canonicalURL, noindex, robots } = Astro.props;
+const { locale, title, description, ogImage, canonicalURL, noindex, robots, home } = Astro.props;
 ---
 
 <!doctype html>
@@ -37,7 +39,7 @@ const { locale, title, description, ogImage, canonicalURL, noindex, robots } = A
     <!-- ClientRouter:客户端导航 + View Transitions(spec 5.20 P0-8 / spec 7.7 P0-7) -->
     <ClientRouter />
   </head>
-  <body>
+  <body class:list={[{ 'page-home': home }]}>
     <a href="#main" class="skip-link">{t(locale, 'common.skip-to-content')}</a>
     <Header locale={locale} />
     <main id="main">
