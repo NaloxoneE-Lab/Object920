@@ -1,0 +1,50 @@
+# .github/workflows/sync-vocaloid.yml
+# 从网易云音乐公开歌单同步术曲收藏到 content 仓(data/vocaloid.json + data/covers/vocaloid/)。
+# 歌单内曲目顺序 = 站点展示顺序;content 仓推送后由其 workflow 自动触发主站构建部署。
+#
+# 前置配置(一次性):
+#   1. 仓库 Variables 加 NETEASE_PLAYLIST_ID = 公开歌单 ID(music.163.com/#/playlist?id=xxx)
+#      未配置时使用下方内联的公开歌单 ID
+#   2. secret CONTENT_GITHUB_TOKEN 需要 content 仓 Contents: Read and write(与番剧同步共用)
+name: Sync NetEase vocaloid
+on:
+  schedule:
+    - cron: '20 3 * * *' # 每日 03:20 UTC(北京 11:20),与番剧同步错开 20 分钟避免内容仓推撞
+  workflow_dispatch:
+concurrency:
+  group: vocaloid-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # 主仓:同步脚本
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # content 仓克隆到 src/content(与本地 pull-content.mjs 的路径约定一致)
+      - uses: actions/checkout@v4
+        with:
+          repository: NaloxoneE-Lab/object920-content
+          token: ${{ secrets.CONTENT_GITHUB_TOKEN }}
+          path: src/content
+
+      - name: Run sync
+        env:
+          NETEASE_PLAYLIST_ID: ${{ vars.NETEASE_PLAYLIST_ID || '18381546226' }}
+        run: node src/scripts/sync-vocaloid.mjs
+
+      - name: Commit & push
+        working-directory: src/content
+        run: |
+          git config user.name "vocaloid-sync[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "[sync-vocaloid] No changes since last sync"
+            exit 0
+          fi
+          git commit -m "chore(vocaloid): sync NetEase playlist ($(date -u +%F))"
+          git push

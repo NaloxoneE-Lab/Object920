@@ -87,7 +87,7 @@ const vocaloid = pickRecentVocaloid(await getCollection('vocaloid'));
             {t(locale, 'articles.viewAll')} →
           </a>
         </div>
-        <div class="home-section-grid">
+        <div class="home-section-grid home-section-grid-small">
           {vocaloid.map((e) => (
             <VocaloidCard entry={e} locale={locale} />
           ))}

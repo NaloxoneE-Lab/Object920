@@ -35,7 +35,8 @@ jobs:
 
       - name: Run sync
         env:
-          BANGUMI_USER: ${{ vars.BANGUMI_USER }}
+          # 公开的 bgm 用户名,仓库 Variable 可覆盖;未配置时用内联值,避免每日同步空跑失败
+          BANGUMI_USER: ${{ vars.BANGUMI_USER || 'naloxonee' }}
         run: node src/scripts/sync-bangumi.mjs
 
       - name: Commit & push
