@@ -89,10 +89,11 @@ const enLabels: Record<string, string> = {
     background: transparent;
   }
 
-  /* === 左侧菜单(设计稿实测:x=240,首项顶 228,行距 76,细线 项顶+44/56px)=== */
+  /* === 左侧菜单(设计稿实测:x=240,首项顶 228,行距 76,细线 项顶+44/56px)
+     x 统一跟随设计稿比例:240/1440 = 16.67vw,任何分辨率按画板比例定位,不设上限 === */
   .sakura-menu {
     position: absolute;
-    left: clamp(24px, 16.67vw, 240px);
+    left: 16.67vw;
     /* 菜单块高 4*76+34=338,块中心比板中心高 8px → 50%-169-8 */
     top: calc(50% - 177px);
     z-index: 1;

@@ -52,6 +52,9 @@ const wallpaper = siteConfig.background;
         </div>
       )
     }
+    <!-- 顶栏下内容穿越带:只模糊不加色,内容滚过顶栏时被虚化,消除与顶栏文字的相撞。
+         首页第一屏不启用(opacity 0),切到第二屏随动画淡入 -->
+    <div class="top-fade" aria-hidden="true"></div>
     <a href="#main" class="skip-link">{t(locale, 'common.skip-to-content')}</a>
     <Header locale={locale} />
     <main id="main">
@@ -128,6 +131,28 @@ const wallpaper = siteConfig.background;
       body.page-home .footer {
         background: var(--frost-bg);
         backdrop-filter: blur(var(--frost-blur));
+      }
+      /* 顶栏下内容穿越带:fixed 于顶栏区——backdrop-filter 模糊 + 一层浅色磨砂底
+         (var(--frost-bg),与内容区同色)把糊进来的深色封面"提浅",消除灰斑感。
+         无渐变;强度 opacity 1;z-index 低于顶栏、高于内容。
+         首页第一屏隐藏(opacity 0),非首页常开,首页切到第二屏淡入 */
+      .top-fade {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 72px;
+        z-index: 40;
+        pointer-events: none;
+        background: var(--frost-bg);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        opacity: 0;
+        transition: opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out);
+      }
+      body:not(.page-home) .top-fade,
+      body.page-home.home-at-panel .top-fade {
+        opacity: 1;
       }
     </style>
   </body>
