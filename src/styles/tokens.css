@@ -97,6 +97,13 @@
   --duration-slow: 400ms;
   --duration-slower: 600ms;
   --motion-scale: 1;
+  /* 壁纸墨色:全站统一壁纸之上的前景墨色(RGB 分量便于透明度组合)。
+     亮 26 26 29 / 暗 232 232 234;常驻顶栏与首页 Hero 菜单共用 */
+  --hero-ink: 26 26 29;
+  /* 内容磨砂遮罩:内容玻璃板的底色与模糊半径(压住壁纸提高可读性)。
+     底色引用 --color-bg,暗色主题自动跟随 */
+  --frost-bg: color-mix(in srgb, var(--color-bg) 31%, transparent);
+  --frost-blur: 8px;
 }
 
 /* 暗色模式:仅覆盖颜色 token */
@@ -112,6 +119,7 @@
   --color-text-subtle: #6b7280;
   --color-border: #2d2d35;
   --color-border-strong: #3f3f47;
+  --hero-ink: 232 232 234;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -127,5 +135,6 @@
     --color-text-subtle: #6b7280;
     --color-border: #2d2d35;
     --color-border-strong: #3f3f47;
+    --hero-ink: 232 232 234;
   }
 }

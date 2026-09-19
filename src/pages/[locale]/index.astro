@@ -1,8 +1,8 @@
 ---
-// src/pages/[locale]/index.astro — 首页(Hero + HomeSections)
+// src/pages/[locale]/index.astro — 首页(双屏:Hero 第一屏 + HomePanel 第二屏)
 import BaseLayout from '@components/layout/BaseLayout.astro';
 import Hero from '@components/home/Hero.astro';
-import HomeSections from '@components/home/HomeSections.astro';
+import HomePanel from '@components/home/HomePanel.astro';
 import { t } from '@i18n/utils';
 import { locales, type Locale } from '@i18n/config';
 export function getStaticPaths() {
@@ -18,5 +18,5 @@ const { locale } = Astro.params as { locale: Locale };
   home
 >
   <Hero locale={locale} />
-  <HomeSections locale={locale} />
+  <HomePanel locale={locale} />
 </BaseLayout>

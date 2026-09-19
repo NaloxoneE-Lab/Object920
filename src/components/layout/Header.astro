@@ -1,5 +1,11 @@
 ---
 // src/components/layout/Header.astro
+// 全站唯一常驻顶栏(fixed,恒透明):logo + 居中导航 + 右侧图标组,所有页面样式统一。
+// 几何规格与首页 Hero 顶栏一致(docs/design/hero-home-spec.md §3):
+// 高 64px、logo 24px/400 距左 40px、34px 按钮圆心距 44px、搜索光学 -2px。
+// 取色用壁纸墨色 --hero-ink(壁纸全局铺底,与首页第一屏同观感)。
+// - 首页第一屏:中间跳转按钮隐藏(body.home-at-panel 出现时随切换动画淡入);
+//   顶栏本体全程不动、全程无底色。
 import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
@@ -35,22 +41,26 @@ const { locale } = Astro.props;
     <MobileNav locale={locale} />
   </div>
 </header>
+
 <style>
   .header {
-    position: sticky;
+    /* 壁纸墨色覆盖控件取色:与首页 Hero 顶栏同款(弹层面板内部仍用正常主题色) */
+    --color-text-muted: rgb(var(--hero-ink) / 0.85);
+    --color-text: rgb(var(--hero-ink));
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: var(--z-header);
-    background: color-mix(in srgb, var(--color-bg) 85%, transparent);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border);
+    /* 顶栏恒透明(用户要求):任何页面、任何滚动位置都不加底色/磨砂 */
   }
   .header-inner {
-    /* 与首页 Hero 顶栏同规格(docs/design/hero-home-spec.md §3):
-       高 64px,logo 距左 40px,最右图标距右≈40px(34px 按钮 + 右 32px) */
     height: 64px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    /* 图标组贴右缘由 margin-left:auto 保证(与原 Hero 顶栏双元素 space-between 等效;
+       若用 space-between,末尾 0 宽的 MobileNav 包装层会吃掉一个间隙槽,
+       图标组会被顶离右缘 ~300px) */
     padding: 0 32px 0 40px;
   }
   .header-logo {
@@ -61,8 +71,15 @@ const { locale } = Astro.props;
     text-decoration: none;
   }
   .header-nav {
+    /* 绝对居中:不论 logo/图标组宽度,链接组恒在顶栏正中 */
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
     display: flex;
     gap: var(--spacing-sm);
+    transition:
+      opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
+      visibility 0s linear;
   }
   .header-nav-link {
     color: var(--color-text-muted);
@@ -75,7 +92,7 @@ const { locale } = Astro.props;
   }
   .header-controls {
     /* 与 Hero 顶栏图标组同规格:墨色 85%、归一 34px、圆心距 44px、搜索光学 -2px */
-    --color-text-muted: color-mix(in srgb, var(--color-text) 85%, transparent);
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -93,10 +110,23 @@ const { locale } = Astro.props;
     height: 34px;
     translate: 0 -2px;
   }
+  /* 首页双屏切换:第一屏无中间跳转按钮(原 Hero 顶栏形态),
+     切到第二屏时按钮随动画淡入;顶栏本体全程不动 */
+  :global(body.page-home:not(.home-at-panel)) .header-nav {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
+      visibility 0s linear calc(var(--duration-slow) * var(--motion-scale));
+  }
   @media (max-width: 768px) {
     .header-nav,
     .header-controls {
       display: none;
+    }
+    /* 移动端汉堡贴右(桌面端图标组贴右,无需此规则) */
+    .mobile-nav {
+      margin-left: auto;
     }
     .header-inner {
       padding: 0 var(--spacing-md);

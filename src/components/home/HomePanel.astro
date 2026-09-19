@@ -1,0 +1,68 @@
+---
+// src/components/home/HomePanel.astro
+// 首页第二屏内容区:原首页内容(HomeSections)+ Footer 由 BaseLayout 自然衔接。
+// 常驻顶栏由 BaseLayout 的 Header 提供(fixed,切到本屏时中间跳转按钮随动画淡入,
+// 顶栏本体不动);与第一屏(Hero)的整屏切换逻辑见 scroll-switch.ts。
+// 进场动画:body.home-at-panel 时各内容块错峰上滑淡入(类移除即复位,可重放)。
+import HomeSections from './HomeSections.astro';
+import type { Locale } from '@i18n/config';
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+---
+
+<div class="home-panel" data-home-panel>
+  <HomeSections locale={locale} />
+</div>
+
+<script>
+  import { initHomeSwitch } from './scroll-switch';
+  // astro:page-load 首次加载即触发;非首页时元素查询为空,内部自行短路
+  document.addEventListener('astro:page-load', () => initHomeSwitch());
+</script>
+
+<style>
+  /* 让出常驻顶栏高度(顶栏 fixed 不占流),落位后内容不从顶栏底下起;
+     面板磨砂板:压住壁纸提高内容可读性(第一屏 Hero 保持壁纸原样不受影响) */
+  .home-panel {
+    padding-top: 64px;
+    background: var(--frost-bg);
+    backdrop-filter: blur(var(--frost-blur));
+    -webkit-backdrop-filter: blur(var(--frost-blur));
+  }
+  /* 进场基态(仅 JS 就绪后生效,body.home-ready 由 scroll-switch 注入;
+     无 JS 时面板始终可见,原生滚动兜底):隐藏 + 下沉。
+     transition 声明在基态,延迟挂在进场态(退场无延迟,整体同步淡出) */
+  :global(body.home-ready) .home-panel :global(.home-section) {
+    opacity: 0;
+    translate: 0 28px;
+    transition:
+      opacity calc(var(--duration-slower) * var(--motion-scale)) var(--ease-out),
+      translate calc(var(--duration-slower) * var(--motion-scale)) var(--ease-out);
+  }
+  /* 进场态:上滑淡入,内容块错峰跟进 */
+  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section) {
+    opacity: 1;
+    translate: 0 0;
+  }
+  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(1) {
+    transition-delay: 140ms;
+  }
+  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(2) {
+    transition-delay: 220ms;
+  }
+  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(3) {
+    transition-delay: 300ms;
+  }
+  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(4) {
+    transition-delay: 380ms;
+  }
+</style>
+
+<style is:global>
+  /* 滚动位置恢复(进页直达第二屏)时的一次性跳过动画 */
+  html.home-skip-anim * {
+    transition: none !important;
+  }
+</style>

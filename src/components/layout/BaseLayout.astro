@@ -8,6 +8,7 @@ import Lightbox from '@components/ui/Lightbox.astro';
 import Analytics from '@components/integrations/analytics/Analytics.astro';
 import MusicHost from '@components/integrations/music/MusicHost.astro';
 import { t } from '@i18n/utils';
+import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
 interface Props {
   locale: Locale;
@@ -17,10 +18,11 @@ interface Props {
   canonicalURL?: string;
   noindex?: boolean;
   robots?: string;
-  /** 首页:桌面端隐藏站点 Header,由 Hero 自绘 64px 透明顶栏(spec §1) */
+  /** 首页:第一屏无中间跳转按钮(由 Header 按 body.home-at-panel 控制) */
   home?: boolean;
 }
 const { locale, title, description, ogImage, canonicalURL, noindex, robots, home } = Astro.props;
+const wallpaper = siteConfig.background;
 ---
 
 <!doctype html>
@@ -39,7 +41,17 @@ const { locale, title, description, ogImage, canonicalURL, noindex, robots, home
     <!-- ClientRouter:客户端导航 + View Transitions(spec 5.20 P0-8 / spec 7.7 P0-7) -->
     <ClientRouter />
   </head>
-  <body class:list={[{ 'page-home': home }]}>
+  <body class:list={[{ 'page-home': home, 'has-site-bg': !!wallpaper }]}>
+    <!-- 全站统一壁纸层:fixed 铺满视口,内容与顶栏都浮在其上(z-index:-1 垫底,
+         不参与命中)。配置为空时整层不渲染,回退主题底色 -->
+    {
+      wallpaper && (
+        <div class="site-bg" aria-hidden="true">
+          <img src={wallpaper} alt="" fetchpriority="high" />
+          <div class="site-bg-overlay" />
+        </div>
+      )
+    }
     <a href="#main" class="skip-link">{t(locale, 'common.skip-to-content')}</a>
     <Header locale={locale} />
     <main id="main">
@@ -74,6 +86,50 @@ const { locale, title, description, ogImage, canonicalURL, noindex, robots, home
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border: 0;
+      }
+      /* 全站壁纸:fixed 铺满,滚动的只是内容(像桌面壁纸)。
+         暗色主题压暗保浅色墨字可读(与原 Hero 暗色遮罩同参数) */
+      .site-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+      .site-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .site-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: transparent;
+      }
+      :global([data-theme='dark']) .site-bg-overlay {
+        background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
+      }
+      /* 常驻顶栏为 fixed,不占文档流:非首页内容下移让出顶栏高度;
+         首页第一屏 Hero 从视口顶开始,顶栏悬浮其上 */
+      body:not(.page-home) main {
+        padding-top: 64px;
+      }
+      /* 内容磨砂遮罩(非首页):视口固定的磨砂底层,垫在 main 内容与壁纸之间。
+         必须挂在 main::before 而非 main 本身——backdrop-filter 会把 main 变成
+         fixed 后代(如阅读进度条)的包含块,破坏其视口定位 */
+      body:not(.page-home) main::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: var(--frost-bg);
+        backdrop-filter: blur(var(--frost-blur));
+        -webkit-backdrop-filter: blur(var(--frost-blur));
+      }
+      /* 首页第二屏(HomePanel)自带磨砂板,Footer 与之相接,同规格铺一层保持连续 */
+      body.page-home .footer {
+        background: var(--frost-bg);
+        backdrop-filter: blur(var(--frost-blur));
+        -webkit-backdrop-filter: blur(var(--frost-blur));
       }
     </style>
   </body>

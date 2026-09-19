@@ -1,5 +1,7 @@
 ---
 // src/components/ui/MobileNav.astro
+// 多实例安全:首页第二屏面板会再挂一个 Header,抽屉状态全部按实例作用域存取,
+// 禁用跨实例的 getElementById(id 由 render 时随机生成保证唯一)
 import Icon from '../common/Icon.astro';
 import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
@@ -11,47 +13,50 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
+const uid = `mn-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<button
-  id="mobile-nav-toggle"
-  class="mobile-nav-toggle"
-  aria-expanded="false"
-  aria-controls="mobile-nav-drawer"
->
-  <Icon name="menu" size={24} class="icon-menu" />
-  <Icon name="close" size={24} class="icon-close" />
-</button>
-<!-- 裁剪根容器:fixed inset:0 + overflow:hidden,把关闭态停在视口外的抽屉
+<div class="mobile-nav">
+  <button
+    type="button"
+    class="mobile-nav-toggle"
+    aria-expanded="false"
+    aria-controls={`${uid}-drawer`}
+  >
+    <Icon name="menu" size={24} class="icon-menu" />
+    <Icon name="close" size={24} class="icon-close" />
+  </button>
+  <!-- 裁剪根容器:fixed inset:0 + overflow:hidden,把关闭态停在视口外的抽屉
      裁在自己内部。否则 fixed 盒会撑出文档横向滚动区,页面可左右拖动 -->
-<div id="mobile-nav-root" class="mobile-nav-root">
-  <div id="mobile-nav-overlay" class="mobile-nav-overlay" hidden></div>
-  <nav id="mobile-nav-drawer" class="mobile-nav-drawer" aria-label={t(locale, 'nav.home')}>
-    <ul class="mobile-nav-list">
-      {
-        siteConfig.navItems.map((item) => (
-          <li>
-            <a href={`/${locale}${item.href}`} class="mobile-nav-link">
-              {t(locale, item.key)}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-    <div class="mobile-nav-controls">
-      <MusicPlayerWidget locale={locale} />
-      <LangSwitch locale={locale} />
-      <ThemeToggle locale={locale} />
-    </div>
-  </nav>
+  <div class="mobile-nav-root" id={`${uid}-root`}>
+    <div class="mobile-nav-overlay" hidden></div>
+    <nav class="mobile-nav-drawer" id={`${uid}-drawer`} aria-label={t(locale, 'nav.home')}>
+      <ul class="mobile-nav-list">
+        {
+          siteConfig.navItems.map((item) => (
+            <li>
+              <a href={`/${locale}${item.href}`} class="mobile-nav-link">
+                {t(locale, item.key)}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mobile-nav-controls">
+        <MusicPlayerWidget locale={locale} />
+        <LangSwitch locale={locale} />
+        <ThemeToggle locale={locale} />
+      </div>
+    </nav>
+  </div>
 </div>
 <script>
   // ClientRouter 导航重建 DOM:元素级绑定随 astro:page-load 重进(带实例守卫);
-  // document 级 Escape 只绑一次,处理时动态查询当前抽屉,避免随导航累积
-  function closeMobileNav() {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const root = document.getElementById('mobile-nav-root');
-    const overlay = document.getElementById('mobile-nav-overlay');
+  // document 级 Escape 只绑一次,处理时关闭所有处于打开态的抽屉实例
+  function closeMobileNav(scope: HTMLElement) {
+    const toggle = scope.querySelector<HTMLElement>('.mobile-nav-toggle');
+    const root = scope.querySelector<HTMLElement>('.mobile-nav-root');
+    const overlay = scope.querySelector<HTMLElement>('.mobile-nav-overlay');
     if (!toggle || !root || !overlay) return;
     toggle.setAttribute('aria-expanded', 'false');
     root.classList.remove('open');
@@ -59,29 +64,30 @@ const { locale } = Astro.props;
     document.body.style.overflow = '';
   }
   function initMobileNav() {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const root = document.getElementById('mobile-nav-root');
-    const overlay = document.getElementById('mobile-nav-overlay');
-    if (!toggle || !root || !overlay) return;
-    if (toggle.dataset.initialized === 'true') return;
-    toggle.dataset.initialized = 'true';
-    const isOpen = () => root.classList.contains('open');
-    toggle.addEventListener('click', () => {
-      if (isOpen()) {
-        closeMobileNav();
-      } else {
-        toggle.setAttribute('aria-expanded', 'true');
-        root.classList.add('open');
-        overlay.hidden = false;
-        document.body.style.overflow = 'hidden';
-      }
+    document.querySelectorAll<HTMLElement>('.mobile-nav').forEach((scope) => {
+      const toggle = scope.querySelector<HTMLElement>('.mobile-nav-toggle');
+      const root = scope.querySelector<HTMLElement>('.mobile-nav-root');
+      const overlay = scope.querySelector<HTMLElement>('.mobile-nav-overlay');
+      if (!toggle || !root || !overlay) return;
+      if (toggle.dataset.initialized === 'true') return;
+      toggle.dataset.initialized = 'true';
+      const isOpen = () => root.classList.contains('open');
+      toggle.addEventListener('click', () => {
+        if (isOpen()) {
+          closeMobileNav(scope);
+        } else {
+          toggle.setAttribute('aria-expanded', 'true');
+          root.classList.add('open');
+          overlay.hidden = false;
+          document.body.style.overflow = 'hidden';
+        }
+      });
+      overlay.addEventListener('click', () => closeMobileNav(scope));
     });
-    overlay.addEventListener('click', closeMobileNav);
   }
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    const root = document.getElementById('mobile-nav-root');
-    if (root?.classList.contains('open')) closeMobileNav();
+    document.querySelectorAll<HTMLElement>('.mobile-nav').forEach((scope) => closeMobileNav(scope));
   });
   document.addEventListener('astro:page-load', initMobileNav);
 </script>

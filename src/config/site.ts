@@ -12,10 +12,11 @@ export const siteConfig = {
   // header 品牌字(docs/design/hero-home-spec.md §3.1);siteName 仍用于 <title>/meta
   brand: 'Naloxonee',
   github: 'https://github.com/NaloxoneE-Lab',
-  // Hero 背景图(docs/design/hero-home-spec.md §2 的 Penpot 雪景,webp 28KB):
-  // 版权未确认(wallhaven 占位),替换自有授权图时直接覆盖 public/images/hero-bg.webp;
-  // 置 undefined 则回退自绘渐变
-  heroBackground: '/images/hero-bg.webp',
+  // 全站统一背景壁纸:网站有一张统一的背景图,所有页面共用(像桌面壁纸,
+  // fixed 铺满、内容在其上滚动)。当前为前期验证临时取首页 Hero 同图
+  // (docs/design/hero-home-spec.md §2 的 Penpot 雪景,wallhaven 占位版权未确认),
+  // 替换自有授权图时直接覆盖 public/images/hero-bg.webp;置 undefined 回退主题底色
+  background: '/images/hero-bg.webp',
   description: '个人网站 — 文章、工程、番剧与术曲',
   // 导航菜单项(走 i18n key)
   navItems: [
