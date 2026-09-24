@@ -26,6 +26,7 @@ export default tseslint.config(
         Request: 'readonly',
         Headers: 'readonly', // fetch 规范全局;deploy/cf-relay/worker.js 在 CF Workers 运行时使用
         fetch: 'readonly',
+        AbortSignal: 'readonly', // fetch 超时用(AbortSignal.timeout);Node 17+ 全局
         crypto: 'readonly',
       },
     },
