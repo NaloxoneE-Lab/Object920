@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  // name 必须与 Cloudflare Dashboard 上创建的项目名一致,否则 Workers Builds 构建直接失败
+  "name": "object920",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // auto-trailing-slash:目录型 URL 自动 308 到带斜杠版本,匹配 Astro trailingSlash: always
+    "html_handling": "auto-trailing-slash",
+    // 未命中路由时返回 dist/404.html(Astro 构建产物)
+    "not_found_handling": "404-page"
+  }
+}
