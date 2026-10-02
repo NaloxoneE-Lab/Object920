@@ -35,22 +35,45 @@ function validateContentRepo() {
   }
 }
 
+const askpassPath = resolve(projectRoot ?? process.cwd(), '.git-askpass.tmp');
+
+function writeAskpass() {
+  writeFileSync(askpassPath, '#!/bin/sh\necho "$OBJECT920_GIT_TOKEN"\n');
+  chmodSync(askpassPath, 0o755);
+}
+
+function removeAskpass() {
+  try {
+    unlinkSync(askpassPath);
+  } catch {
+    /* already gone */
+  }
+}
+
+// git 认证环境:token 经 GIT_ASKPASS 注入(不进 URL/进程列表),git 以 x-access-token:token 构造凭据。
+// 同时把平台预置的全局/系统 git 配置指向 /dev/null——构建环境为主仓预配的凭据
+// (credential.helper / extraheader)优先级高于 askpass,会盖过 CONTENT_GITHUB_TOKEN,
+// 与 Actions 上 persist-credentials:false 防的 extraheader 覆盖是同源坑。
+function gitAuthEnv() {
+  writeAskpass();
+  return {
+    ...process.env,
+    OBJECT920_GIT_TOKEN: GITHUB_TOKEN.trim(),
+    GIT_ASKPASS: askpassPath,
+    GIT_TERMINAL_PROMPT: '0',
+    GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_CONFIG_SYSTEM: '/dev/null',
+  };
+}
+
 function clone() {
   console.log(`[pull-content] Cloning ${CONTENT_REPO}...`);
   const url = getCloneUrl();
   if (GITHUB_TOKEN) {
-    // GIT_ASKPASS + Basic:token 走环境变量(不进进程列表/URL),git 以 x-access-token:token 构造凭据
-    const askpass = resolve(projectRoot ?? process.cwd(), '.git-askpass.tmp');
-    writeFileSync(askpass, '#!/bin/sh\necho "$OBJECT920_GIT_TOKEN"\n');
-    chmodSync(askpass, 0o755);
-    const env = {
-      ...process.env,
-      OBJECT920_GIT_TOKEN: GITHUB_TOKEN.trim(),
-      GIT_ASKPASS: askpass,
-      GIT_TERMINAL_PROMPT: '0',
-    };
+    // 诊断用:93 = fine-grained PAT 标准长度;长度不对说明变量值在保存环节损坏
+    console.log(`[pull-content] token length: ${GITHUB_TOKEN.trim().length}`);
     try {
-      run(`git clone --depth 1 ${url} src/content`, { env });
+      run(`git clone --depth 1 ${url} src/content`, { env: gitAuthEnv() });
     } catch {
       console.error(
         '[pull-content] 带认证克隆失败:请核对 CONTENT_GITHUB_TOKEN 是否为 fine-grained PAT、' +
@@ -58,11 +81,7 @@ function clone() {
       );
       throw new Error('authenticated clone failed');
     } finally {
-      try {
-        unlinkSync(askpass);
-      } catch {
-        /* already gone */
-      }
+      removeAskpass();
     }
   } else {
     run(`git clone --depth 1 ${url} src/content`);
@@ -79,7 +98,11 @@ function pull() {
   }
   if (FORCE_SYNC) {
     console.log('[pull-content] Force sync (CI mode)...');
-    run('git -C src/content fetch origin main --depth=1');
+    try {
+      run('git -C src/content fetch origin main --depth=1', { env: gitAuthEnv() });
+    } finally {
+      removeAskpass();
+    }
     run('git -C src/content reset --hard origin/main');
   } else {
     // 本地非 destructive:有未提交修改时报错退出,绝不自动 reset --hard
