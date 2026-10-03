@@ -18,6 +18,8 @@ const emptyToUndefined = (value: unknown): unknown => {
 };
 
 const optionalString = () => z.preprocess(emptyToUndefined, z.string().optional());
+// date 与 image 字段同样会被 Sveltia 写成空串(updatedDate: '' / cover: '' 都实际炸过构建)
+const optionalDate = () => z.preprocess(emptyToUndefined, z.coerce.date().optional());
 
 const articles = defineCollection({
   loader: glob({
@@ -29,11 +31,11 @@ const articles = defineCollection({
     z.object({
       title: z.string(),
       pubDate: z.coerce.date(),
-      updatedDate: z.coerce.date().optional(),
+      updatedDate: optionalDate(),
       translationKey: z.string().trim().min(1).optional(),
       category: z.string().default('uncategorized'),
       tags: z.array(z.string()).default([]),
-      cover: image().optional(),
+      cover: z.preprocess(emptyToUndefined, image().optional()),
       coverAlt: z.string().trim().min(1),
       excerpt: optionalString(),
       draft: z.boolean().default(false),
@@ -41,7 +43,7 @@ const articles = defineCollection({
       seoTitle: optionalString(),
       seoDescription: optionalString(),
       ogImage: z.preprocess(emptyToUndefined, z.url().optional()),
-      ogImageLocal: image().optional(),
+      ogImageLocal: z.preprocess(emptyToUndefined, image().optional()),
     }),
 });
 
@@ -55,12 +57,12 @@ const projects = defineCollection({
     z.object({
       title: z.string(),
       pubDate: z.coerce.date(),
-      updatedDate: z.coerce.date().optional(),
+      updatedDate: optionalDate(),
       translationKey: z.string().trim().min(1).optional(),
       category: z.string().default('hardware'),
       tags: z.array(z.string()).default([]),
       status: z.enum(['ongoing', 'completed', 'archived', 'planned']).default('ongoing'),
-      cover: image().optional(),
+      cover: z.preprocess(emptyToUndefined, image().optional()),
       coverAlt: z.string().trim().min(1),
       gallery: z
         .array(
@@ -88,7 +90,7 @@ const projects = defineCollection({
       relatedLinks: z.array(z.object({ label: z.string(), url: z.url() })).default([]),
       draft: z.boolean().default(false),
       ogImage: z.preprocess(emptyToUndefined, z.url().optional()),
-      ogImageLocal: image().optional(),
+      ogImageLocal: z.preprocess(emptyToUndefined, image().optional()),
     }),
 });
 
