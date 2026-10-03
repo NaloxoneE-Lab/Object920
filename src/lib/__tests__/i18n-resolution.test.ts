@@ -153,4 +153,13 @@ describe('validateTranslationGroups (spec 6.5, 同 collection+key+locale 唯一)
       ]),
     ).toThrow();
   });
+
+  it('fails when translations of one article use different slugs', () => {
+    expect(() =>
+      validateTranslationGroups([
+        { collection: 'articles', id: 'zh/hash-a', data: { translationKey: 'tk' } },
+        { collection: 'articles', id: 'en/hash-b', data: { translationKey: 'tk' } },
+      ]),
+    ).toThrow(/slug 不一致/);
+  });
 });

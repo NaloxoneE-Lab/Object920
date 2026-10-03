@@ -127,9 +127,12 @@ interface TranslationCheckable {
   data: { translationKey?: string };
 }
 
-/** 同 collection + translationKey + locale 最多 1 条(重复 → build fail);无 translationKey 的合成组不参与 */
+/** 同 collection + translationKey + locale 最多 1 条(重复 → build fail);同组各语言必须同 slug;无 translationKey 的合成组不参与 */
 export function validateTranslationGroups(entries: TranslationCheckable[]): void {
   const seen = new Map<string, string>();
+  // groupKey → {locale → slug}:LangSwitch 按「当前路径换语言段」生成切换链接,
+  // ja/ru 占位页挂在 group.zh/en 的 slug 下——各语言 slug 不一致 = 静默断链(仅 lychee 能发现)
+  const groupSlugs = new Map<string, Map<string, string>>();
   for (const e of entries) {
     const key = e.data.translationKey;
     if (!key || !key.trim()) continue;
@@ -141,5 +144,16 @@ export function validateTranslationGroups(entries: TranslationCheckable[]): void
       );
     }
     seen.set(dedupe, e.id);
+    const groupKey = `${e.collection}/${key}`;
+    let slugs = groupSlugs.get(groupKey);
+    if (!slugs) groupSlugs.set(groupKey, (slugs = new Map()));
+    slugs.set(locale, e.id.slice(e.id.indexOf('/') + 1));
+  }
+  for (const [groupKey, slugs] of groupSlugs) {
+    if (new Set(slugs.values()).size <= 1) continue;
+    const detail = [...slugs].map(([l, s]) => `${l}=${s}`).join(', ');
+    throw new Error(
+      `[validateTranslationGroups] "${groupKey}" 各语言 slug 不一致(${detail})。LangSwitch 与占位页按同 slug 生成链接,不一致会产生断链;请在 content 仓将各语言目录统一为同一 slug`,
+    );
   }
 }
