@@ -9,8 +9,8 @@ backend:
   # 生产多用户(可选):部署 sveltia-cms-auth 后取消注释
   # base_url: https://your-authenticator.workers.dev
 
-site_url: https://example.com
-display_url: https://example.com
+site_url: https://naloxonee.ink
+display_url: https://naloxonee.ink
 locale: 'zh'
 
 # Sveltia 要求 i18n 为【对象】定义在顶层(spec 4.7 原平铺写法 i18n.structure: 无效,已实测修正):
