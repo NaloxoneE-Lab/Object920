@@ -3,11 +3,16 @@
   // name 必须与 Cloudflare Dashboard 上创建的项目名一致,否则 Workers Builds 构建直接失败
   "name": "object920",
   "compatibility_date": "2026-09-01",
+  "main": "deploy/cloudflare/worker.js",
   "assets": {
     "directory": "./dist",
     // auto-trailing-slash:目录型 URL 自动 308 到带斜杠版本,匹配 Astro trailingSlash: always
     "html_handling": "auto-trailing-slash",
     // 未命中路由时返回 dist/404.html(Astro 构建产物)
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+    "binding": "ASSETS",
+    // /admin/* 先进 Worker 改写响应头(_headers 多规则叠加会双 CSP 取交集,见 worker.js);
+    // 其余路径仍由 Asset Worker 直连静态资源,不经过 User Worker
+    "run_worker_first": ["/admin/*"],
+  },
 }

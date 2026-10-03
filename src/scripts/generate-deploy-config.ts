@@ -22,7 +22,9 @@ async function main() {
   mkdirSync(DIST_DIR, { recursive: true });
 
   if (platform === 'cloudflare' || platform === 'netlify') {
-    // /admin/* 须排在 /* 之后:后匹配块的同名头覆盖前块,Admin CSP 才能生效。
+    // 注意(实测 2026-10-03):_headers 的规则是"所有匹配块叠加",同一头出现在多个匹配块
+    // 会产出多个响应头(浏览器对多个 CSP 取交集),因此这里不能用 /* + /admin/* 覆盖的组合
+    // ——/admin/* 的 CSP/Cache-Control 由 deploy/cloudflare/worker.js 经 run_worker_first 改写。
     // /_astro 与 pagefind 哈希产物一年 immutable(对齐 nginx);pagefind 运行时入口
     // (pagefind.js/entry.json/ui)不写规则,保留平台默认 revalidate——即 nginx no-cache
     // 的意图,避免跨构建的旧 entry 被长缓存拦掉新 CSP。
@@ -45,9 +47,6 @@ async function main() {
       '',
       '/pagefind/*.pf_meta',
       '  Cache-Control: public, max-age=31536000, immutable',
-      '',
-      '/admin/*',
-      `  Content-Security-Policy: ${ADMIN_CSP}`,
       '',
     ].join('\n');
     writeFileSync(resolve(DIST_DIR, '_headers'), headers);
