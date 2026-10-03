@@ -1,0 +1,130 @@
+---
+// src/components/home/HomeArticleList.astro
+// 首页文章图文列表:左文字块(标题/摘要/图标元信息行)+ 右 16:9 圆角封面。
+// 无封面的文章封面块不渲染、文字占满全宽;设计定稿见 Penpot「01 · 首页」1.2 画板。
+import { Image } from 'astro:assets';
+import Icon from '@components/common/Icon.astro';
+import { formatDate } from '@i18n/utils';
+import type { Locale } from '@i18n/config';
+import { slugOf } from '@lib/i18n';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entries: CollectionEntry<'articles'>[];
+  locale: Locale;
+}
+const { entries, locale } = Astro.props;
+---
+
+<div class="home-article-list">
+  {
+    entries.map((entry) => {
+      const { cover, coverAlt, title, excerpt, pubDate, category, tags } = entry.data;
+      const href = `/${locale}/articles/${slugOf(entry)}/`;
+      return (
+        <a href={href} class="home-article-row">
+          <div class="home-article-body">
+            <h3 class="home-article-title">{title}</h3>
+            {excerpt && <p class="home-article-excerpt">{excerpt}</p>}
+            <div class="home-article-meta">
+              <span class="home-article-meta-item">
+                <Icon name="link" size={13} />
+                <time datetime={pubDate.toISOString()}>{formatDate(pubDate, locale)}</time>
+              </span>
+              <span class="home-article-meta-item">
+                <Icon name="book" size={13} />
+                {category}
+              </span>
+              {tags.slice(0, 3).map((tag) => (
+                <span class="home-article-meta-item">
+                  <Icon name="tag" size={13} />#{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          {cover && (
+            <Image
+              src={cover}
+              alt={coverAlt}
+              width={540}
+              height={304}
+              loading="lazy"
+              class="home-article-cover"
+            />
+          )}
+        </a>
+      );
+    })
+  }
+</div>
+
+<style>
+  .home-article-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .home-article-row {
+    display: flex;
+    gap: 24px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: inherit;
+    text-decoration: none;
+    transition:
+      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .home-article-row:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .home-article-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .home-article-title {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .home-article-excerpt {
+    margin-top: 8px;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .home-article-meta {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+    font-size: var(--text-2xs);
+    color: var(--color-text-subtle);
+  }
+  .home-article-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .home-article-cover {
+    width: 270px;
+    height: auto;
+    min-height: 164px;
+    align-self: stretch;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+  }
+</style>

@@ -1,6 +1,6 @@
 ---
 // src/components/home/HomeSections.astro
-import ArticleCard from '@components/article/ArticleCard.astro';
+import HomeArticleList from '@components/home/HomeArticleList.astro';
 import AnimeCard from '@components/favorites/AnimeCard.astro';
 import VocaloidCard from '@components/favorites/VocaloidCard.astro';
 import {
@@ -36,11 +36,7 @@ const vocaloid = pickRecentVocaloid(await getCollection('vocaloid'));
             {t(locale, 'articles.viewAll')} →
           </a>
         </div>
-        <div class="home-section-grid">
-          {pinned.map((e) => (
-            <ArticleCard entry={e} locale={locale} />
-          ))}
-        </div>
+        <HomeArticleList entries={pinned} locale={locale} />
       </section>
     )
   }
@@ -53,11 +49,7 @@ const vocaloid = pickRecentVocaloid(await getCollection('vocaloid'));
             {t(locale, 'articles.viewAll')} →
           </a>
         </div>
-        <div class="home-section-grid">
-          {articles.map((e) => (
-            <ArticleCard entry={e} locale={locale} />
-          ))}
-        </div>
+        <HomeArticleList entries={articles} locale={locale} />
       </section>
     )
   }
@@ -98,7 +90,7 @@ const vocaloid = pickRecentVocaloid(await getCollection('vocaloid'));
 </div>
 <style>
   .home-sections {
-    max-width: var(--container-wide);
+    max-width: var(--container-page);
     margin: 0 auto;
     padding: var(--spacing-lg) var(--spacing-md);
     display: flex;
