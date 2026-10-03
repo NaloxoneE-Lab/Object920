@@ -22,7 +22,34 @@ async function main() {
   mkdirSync(DIST_DIR, { recursive: true });
 
   if (platform === 'cloudflare' || platform === 'netlify') {
-    const headers = `/*\n  Content-Security-Policy: ${csp}\n  X-Frame-Options: SAMEORIGIN\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n\n/admin/*\n  Content-Security-Policy: ${ADMIN_CSP}\n`;
+    // /admin/* 须排在 /* 之后:后匹配块的同名头覆盖前块,Admin CSP 才能生效。
+    // /_astro 与 pagefind 哈希产物一年 immutable(对齐 nginx);pagefind 运行时入口
+    // (pagefind.js/entry.json/ui)不写规则,保留平台默认 revalidate——即 nginx no-cache
+    // 的意图,避免跨构建的旧 entry 被长缓存拦掉新 CSP。
+    const headers = [
+      '/*',
+      `  Content-Security-Policy: ${csp}`,
+      '  X-Frame-Options: SAMEORIGIN',
+      '  X-Content-Type-Options: nosniff',
+      '  Referrer-Policy: strict-origin-when-cross-origin',
+      '  Permissions-Policy: camera=(), microphone=(), geolocation=()',
+      '',
+      '/_astro/*',
+      '  Cache-Control: public, max-age=31536000, immutable',
+      '',
+      '/pagefind/*.pf_index',
+      '  Cache-Control: public, max-age=31536000, immutable',
+      '',
+      '/pagefind/*.pf_fragment',
+      '  Cache-Control: public, max-age=31536000, immutable',
+      '',
+      '/pagefind/*.pf_meta',
+      '  Cache-Control: public, max-age=31536000, immutable',
+      '',
+      '/admin/*',
+      `  Content-Security-Policy: ${ADMIN_CSP}`,
+      '',
+    ].join('\n');
     writeFileSync(resolve(DIST_DIR, '_headers'), headers);
     console.log(`[generate-deploy-config] wrote dist/_headers (${platform})`);
   }
