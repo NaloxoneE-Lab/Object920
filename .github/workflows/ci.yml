@@ -63,90 +63,41 @@ jobs:
         with:
           name: dist-preview
 
-  # ECS 部署(SSH 直推):main push(代码更新)/ repository_dispatch(内容更新)/ 手动触发
-  # CI 把 dist 打包 scp 到 ECS,ECS 端 rsync --delete 原子换装 + nginx conf 安装 + reload。
-  # 前提:阿里云安全组放行 22(0.0.0.0/0);仓库 secrets:ECS_HOST / ECS_SSH_KEY(见回退说明)
-  deploy-ecs:
+  # Cloudflare Workers 部署触发(2026-10 起替代 ECS rsync 直推,回滚可从 git 历史恢复 deploy-ecs):
+  # 仅内容更新(repository_dispatch)/ 手动触发时调用 Deploy Hook 让 Cloudflare 重新构建;
+  # push 到 main 不触发——Workers Builds 已监听 main,再触发会双重构建。
+  # Hook URL:Worker → Settings → Builds → Deploy hooks 创建,存为仓库 secret CF_DEPLOY_HOOK_URL。
+  deploy-cloudflare:
     needs: ci
     if: >-
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' ||
-       github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' ||
        github.event_name == 'repository_dispatch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9.15.5
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - name: Check deploy secrets configured
+      - name: Check deploy hook secret configured
         id: guard
         env:
-          ECS_HOST: ${{ secrets.ECS_HOST }}
-          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+          CF_DEPLOY_HOOK_URL: ${{ secrets.CF_DEPLOY_HOOK_URL }}
         run: |
-          if [ -n "$ECS_HOST" ] && [ -n "$ECS_SSH_KEY" ]; then
+          if [ -n "$CF_DEPLOY_HOOK_URL" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::ECS deploy secrets not configured — skipping deploy"
+            echo "::notice::CF_DEPLOY_HOOK_URL not configured — skipping deploy hook"
           fi
-      - run: pnpm install --frozen-lockfile
+      - name: Trigger Cloudflare deploy hook
         if: steps.guard.outputs.enabled == 'true'
-      - name: Build with deploy site URL
-        if: steps.guard.outputs.enabled == 'true'
-        run: pnpm build
         env:
-          CONTENT_REPO: ${{ secrets.CONTENT_REPO || 'NaloxoneE-Lab/object920-content' }}
-          CONTENT_GITHUB_TOKEN: ${{ secrets.CONTENT_GITHUB_TOKEN }}
-          FORCE_CONTENT_SYNC: 'true'
-          PUBLIC_SEARCH_ENABLED: 'true'
-          PUBLIC_SEARCH_PROVIDER: 'pagefind'
-          PUBLIC_MUSIC_ENABLED: 'true'
-          PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
-          PUBLIC_ASSETS_USER: 'NaloxoneE-Lab'
-          PUBLIC_ASSETS_REPO: 'object920-assets'
-      - name: Generate nginx configs
-        if: steps.guard.outputs.enabled == 'true'
+          CF_DEPLOY_HOOK_URL: ${{ secrets.CF_DEPLOY_HOOK_URL }}
         run: |
-          pnpm run generate:redirects
-          pnpm run generate:deploy-config -- --platform=nginx
-        env:
-          DEPLOY_PLATFORM: nginx
-          PUBLIC_MUSIC_ENABLED: 'true'
-          PUBLIC_SITE_URL: ${{ secrets.DEPLOY_SITE_URL || 'http://47.114.43.241' }}
-      - name: Rsync to ECS
-        if: steps.guard.outputs.enabled == 'true'
-        env:
-          ECS_HOST: ${{ secrets.ECS_HOST }}
-          ECS_USER: ${{ secrets.ECS_USER || 'root' }}
-          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
-        run: |
-          install -m 600 /dev/null /tmp/deploy_key
-          echo "$ECS_SSH_KEY" > /tmp/deploy_key
-          # 诊断:ECS_HOST 与当前公网 IP 不符时(实例重启后非 EIP 公网 IP 会变),
-          # rsync 会"成功"写进另一台机器/失效地址;只报布尔与长度,不泄露 Secret 值
-          if [ "$ECS_HOST" = "47.114.43.241" ]; then
-            echo "::notice::ECS_HOST matches the public IP 47.114.43.241"
-          else
-            echo "::warning::ECS_HOST does NOT match 47.114.43.241 (len=${#ECS_HOST}) — update the repo secret if the instance IP changed"
-          fi
-          # GitHub(海外 runner)→ 阿里云的 SSH 长连接极不稳(rsync 逐文件往返会被拖死),
-          # 改为:本地打 tar 包 → 单连接 scp(压缩后 ~2MB,失败重传代价小)→ ECS 本地
-          # rsync --delete 原子换装;ConnectTimeout 让僵死连接 15s 内判死
-          SSH_OPTS="-i /tmp/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
-          tar -C dist -czf /tmp/object920-dist.tgz .
-          # 注意:if 条件为假且无 else 分支时 $? 恒为 0(POSIX),真实退出码必须在 else 内捕获,
-          # 否则失败会被吞成 return 0、部署假成功(0.197.x 历史教训)
+          # hook 对同 commit 幂等(Cloudflare 去重),失败重试代价小;
+          # if 条件为假且无 else 时 $? 恒为 0(POSIX),真实退出码必须在 else 内捕获
           retry() {
             n=1
             while :; do
-              if out=$("$@" 2>&1); then
-                LAST_OUT="$out"
+              if out=$(curl -fsS -X POST "$CF_DEPLOY_HOOK_URL" 2>&1); then
+                echo "::notice::deploy hook accepted: ${out:0:200}"
                 return 0
               else
                 rc=$?
@@ -160,17 +111,4 @@ jobs:
               sleep 15
             done
           }
-          retry scp $SSH_OPTS /tmp/object920-dist.tgz $ECS_USER@$ECS_HOST:/tmp/object920-dist.tgz || exit $?
-          retry ssh $SSH_OPTS $ECS_USER@$ECS_HOST '
-            set -e
-            mkdir -p /var/www/object920-incoming
-            tar -xzf /tmp/object920-dist.tgz -C /var/www/object920-incoming
-            rsync -a --delete /var/www/object920-incoming/ /var/www/object920/
-            cp /var/www/object920/nginx/object920.conf /etc/nginx/sites-available/object920
-            cp /var/www/object920/nginx/object920-redirects.conf /etc/nginx/conf.d/object920-redirects.conf
-            rm -rf /var/www/object920-incoming /tmp/object920-dist.tgz
-            nginx -t && systemctl reload nginx
-            echo REMOTE_DEPLOY_OK
-          ' || exit $?
-          echo "::notice::remote output: ${LAST_OUT:0:400}"
-          rm -f /tmp/deploy_key /tmp/object920-dist.tgz
+          retry
