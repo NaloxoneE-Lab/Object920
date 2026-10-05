@@ -63,17 +63,7 @@ const { entries, locale } = Astro.props;
                 loading="lazy"
                 class="home-article-cover"
               />
-              <span class="home-article-cover-preview" aria-hidden="true">
-                <Image
-                  src={cover}
-                  alt=""
-                  width={540}
-                  height={304}
-                  loading="eager"
-                  decoding="sync"
-                  class="home-article-cover-blur"
-                />
-              </span>
+              <span class="home-article-cover-frost" aria-hidden="true"></span>
               <span class="home-article-cover-preview-text" aria-hidden="true">
                 {bodyPreview}
               </span>
@@ -154,73 +144,85 @@ const { entries, locale } = Astro.props;
     width: calc((100% - 24px) / 2.618);
     align-self: stretch;
     flex-shrink: 0;
+    /* 裁切滑动中的贴片,避免越出封面洗淡标题文字 */
+    overflow: hidden;
   }
   .home-article-cover {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* 左缘渐隐进卡片底色(透出 surface,深浅主题自适应) */
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 25%);
-    mask-image: linear-gradient(to right, transparent, #000 25%);
+    /* 左缘渐隐进卡片底色(透出 surface,深浅主题自适应)。
+       不透明度"先慢后快"但更均缓:保留一点慢起,整体更接近均速(非线性度减弱)。
+       范围保持 0→45% 不变,起点完全透明(最左端彻底融没) */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.12) 9%,
+      rgba(0, 0, 0, 0.28) 18%,
+      rgba(0, 0, 0, 0.46) 27%,
+      rgba(0, 0, 0, 0.68) 36%,
+      #000 45%
+    );
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.12) 9%,
+      rgba(0, 0, 0, 0.28) 18%,
+      rgba(0, 0, 0, 0.46) 27%,
+      rgba(0, 0, 0, 0.68) 36%,
+      #000 45%
+    );
   }
-  /* 悬停封面:虚化副本由左向右 clip-path 扫入(clip-path inset 全内核可插值;
-     mask-size 过渡在旧 Chromium/Edge 不支持,会整张跳变——实测踩坑)。
-     正文预览叠层同时渐显;键盘聚焦行时同样触发 */
-  /* 预览容器:虚化图 + 文字衬底薄纱都装在这里,由 mask-size 从左向右扫入。
-     不存在任何独立淡入的层(独立淡入的整区域薄纱曾被看成"瞬间全虚")。
-     蒙版用 mask-size 过渡(前沿自带 ~23% 宽的柔和渐变,clip-path 做不出软前沿);
-     早期误判是 Edge 不支持其插值,实为 backdrop-filter+父级 opacity 冲突与 ease-out 曲线,
-     两者均已修复。opacity ease-in 兜底:即使插值失效也只是整体淡入,不会突现。
-     DEBUG: 2s 便于观察,定稿改回 var(--duration-slower) */
-  .home-article-cover-preview {
+  /* 悬停封面:真正的磨砂玻璃——backdrop-filter 实时糊化身后的活封面图,再叠一层
+     雾面 tint 把它压向"均匀、低对比"。玻璃层从左向右推入(transform + ease-out),
+     右缘用蒙版做成柔和玻璃边界。文字层独立叠在其上。
+     规则(MVP-PHASE3 教训):backdrop-filter 只写标准属性、不写 -webkit- 配对,
+     前缀交给压缩器(lightningcss 成对出现会合并成仅前缀版导致标准属性丢失);
+     该层在卡片内、不含 fixed 后代,不会踩"backdrop-filter 制造包含块"害 fixed
+     子孙(阅读进度条)的坑。 */
+  .home-article-cover-frost {
     position: absolute;
-    inset: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    /* 比封面宽 240px:柔边蒙版落在封面右缘之外,被父级 overflow:hidden 裁掉——
+       到位后封面整块都是均匀磨砂,右缘不再通过蒙版渐隐露出原始锐利底图(踩坑记录);
+       滑动中柔边(240px 软渐变)作为推进前沿扫过封面,保留"推过来"手感。
+       前沿不用单段线性渐变(会与磨砂本体形成可见分界),而是多 stops 的"消散"曲线:
+       磨砂本体保持较实一段,再渐进淡出,融进背后清晰封面(用户指定"交界太明显") */
+    width: calc(100% + 240px);
     z-index: 1;
-    display: flex;
-    align-items: center;
-    padding: 18px 20px;
-    opacity: 0;
-    /* 蒙版只负责扫入前沿(右羽化);左缘过渡交给子层静态蒙版——
-       若容器再叠一层左羽化,两层渐隐乘积会把过渡压窄成 ~35px 的视觉分界线(实测踩坑) */
-    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
-    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
-    -webkit-mask-size: 0% 100%;
-    mask-size: 0% 100%;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    transition:
-      opacity 2s var(--ease-in, ease-in),
-      -webkit-mask-size 2s linear,
-      mask-size 2s linear;
+    display: block;
+    backdrop-filter: blur(14px) saturate(0.8) brightness(1.04);
+    background: color-mix(in srgb, var(--color-surface) 42%, transparent);
+    transform: translateX(-100%);
+    /* 定稿:比原基准(600ms)稍快,用 var(--duration-slow)=400ms(用户指定"比之前快一点") */
+    transition: transform var(--duration-slow) var(--ease-out);
     pointer-events: none;
-    /* mask-size 动画走主线程重绘,will-change 让模糊纹理与蒙版常驻合成器缓存:
-       实测扫入期间主线程漂移 23.5ms → 1.28ms(小图层,常驻代价可忽略) */
-    will-change: mask-size, opacity;
+    will-change: transform, backdrop-filter;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 240px),
+      rgba(0, 0, 0, 0.92) calc(100% - 180px),
+      rgba(0, 0, 0, 0.72) calc(100% - 120px),
+      rgba(0, 0, 0, 0.45) calc(100% - 60px),
+      rgba(0, 0, 0, 0.18) calc(100% - 20px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 240px),
+      rgba(0, 0, 0, 0.92) calc(100% - 180px),
+      rgba(0, 0, 0, 0.72) calc(100% - 120px),
+      rgba(0, 0, 0, 0.45) calc(100% - 60px),
+      rgba(0, 0, 0, 0.18) calc(100% - 20px),
+      transparent 100%
+    );
   }
-  .home-article-cover-blur {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    /* 16px 大半径让模糊图趋近均匀色块:半透明薄纱下内容明暗透出 ∝ 内容差×透出率,
-       8px 时残差 ±12 级(薄纱 72%),16px 可再压半 */
-    filter: blur(16px);
-    transform: scale(1.1);
-    /* 渐进式模糊:前 12% 不加模糊(底图自身的 94px 左缘渐隐原样呈现,与静止态一致),
-       12%→32% 渐至全模糊——清晰与虚化之间用渐变带过渡,避免白卡片与深色模糊图
-       直接交叉渐隐产生视觉分界线(静态蒙版,无动画兼容性问题) */
-    -webkit-mask-image: linear-gradient(to right, transparent 12%, #000 32%);
-    mask-image: linear-gradient(to right, transparent 12%, #000 32%);
-    will-change: transform;
-  }
-  /* 文字衬底薄纱:均匀 tint,无独立蒙版(跟随容器扫入裁切) */
-  .home-article-cover-preview::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  .home-article-cover-wrap:hover .home-article-cover-frost,
+  .home-article-row:focus-visible .home-article-cover-frost {
+    transform: translateX(0);
   }
   /* 预览文字:独立于蒙版容器的兄弟层——不参与左缘过渡区,只随悬停整体渐入,
      避免容器蒙版的左羽化把开头文字洗淡 */
@@ -238,7 +240,7 @@ const { entries, locale } = Astro.props;
     max-height: 120px;
     overflow: hidden;
     opacity: 0;
-    transition: opacity 2s var(--ease-in, ease-in);
+    transition: opacity var(--duration-slow) var(--ease-in, ease-in);
     pointer-events: none;
   }
   /* 深色主题下纯黑不可读,回退主题文字色 */
@@ -247,12 +249,6 @@ const { entries, locale } = Astro.props;
   }
   .home-article-cover-wrap:hover .home-article-cover-preview-text,
   .home-article-row:focus-visible .home-article-cover-preview-text {
-    opacity: 1;
-  }
-  .home-article-cover-wrap:hover .home-article-cover-preview,
-  .home-article-row:focus-visible .home-article-cover-preview {
-    -webkit-mask-size: 130% 100%;
-    mask-size: 130% 100%;
     opacity: 1;
   }
 </style>
