@@ -1,6 +1,6 @@
 // src/lib/__tests__/i18n-utils.test.ts
 import { describe, it, expect } from 'vitest';
-import { t, getLocalizedPath, getLocaleFromPath } from '@i18n/utils';
+import { t, getLocalizedPath, getLocaleFromPath, formatDateISO } from '@i18n/utils';
 import zh from '@i18n/ui/zh';
 import en from '@i18n/ui/en';
 import ru from '@i18n/ui/ru';
@@ -78,5 +78,12 @@ describe('getLocaleFromPath()', () => {
 
   it('returns defaultLocale for non-locale path', () => {
     expect(getLocaleFromPath('/404/')).toBe('zh');
+  });
+});
+
+describe('formatDateISO (卡片日期 2026-10-04 格式)', () => {
+  it('formats with local-time fields, zero-padded', () => {
+    expect(formatDateISO(new Date(2026, 9, 4))).toBe('2026-10-04');
+    expect(formatDateISO(new Date(2026, 0, 5, 1, 31))).toBe('2026-01-05');
   });
 });

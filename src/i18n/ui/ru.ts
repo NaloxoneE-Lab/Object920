@@ -42,6 +42,7 @@ export default {
   'articles.viewAll': 'Смотреть все',
   'articles.readMore': 'Читать далее',
   'articles.publishedOn': 'Опубликовано {date}',
+  'articles.wordCount': '{n} слов',
   'articles.updatedOn': 'Обновлено {date}',
   'articles.toc': 'Содержание',
   'articles.untranslated': 'У этой статьи пока нет версии на {lang}',

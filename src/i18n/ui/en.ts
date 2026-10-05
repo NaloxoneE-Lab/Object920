@@ -42,6 +42,7 @@ export default {
   'articles.viewAll': 'View all',
   'articles.readMore': 'Read more',
   'articles.publishedOn': 'Published on {date}',
+  'articles.wordCount': '{n} words',
   'articles.updatedOn': 'Updated on {date}',
   'articles.toc': 'Table of contents',
   'articles.untranslated': 'This article has no {lang} version yet',

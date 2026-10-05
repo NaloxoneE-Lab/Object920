@@ -162,3 +162,32 @@ export function mergeVocaloidNotes<T extends AnimeMergable>(
   const unmatchedNotes = notes.filter((n) => !itemIds.has(n.id as string));
   return { items: merged, unmatchedNotes };
 }
+
+/**
+ * 文章字数统计(卡片元信息展示用):CJK 字符每字计 1,其余按空白分词计词。
+ * 先剥离代码块/行内代码/图片/链接 URL/HTML 标签/Markdown 标记,避免符号计入。
+ */
+/** 剥离 Markdown 结构(代码块/行内代码/图片/链接 URL/HTML 标签/标记符),留纯文本 */
+export function stripMarkdown(markdown: string): string {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/~~~[\s\S]*?~~~/g, ' ')
+    .replace(/`[^`\n]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#>*_~[\]()|-]+/g, ' ');
+}
+
+export function countWords(markdown: string): number {
+  const text = stripMarkdown(markdown);
+  const cjk = text.match(
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu,
+  );
+  const rest = text.replace(
+    /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu,
+    ' ',
+  );
+  const words = rest.split(/\s+/).filter((w) => /[a-zA-Z0-9]/.test(w));
+  return (cjk?.length ?? 0) + words.length;
+}

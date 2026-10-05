@@ -42,6 +42,7 @@ export default {
   'articles.viewAll': 'すべて見る',
   'articles.readMore': '続きを読む',
   'articles.publishedOn': '{date} 公開',
+  'articles.wordCount': '{n} 字',
   'articles.updatedOn': '{date} 更新',
   'articles.toc': '目次',
   'articles.untranslated': 'この記事にはまだ{lang}版がありません',

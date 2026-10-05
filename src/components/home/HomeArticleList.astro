@@ -1,12 +1,14 @@
 ---
 // src/components/home/HomeArticleList.astro
-// 首页文章图文列表:左文字块(标题/摘要/图标元信息行)+ 右 16:9 圆角封面。
+// 首页文章图文列表:左文字块(标题/摘要/图标元信息行)+ 右侧满贴边封面
+// (图的上/右/下三边与卡片边缘对齐,圆角由卡片 overflow 裁切)。
 // 无封面的文章封面块不渲染、文字占满全宽;设计定稿见 Penpot「01 · 首页」1.2 画板。
 import { Image } from 'astro:assets';
 import Icon from '@components/common/Icon.astro';
-import { formatDate } from '@i18n/utils';
+import { formatDateISO, t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 import { slugOf } from '@lib/i18n';
+import { countWords, stripMarkdown } from '@lib/content';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -20,6 +22,11 @@ const { entries, locale } = Astro.props;
   {
     entries.map((entry) => {
       const { cover, coverAlt, title, excerpt, pubDate, category, tags } = entry.data;
+      const wordCount = countWords(entry.body ?? '');
+      const plainBody = stripMarkdown(entry.body ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const bodyPreview = plainBody.length > 120 ? `${plainBody.slice(0, 120)}…` : plainBody;
       const href = `/${locale}/articles/${slugOf(entry)}/`;
       return (
         <a href={href} class="home-article-row">
@@ -28,29 +35,49 @@ const { entries, locale } = Astro.props;
             {excerpt && <p class="home-article-excerpt">{excerpt}</p>}
             <div class="home-article-meta">
               <span class="home-article-meta-item">
-                <Icon name="link" size={13} />
-                <time datetime={pubDate.toISOString()}>{formatDate(pubDate, locale)}</time>
+                <Icon name="calendar" size={14} />
+                <time datetime={pubDate.toISOString()}>{formatDateISO(pubDate)}</time>
               </span>
               <span class="home-article-meta-item">
-                <Icon name="book" size={13} />
+                <Icon name="folder" size={14} />
                 {category}
+              </span>
+              <span class="home-article-meta-item">
+                <Icon name="fileText" size={14} />
+                {t(locale, 'articles.wordCount', { n: String(wordCount) })}
               </span>
               {tags.slice(0, 3).map((tag) => (
                 <span class="home-article-meta-item">
-                  <Icon name="tag" size={13} />#{tag}
+                  <Icon name="tag" size={14} />#{tag}
                 </span>
               ))}
             </div>
           </div>
           {cover && (
-            <Image
-              src={cover}
-              alt={coverAlt}
-              width={540}
-              height={304}
-              loading="lazy"
-              class="home-article-cover"
-            />
+            <span class="home-article-cover-wrap">
+              <Image
+                src={cover}
+                alt={coverAlt}
+                width={540}
+                height={304}
+                loading="lazy"
+                class="home-article-cover"
+              />
+              <span class="home-article-cover-preview" aria-hidden="true">
+                <Image
+                  src={cover}
+                  alt=""
+                  width={540}
+                  height={304}
+                  loading="eager"
+                  decoding="sync"
+                  class="home-article-cover-blur"
+                />
+              </span>
+              <span class="home-article-cover-preview-text" aria-hidden="true">
+                {bodyPreview}
+              </span>
+            </span>
           )}
         </a>
       );
@@ -67,36 +94,36 @@ const { entries, locale } = Astro.props;
   .home-article-row {
     display: flex;
     gap: 24px;
-    padding: 20px;
+    min-height: 200px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
+    overflow: hidden;
     color: inherit;
     text-decoration: none;
-    transition:
-      transform calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
-      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
-  }
-  .home-article-row:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
   }
   .home-article-body {
     flex: 1;
     min-width: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
   .home-article-title {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: var(--text-xl);
+    font-weight: 500;
     line-height: 1.25;
+    /* 单行宽度比文字区多容纳 2 字:右界外扩 2em,伸进 gap 与封面左缘渐隐区 */
+    margin-right: -2em;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     overflow: hidden;
   }
   .home-article-excerpt {
-    margin-top: 8px;
-    font-size: var(--text-xs);
+    margin-top: 14px;
+    font-size: var(--text-sm);
     color: var(--color-text-muted);
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -104,12 +131,15 @@ const { entries, locale } = Astro.props;
     overflow: hidden;
   }
   .home-article-meta {
-    margin-top: 10px;
+    /* 贴卡片底部:自由空间用 auto 吃掉,文字长时 padding-top 保底间距 */
+    margin-top: auto;
+    padding-top: 12px;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 20px;
-    font-size: var(--text-2xs);
+    width: 100%;
+    font-size: var(--text-xs);
     color: var(--color-text-subtle);
   }
   .home-article-meta-item {
@@ -118,13 +148,111 @@ const { entries, locale } = Astro.props;
     gap: 6px;
     white-space: nowrap;
   }
-  .home-article-cover {
-    width: 270px;
-    height: auto;
-    min-height: 164px;
+  .home-article-cover-wrap {
+    /* 黄金分割小份:(内容宽 - gap) / φ² ≈ 38.2%,文字区 : 封面 = φ : 1 */
+    position: relative;
+    width: calc((100% - 24px) / 2.618);
     align-self: stretch;
-    object-fit: cover;
-    border-radius: var(--radius-md);
     flex-shrink: 0;
+  }
+  .home-article-cover {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 左缘渐隐进卡片底色(透出 surface,深浅主题自适应) */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 25%);
+    mask-image: linear-gradient(to right, transparent, #000 25%);
+  }
+  /* 悬停封面:虚化副本由左向右 clip-path 扫入(clip-path inset 全内核可插值;
+     mask-size 过渡在旧 Chromium/Edge 不支持,会整张跳变——实测踩坑)。
+     正文预览叠层同时渐显;键盘聚焦行时同样触发 */
+  /* 预览容器:虚化图 + 文字衬底薄纱都装在这里,由 mask-size 从左向右扫入。
+     不存在任何独立淡入的层(独立淡入的整区域薄纱曾被看成"瞬间全虚")。
+     蒙版用 mask-size 过渡(前沿自带 ~23% 宽的柔和渐变,clip-path 做不出软前沿);
+     早期误判是 Edge 不支持其插值,实为 backdrop-filter+父级 opacity 冲突与 ease-out 曲线,
+     两者均已修复。opacity ease-in 兜底:即使插值失效也只是整体淡入,不会突现。
+     DEBUG: 2s 便于观察,定稿改回 var(--duration-slower) */
+  .home-article-cover-preview {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    opacity: 0;
+    /* 蒙版只负责扫入前沿(右羽化);左缘过渡交给子层静态蒙版——
+       若容器再叠一层左羽化,两层渐隐乘积会把过渡压窄成 ~35px 的视觉分界线(实测踩坑) */
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    -webkit-mask-size: 0% 100%;
+    mask-size: 0% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    transition:
+      opacity 2s var(--ease-in, ease-in),
+      -webkit-mask-size 2s linear,
+      mask-size 2s linear;
+    pointer-events: none;
+    /* mask-size 动画走主线程重绘,will-change 让模糊纹理与蒙版常驻合成器缓存:
+       实测扫入期间主线程漂移 23.5ms → 1.28ms(小图层,常驻代价可忽略) */
+    will-change: mask-size, opacity;
+  }
+  .home-article-cover-blur {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 16px 大半径让模糊图趋近均匀色块:半透明薄纱下内容明暗透出 ∝ 内容差×透出率,
+       8px 时残差 ±12 级(薄纱 72%),16px 可再压半 */
+    filter: blur(16px);
+    transform: scale(1.1);
+    /* 渐进式模糊:前 12% 不加模糊(底图自身的 94px 左缘渐隐原样呈现,与静止态一致),
+       12%→32% 渐至全模糊——清晰与虚化之间用渐变带过渡,避免白卡片与深色模糊图
+       直接交叉渐隐产生视觉分界线(静态蒙版,无动画兼容性问题) */
+    -webkit-mask-image: linear-gradient(to right, transparent 12%, #000 32%);
+    mask-image: linear-gradient(to right, transparent 12%, #000 32%);
+    will-change: transform;
+  }
+  /* 文字衬底薄纱:均匀 tint,无独立蒙版(跟随容器扫入裁切) */
+  .home-article-cover-preview::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  }
+  /* 预览文字:独立于蒙版容器的兄弟层——不参与左缘过渡区,只随悬停整体渐入,
+     避免容器蒙版的左羽化把开头文字洗淡 */
+  .home-article-cover-preview-text {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    font-size: var(--text-xs);
+    line-height: 1.7;
+    color: #000;
+    /* 正文已在组件里截到 120 字,max-height 仅作溢出兜底 */
+    max-height: 120px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 2s var(--ease-in, ease-in);
+    pointer-events: none;
+  }
+  /* 深色主题下纯黑不可读,回退主题文字色 */
+  :global([data-theme='dark']) .home-article-cover-preview-text {
+    color: var(--color-text);
+  }
+  .home-article-cover-wrap:hover .home-article-cover-preview-text,
+  .home-article-row:focus-visible .home-article-cover-preview-text {
+    opacity: 1;
+  }
+  .home-article-cover-wrap:hover .home-article-cover-preview,
+  .home-article-row:focus-visible .home-article-cover-preview {
+    -webkit-mask-size: 130% 100%;
+    mask-size: 130% 100%;
+    opacity: 1;
   }
 </style>

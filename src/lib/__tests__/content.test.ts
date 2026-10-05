@@ -5,6 +5,7 @@ import {
   validateCollectionItemIds,
   mergeAnimeNotes,
   mergeVocaloidNotes,
+  countWords,
 } from '@lib/content';
 
 describe('validateOgImageFields (spec P1-10)', () => {
@@ -136,5 +137,16 @@ describe('mergeVocaloidNotes', () => {
     expect(() => mergeVocaloidNotes(items, [{ comment: 'no id' }])).toThrow(/id/);
     expect(() => mergeVocaloidNotes(items, [{ id: 'ne-1' }, { id: 'ne-1' }])).toThrow(/重复/);
     expect(() => mergeVocaloidNotes(items, [{ id: 'ne-1', status: 'watching' }])).toThrow(/status/);
+  });
+});
+
+describe('countWords (卡片字数统计)', () => {
+  it('counts CJK chars individually and latin words by space', () => {
+    expect(countWords('这是**测试**文章,含 [链接](https://example.com)。')).toBe(9);
+  });
+
+  it('strips code blocks, inline code and markdown marks first', () => {
+    expect(countWords('# 标题\n\n```js\nconst a = 1;\n```\n\n`var` Hello world 文')).toBe(5);
+    expect(countWords('')).toBe(0);
   });
 });

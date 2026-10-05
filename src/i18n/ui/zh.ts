@@ -42,6 +42,7 @@ export default {
   'articles.viewAll': '查看全部',
   'articles.readMore': '阅读全文',
   'articles.publishedOn': '发布于 {date}',
+  'articles.wordCount': '{n} 字',
   'articles.updatedOn': '更新于 {date}',
   'articles.toc': '文章目录',
   'articles.untranslated': '本文暂无 {lang} 版本',

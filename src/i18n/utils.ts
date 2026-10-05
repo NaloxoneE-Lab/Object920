@@ -36,3 +36,10 @@ export function formatDate(date: Date, locale: Locale): string {
     day: 'numeric',
   }).format(date);
 }
+
+/** 卡片元信息用的纯数字日期(2026-10-04):本地时间字段拼装,避免 toISOString 的 UTC 偏移 */
+export function formatDateISO(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
