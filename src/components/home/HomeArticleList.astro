@@ -115,6 +115,8 @@ const { entries, locale } = Astro.props;
     margin-top: 14px;
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+    /* 保留 excerpt 里的换行(用户在 CMS 用回车断句);与 line-clamp 叠加不冲突 */
+    white-space: pre-line;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;

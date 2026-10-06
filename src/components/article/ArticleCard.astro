@@ -83,6 +83,8 @@ const href = `/${locale}/articles/${slugOf(entry)}/`;
     margin-top: var(--spacing-2xs);
     color: var(--color-text-muted);
     font-size: var(--text-sm);
+    /* 保留 excerpt 里的换行(用户在 CMS 用回车断句) */
+    white-space: pre-line;
   }
   .article-card-meta {
     display: flex;
