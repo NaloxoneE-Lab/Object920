@@ -1,10 +1,12 @@
 ---
 // src/layouts/ArticleLayout.astro
+import { Image } from 'astro:assets';
 import BaseLayout from '@components/layout/BaseLayout.astro';
 import ArticleProse from '@components/article/ArticleProse.astro';
 import Toc from '@components/article/Toc.astro';
 import ReadingProgress from '@components/article/ReadingProgress.astro';
 import LangSwitch from '@components/common/LangSwitch.astro';
+import Icon from '@components/common/Icon.astro';
 import { t } from '@i18n/utils';
 import { defaultLocale, type Locale, type ContentLocale } from '@i18n/config';
 import { siteConfig } from '@config/site';
@@ -23,6 +25,10 @@ interface Props {
   headings?: { depth: number; slug: string; text: string }[];
 }
 const { locale, mode, contentLocale, entry, group, routeSegment, Content, headings } = Astro.props;
+
+// Toc 组件只在有 h2/h3 时渲染(组件内部过滤)。网格是 220px 1fr 两列,
+// 无小标题时若仍按两列排,正文会掉进 220px 的 Toc 空列——退化为单列。
+const hasToc = (headings ?? []).some((h) => h.depth === 2 || h.depth === 3);
 
 const renderLocales = (['zh', 'en'] as const).filter((l) => group[l]);
 const alternates = renderLocales.map((l) => ({
@@ -56,21 +62,51 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
   <div class="article-layout">
     {
       mode === 'render' && Content && (
-        <div class="article-grid">
-          <Toc headings={headings ?? []} locale={locale} />
+        <div class:list={['article-grid', { 'article-grid--no-toc': !hasToc }]}>
           <article class="article-main" data-pagefind-body>
-            <h1 class="article-title">{entry?.data.title}</h1>
-            {entry?.data.pubDate && (
-              <p class="article-date">
-                {t(locale, 'articles.publishedOn', {
-                  date: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(
-                    entry.data.pubDate,
-                  ),
-                })}
-              </p>
+            {entry?.data.cover && (
+              <figure class="article-hero">
+                <Image
+                  src={entry.data.cover}
+                  alt={entry.data.coverAlt}
+                  width={1120}
+                  height={374}
+                  fit="cover"
+                  loading="eager"
+                  fetchpriority="high"
+                  class="article-hero-image"
+                />
+              </figure>
             )}
+            <h1 class="article-title">{entry?.data.title}</h1>
+            <div class="article-meta">
+              {entry?.data.pubDate && (
+                <span class="article-meta-item">
+                  <Icon name="calendar" size={14} />
+                  <time datetime={entry.data.pubDate.toISOString()}>
+                    {t(locale, 'articles.publishedOn', {
+                      date: new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(
+                        entry.data.pubDate,
+                      ),
+                    })}
+                  </time>
+                </span>
+              )}
+              {entry && (
+                <span class="article-meta-item">
+                  <Icon name="folder" size={14} />
+                  {entry.data.category}
+                </span>
+              )}
+              {entry?.data.tags.map((tag) => (
+                <span class="article-meta-item">
+                  <Icon name="tag" size={14} />#{tag}
+                </span>
+              ))}
+            </div>
             <ArticleProse contentLocale={contentLocale} Content={Content} />
           </article>
+          {hasToc && <Toc headings={headings ?? []} locale={locale} />}
         </div>
       )
     }
@@ -101,7 +137,8 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
   }
   .article-grid {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    /* 正文左、目录右:280px ≈ 参考稿约 22% 的侧栏占比 */
+    grid-template-columns: 1fr 280px;
     gap: var(--spacing-lg);
   }
   .article-title {
@@ -109,10 +146,68 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     font-weight: 700;
     margin-bottom: var(--spacing-xs);
   }
-  .article-date {
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
+  /* 无小标题的文章:Toc 不渲染,网格退化为单列(否则正文掉进 220px 空列) */
+  .article-grid--no-toc {
+    grid-template-columns: 1fr;
+  }
+  /* 封面开屏横幅:宽度与正文列同轴,构建期 fit=cover 裁到 3:1;
+     下缘蒙版渐隐融进页面背景,给叠字留干净区(FlatPaper 开屏形式) */
+  .article-hero {
+    max-width: var(--container-prose);
+    margin: 0 auto;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .article-hero-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* 720px 列宽下横幅高约 240px:实图区收短到 30%,标题带(约 50%~87%)渐隐可读 */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 30%,
+      rgba(0, 0, 0, 0.55) 50%,
+      rgba(0, 0, 0, 0.22) 72%,
+      rgba(0, 0, 0, 0.06) 88%,
+      transparent 97%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 30%,
+      rgba(0, 0, 0, 0.55) 50%,
+      rgba(0, 0, 0, 0.22) 72%,
+      rgba(0, 0, 0, 0.06) 88%,
+      transparent 97%
+    );
+  }
+  /* 标题/元信息行压上横幅渐隐区:仅紧跟 hero 时生效(无封面文章不受影响);
+     相对定位确保文字稳定画在图上 */
+  .article-hero + .article-title {
+    position: relative;
+    margin-top: -120px;
+  }
+  /* 标题/元信息行与正文同轴:约束到 prose 列宽(hero 保持全宽横幅) */
+  .article-main :is(.article-title, .article-meta) {
+    max-width: var(--container-prose);
+    margin-inline: auto;
+  }
+  /* 标题下元信息行:日期/分类/tags,图标语言与首页文章卡一致 */
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
     margin-bottom: var(--spacing-md);
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+  }
+  .article-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
   }
   .article-main {
     min-width: 0;
@@ -133,6 +228,8 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     :global(.toc) {
       position: static;
       max-height: none;
+      /* 移动端单列:目录回到正文上方(保持既有阅读动线) */
+      order: -1;
     }
   }
 </style>

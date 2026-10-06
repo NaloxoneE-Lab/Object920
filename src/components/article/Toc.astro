@@ -2,6 +2,7 @@
 // src/components/article/Toc.astro
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
+import Icon from '@components/common/Icon.astro';
 interface Heading {
   depth: number;
   slug: string;
@@ -18,6 +19,10 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
 {
   items.length > 0 && (
     <nav class="toc" aria-label={t(locale, 'articles.toc')}>
+      <p class="toc-header">
+        <Icon name="menu" size={14} />
+        {t(locale, 'articles.toc')}
+      </p>
       <ul class="toc-list">
         {items.map((h) => (
           <li class:list={['toc-item', { 'toc-item-h3': h.depth === 3 }]}>
@@ -50,28 +55,50 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   });
 </script>
 <style>
+  /* 目录卡片:表面底色 + 描边 + 卡片圆角,与站点卡片语言一致 */
   .toc {
     position: sticky;
     top: var(--spacing-2xl);
     max-height: calc(100vh - var(--spacing-3xl));
     overflow-y: auto;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+  .toc-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    margin: 0 0 var(--spacing-2xs);
+    padding-bottom: var(--spacing-2xs);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text);
   }
   .toc-list {
     list-style: none;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-2xs);
+    gap: var(--spacing-3xs);
   }
   .toc-item-h3 {
     padding-left: var(--spacing-sm);
   }
   .toc-link {
+    display: block;
+    padding: var(--spacing-2xs);
+    border-left: 2px solid transparent;
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: var(--text-xs);
-    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+    line-height: 1.5;
+    transition:
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      border-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .toc-link:hover {
     color: var(--color-text);
@@ -79,5 +106,7 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   .toc-link-active {
     color: var(--color-accent);
     font-weight: 600;
+    border-left-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   }
 </style>
