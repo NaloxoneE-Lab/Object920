@@ -168,3 +168,11 @@
   margin: 0;
   border-radius: 0;
 }
+
+/* KaTeX 数学公式:行内公式继承正文字色(深浅主题自适应);
+   块级公式超宽时横向滚动,避免撑破 720px 阅读列 */
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--spacing-3xs) 0;
+}

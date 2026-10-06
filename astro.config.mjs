@@ -1,6 +1,8 @@
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { rehypeArticleImage } from './src/lib/rehype-article-image.ts';
 import { rehypeCodeblock } from './src/lib/rehype-codeblock.ts';
 import tailwindcss from '@tailwindcss/vite';
@@ -26,8 +28,10 @@ export default defineConfig({
     // 必须显式使用 unified processor(来自 @astrojs/markdown-remark,直接依赖)
     // 插件顺序纪律(spec 7.2.2):图片插件先于代码块插件
     processor: unified({
-      remarkPlugins: [],
-      rehypePlugins: [rehypeArticleImage, rehypeCodeblock],
+      remarkPlugins: [remarkMath],
+      // KaTeX 必须先于代码块插件:块级公式在 hast 里是 pre>code.language-math,
+      // 先让 rehype-katex 整块替换掉,否则会被代码块装饰层套上 MATH 标签卡
+      rehypePlugins: [rehypeArticleImage, rehypeKatex, rehypeCodeblock],
     }),
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },

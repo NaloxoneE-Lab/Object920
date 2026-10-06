@@ -55,4 +55,10 @@ describe('rehypeCodeblock', () => {
     });
     expect(t.children[0].tagName).toBe('pre');
   });
+
+  it('skips language-math blocks (KaTeX 渲染,不套代码块卡片)', () => {
+    const t = run({ type: 'root', children: [pre(code(['language-math'], 'd = a / b'))] });
+    expect(t.children[0].tagName).toBe('pre');
+    expect(t.children[0].properties.dataCodeBlock).toBeUndefined();
+  });
 });

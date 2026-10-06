@@ -45,6 +45,9 @@ export function rehypeCodeblock() {
       if (!codeEl) return node;
 
       const lang = langFromCode(codeEl);
+      // 数学公式块($$)在 hast 里也是 pre>code.language-math,交给 rehype-katex
+      // 渲染,不套代码块卡片(无语言标签/复制按钮语义)
+      if (lang === 'math') return node;
       const raw = extractText(codeEl);
       const header: HastNode = {
         type: 'element',
