@@ -9,7 +9,7 @@
 //   - 抽屉/搜索等弹层打开时(body overflow hidden)不劫持,避免滚动冲突。
 //   - ClientRouter:astro:page-load 时重查元素;非首页引用为空,监听器自行短路。
 
-const DURATION = 800;
+const DURATION = 600;
 /** 边界判定带:第二屏顶上下各 96px 内视为"开关位" */
 const BOUNDARY = 96;
 /** 一次向下切换的最小触摸位移(px) */
@@ -40,10 +40,11 @@ function reducedMotion(): boolean {
 }
 
 function heroBottom(): number {
-  if (!hero) return Number.POSITIVE_INFINITY;
-  // 文档坐标系里 Hero 的底边 = 第二屏顶(scrollY 补偿视口偏移)
-  const rect = hero.getBoundingClientRect();
-  return rect.bottom + window.scrollY;
+  if (!panel) return Number.POSITIVE_INFINITY;
+  // 第二屏文档顶 = 第一屏底。Hero 钉屏(body.home-ready 后 sticky 常驻视口)后
+  // 自身 rect 恒等于视口框,不能再作基准;第二屏在正常文档流里,
+  // rect.top + scrollY 即文档坐标,与滚动位置无关
+  return panel.getBoundingClientRect().top + window.scrollY;
 }
 
 /** Hero 是否已完成布局(样式就绪)。astro:page-load 可能早于布局:

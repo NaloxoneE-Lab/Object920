@@ -88,6 +88,16 @@ const enLabels: Record<string, string> = {
   :global(body.has-site-bg) .sakura-hero {
     background: transparent;
   }
+  /* 双屏切换(JS 就绪 body.home-ready)后第一屏钉屏:不再随原生滚动竖移,
+     菜单退场是纯横向滑出。z 0 = 定位层,必须压过 main 的流内盒子——透明盒子
+     同样参与命中,Hero 若用负 z 会被 main 拦掉全部点击(elementsFromPoint 实测);
+     仍低于第二屏/Footer(z 1),由它们盖住钉屏 Hero。
+     无 JS 时不钉屏,保留原生滚动整体带离第一屏的兜底 */
+  :global(body.home-ready) .sakura-hero {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+  }
 
   /* === 左侧菜单(设计稿实测:x=240,首项顶 228,行距 76,细线 项顶+44/56px)
      x 统一跟随设计稿比例:240/1440 = 16.67vw,任何分辨率按画板比例定位,不设上限 === */
@@ -175,16 +185,22 @@ const enLabels: Record<string, string> = {
   }
 
   /* === 双屏切换退场(body.home-at-panel,见 scroll-switch.ts):
-     切向第二屏时 Hero 内容上浮淡出,返回第一屏时复位重放 === */
-  .sakura-menu,
+     菜单整块向左加速滑出视口(纯位移不淡出,物理滑离而非消隐),
+     返回第一屏时反向滑入 ease-out 减速落位;箭头保持下沉淡出 === */
+  .sakura-menu {
+    translate: 0 0;
+    transition: translate calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out);
+  }
   .sakura-scroll {
     transition:
       opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
       translate calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out);
   }
+  /* 退场态换 ease-in:全程加速、以峰值速度出屏,读感更快 */
   :global(body.home-at-panel) .sakura-menu {
-    opacity: 0;
-    translate: 0 -26px;
+    transition: translate calc(var(--duration-slow) * var(--motion-scale)) var(--ease-in);
+    /* 滑距 = 菜单左偏移(16.67vw) + 自身宽度(100%) + 48px 余量 → 右缘越过屏幕左缘 */
+    translate: calc(-16.67vw - 100% - 48px) 0;
   }
   /* 滚动箭头的悬浮动画与 translate 过渡冲突,退场态停用动画让位给过渡 */
   :global(body.home-at-panel) .sakura-scroll {

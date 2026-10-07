@@ -27,3 +27,6 @@ _headers
 _redirects
 netlify.toml
 gui-test-screenshots/
+
+# 构建期生成的磨砂壁纸(generate-frost-wallpaper 产物)
+public/generated-frost/

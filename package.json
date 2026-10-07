@@ -8,9 +8,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "predev": "node --env-file-if-exists=.env src/scripts/pull-content.mjs --if-missing",
+    "predev": "node --env-file-if-exists=.env src/scripts/pull-content.mjs --if-missing && tsx --env-file-if-exists=.env src/scripts/generate-frost-wallpaper.ts",
     "build": "astro build",
-    "prebuild": "node --env-file-if-exists=.env src/scripts/pull-content.mjs && node --env-file-if-exists=.env src/scripts/build-meta.mjs && pnpm run check:datasheets",
+    "prebuild": "node --env-file-if-exists=.env src/scripts/pull-content.mjs && tsx --env-file-if-exists=.env src/scripts/generate-frost-wallpaper.ts && node --env-file-if-exists=.env src/scripts/build-meta.mjs && pnpm run check:datasheets",
     "postbuild": "pnpm run build-meta -- --dist && pnpm run search:index && pnpm run generate-og && pnpm run generate:redirects && pnpm run check:links && pnpm run check:sitemap && pnpm run check:rss",
     "check": "astro check",
     "lint": "eslint . && prettier --check .",
@@ -27,6 +27,7 @@
     "check:rss": "tsx --env-file-if-exists=.env src/scripts/check-rss.ts",
     "search:index": "node --env-file-if-exists=.env src/scripts/search-index.mjs",
     "generate-og": "tsx --env-file-if-exists=.env src/scripts/generate-og.ts",
+    "generate-frost": "tsx --env-file-if-exists=.env src/scripts/generate-frost-wallpaper.ts",
     "generate:redirects": "tsx --env-file-if-exists=.env src/scripts/generate-redirects.ts",
     "generate:deploy-config": "tsx --env-file-if-exists=.env src/scripts/generate-deploy-config.ts"
   },

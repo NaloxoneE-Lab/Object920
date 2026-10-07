@@ -127,10 +127,11 @@ const wallpaper = siteConfig.background;
         background: var(--frost-bg);
         backdrop-filter: blur(var(--frost-blur));
       }
-      /* 首页第二屏(HomePanel)自带磨砂板,Footer 与之相接,同规格铺一层保持连续 */
+      /* 首页 Footer 不再自带磨砂:垫在 HomePanel 的 .home-panel-frost 视口定层上,
+         与非首页 Footer 垫在 main::before 磨砂定层上同构 */
       body.page-home .footer {
-        background: var(--frost-bg);
-        backdrop-filter: blur(var(--frost-blur));
+        position: relative;
+        z-index: 1; /* 与第二屏同层,盖住钉屏 Hero(z 0) */
       }
       /* 顶栏下内容穿越带:fixed 于顶栏区——backdrop-filter 模糊 + 一层浅色磨砂底
          (var(--frost-bg),与内容区同色)把糊进来的深色封面"提浅",消除灰斑感。

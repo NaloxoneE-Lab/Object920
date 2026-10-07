@@ -3,16 +3,24 @@
 // 首页第二屏内容区:原首页内容(HomeSections)+ Footer 由 BaseLayout 自然衔接。
 // 常驻顶栏由 BaseLayout 的 Header 提供(fixed,切到本屏时中间跳转按钮随动画淡入,
 // 顶栏本体不动);与第一屏(Hero)的整屏切换逻辑见 scroll-switch.ts。
-// 进场动画:body.home-at-panel 时各内容块错峰上滑淡入(类移除即复位,可重放)。
+// 进场动画:body.home-at-panel 时整屏内容统一透明度渐变(无竖向位移、无错峰,
+// 类移除即复位,可重放);磨砂背景独立为视口定层 .home-panel-frost,不随内容
+// 上滑,切换时整层 opacity 渐显至 1(层内复合见样式块注释)。
 import HomeSections from './HomeSections.astro';
+import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
 interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
+// 预糊壁纸(generate-frost-wallpaper 构建期产物);未配置壁纸时磨砂层退化为纯着色
+const frostWallpaper = siteConfig.background ? '/generated-frost/frost-wallpaper.webp' : null;
 ---
 
 <div class="home-panel" data-home-panel>
+  <div class:list={['home-panel-frost', { 'has-img': !!frostWallpaper }]} aria-hidden="true">
+    {frostWallpaper && <img src={frostWallpaper} alt="" decoding="async" />}
+  </div>
   <HomeSections locale={locale} />
 </div>
 
@@ -23,39 +31,72 @@ const { locale } = Astro.props;
 </script>
 
 <style>
-  /* 让出常驻顶栏高度(顶栏 fixed 不占流),落位后内容不从顶栏底下起;
-     面板磨砂板:压住壁纸提高内容可读性(第一屏 Hero 保持壁纸原样不受影响) */
+  /* 让出常驻顶栏高度(顶栏 fixed 不占流),落位后内容不从顶栏底下起。
+     面板本体全透明:磨砂独立到 .home-panel-frost 视口定层,不随内容滚动。
+     relative + z 1:与 Footer 同层盖住钉屏 Hero(z 0);自成层叠上下文,
+     磨砂定层的 z -1 收在面板内部,不与页面级层级串线 */
   .home-panel {
+    position: relative;
+    z-index: 1;
     padding-top: 64px;
+    /* 至少一屏:保证第二屏滚距与落位占满视口 */
+    min-height: 100svh;
+  }
+  /* 独立磨砂背景层:fixed 铺视口,直接压在壁纸(site-bg)与钉屏 Hero 之上
+     (同为 z-index:-1 但树序在后)、一切滚动内容之下。
+     "磨砂"= 构建期预糊壁纸(public/generated-frost,见 generate-frost-wallpaper.ts)
+     + 暗色压暗 + --frost-bg 着色的层内复合,本层不含 backdrop-filter →
+     渐显直接动 opacity:纯合成器动画零逐帧重采样,也不受 Backdrop Root 规范约束
+     (对带 backdrop-filter 的层动 opacity 会隔离采样致模糊瞬移,此路已验证不通);
+     兼容性反而覆盖全部内核含旧 Safari。transition 声明在基态,进出对称。
+     未生成糊图(未配置壁纸/远程壁纸)时退化为纯着色。
+     已知边界:菜单退场是纯位移,切换前半段以清晰态路过半成形磨砂(窗口 <400ms
+     且磨砂强度低,可接受);要抹掉可给 .sakura-menu 补 filter: blur() 自糊 */
+  .home-panel-frost {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity calc(var(--duration-slower) * var(--motion-scale)) var(--ease-in-out);
+  }
+  .home-panel-frost img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* 暗色压暗:复刻 BaseLayout 站壁纸暗色 overlay(仅糊图存在时有意义) */
+  :global([data-theme='dark']) .home-panel-frost.has-img::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
+  }
+  /* 着色(常驻):与旧 backdrop-filter 磨砂同色,压糊图提高内容可读性 */
+  .home-panel-frost::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     background: var(--frost-bg);
-    backdrop-filter: blur(var(--frost-blur));
+  }
+  :global(body.home-ready.home-at-panel) .home-panel-frost {
+    opacity: 1;
   }
   /* 进场基态(仅 JS 就绪后生效,body.home-ready 由 scroll-switch 注入;
-     无 JS 时面板始终可见,原生滚动兜底):隐藏 + 下沉。
-     transition 声明在基态,延迟挂在进场态(退场无延迟,整体同步淡出) */
+     无 JS 时面板始终可见,原生滚动兜底):整屏内容透明度归零。
+     transition 声明在基态,进出对称;时长/缓动与磨砂层、整屏滚动同轴(600ms) */
   :global(body.home-ready) .home-panel :global(.home-section) {
     opacity: 0;
-    translate: 0 28px;
-    transition:
-      opacity calc(var(--duration-slower) * var(--motion-scale)) var(--ease-out),
-      translate calc(var(--duration-slower) * var(--motion-scale)) var(--ease-out);
+    transition: opacity calc(var(--duration-slower) * var(--motion-scale)) var(--ease-in-out);
   }
-  /* 进场态:上滑淡入,内容块错峰跟进 */
+  /* 进场态:整屏内容统一渐显(无错峰、无竖向位移) */
   :global(body.home-ready.home-at-panel) .home-panel :global(.home-section) {
     opacity: 1;
-    translate: 0 0;
-  }
-  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(1) {
-    transition-delay: 140ms;
-  }
-  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(2) {
-    transition-delay: 220ms;
-  }
-  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(3) {
-    transition-delay: 300ms;
-  }
-  :global(body.home-ready.home-at-panel) .home-panel :global(.home-section):nth-child(4) {
-    transition-delay: 380ms;
   }
 </style>
 
