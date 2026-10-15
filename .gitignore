@@ -21,6 +21,9 @@ src/.build-meta.generated.json
 .DS_Store
 *.log
 
+# Mnemon 运行时记忆/agent 工作目录(本地状态,不是项目源码)
+.mnemon/
+
 # generated deploy configs (generate:redirects / generate:deploy-config 产物)
 vercel.json
 _headers

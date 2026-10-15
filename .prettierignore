@@ -2,6 +2,7 @@ dist
 node_modules
 .astro
 .opencode
+.mnemon
 docs
 pnpm-lock.yaml
 public/fonts
