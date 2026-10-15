@@ -56,6 +56,39 @@ describe('rehypeCodeblock', () => {
     expect(t.children[0].tagName).toBe('pre');
   });
 
+  it('reads language from pre[dataLanguage] when Shiki has already consumed language-* class', () => {
+    // 真实管线形态:rehypeShiki 先跑,把整个 pre 换成自己的输出,
+    // code 上没有 language-* class,语言只留在 pre.properties.dataLanguage 上
+    const t = run({
+      type: 'root',
+      children: [
+        {
+          type: 'element',
+          tagName: 'pre',
+          properties: { dataLanguage: 'javascript' },
+          children: [code([], 'const x = 1;')],
+        },
+      ],
+    });
+    const header = t.children[0].children[0];
+    expect(header.children[0].children[0].value).toBe('JAVASCRIPT');
+  });
+
+  it('prefers pre[dataLanguage] over a stale language-* class on code', () => {
+    const t = run({
+      type: 'root',
+      children: [
+        {
+          type: 'element',
+          tagName: 'pre',
+          properties: { dataLanguage: 'python' },
+          children: [code(['language-ts'], 'print(1)')],
+        },
+      ],
+    });
+    expect(t.children[0].children[0].children[0].children[0].value).toBe('PYTHON');
+  });
+
   it('skips language-math blocks (KaTeX 渲染,不套代码块卡片)', () => {
     const t = run({ type: 'root', children: [pre(code(['language-math'], 'd = a / b'))] });
     expect(t.children[0].tagName).toBe('pre');

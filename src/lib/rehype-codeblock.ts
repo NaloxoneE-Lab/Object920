@@ -33,6 +33,16 @@ function langLabel(lang: string | null): string {
   return (lang ?? 'text').toUpperCase();
 }
 
+// 语言来源优先级(rehypeShiki 先于用户 rehypePlugins 执行):
+//   1. pre.properties.dataLanguage —— Shiki 会把整个 pre 换成自己的输出,语言只留在它的
+//      data-language 属性上,原始 code 的 language-* class 已被消费掉(实测)
+//   2. code 的 language-* class —— 未经 Shiki 处理时的兜底
+function langOf(preEl: HastNode, codeEl: HastNode): string | null {
+  const fromPre = preEl.properties?.dataLanguage;
+  if (typeof fromPre === 'string' && fromPre !== '') return fromPre;
+  return langFromCode(codeEl);
+}
+
 export function rehypeCodeblock() {
   return (tree: Root) => {
     const root = tree as unknown as HastNode;
@@ -44,9 +54,9 @@ export function rehypeCodeblock() {
       ) as HastNode | undefined;
       if (!codeEl) return node;
 
-      const lang = langFromCode(codeEl);
-      // 数学公式块($$)在 hast 里也是 pre>code.language-math,交给 rehype-katex
-      // 渲染,不套代码块卡片(无语言标签/复制按钮语义)
+      const lang = langOf(preNode, codeEl);
+      // 块级公式($$)在未经 rehype-katex 处理时也是 pre>code.language-math,
+      // 不套代码块卡片(无语言标签/复制按钮语义)
       if (lang === 'math') return node;
       const raw = extractText(codeEl);
       const header: HastNode = {
