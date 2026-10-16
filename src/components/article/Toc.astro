@@ -3,17 +3,13 @@
 import { t } from '@i18n/utils';
 import type { Locale } from '@i18n/config';
 import Icon from '@components/common/Icon.astro';
-interface Heading {
-  depth: number;
-  slug: string;
-  text: string;
-}
+import { tocHeadings, type TocHeading } from '@lib/toc';
 interface Props {
-  headings: Heading[];
+  headings: TocHeading[];
   locale: Locale;
 }
 const { headings, locale } = Astro.props;
-const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const items = tocHeadings(headings);
 ---
 
 {
@@ -55,50 +51,67 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   });
 </script>
 <style>
-  /* 目录卡片:表面底色 + 描边 + 卡片圆角,与站点卡片语言一致 */
+  /* 无边框目录:去掉卡片底色/描边/圆角/内边距,骨架交给一条 1px 竖轨,
+     当前项用一段压在轨道同一列上的指示段标记(参考稿:轨道 1px、指示段 20px 高)。
+     轨道挂在 list 上而不是逐条 border-left:条目之间有 6px 间隙,逐条画会断成虚线。 */
   .toc {
     position: sticky;
     top: var(--spacing-2xl);
     max-height: calc(100vh - var(--spacing-3xl));
     overflow-y: auto;
-    padding: var(--spacing-xs);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    /* 卡片没了以后,原生滚动条会浮在条目文字右侧、和整页留白语言冲突,直接隐藏;
+       内容超高时仍可用滚轮/触控板/键盘滚动(见下方组件注释) */
+    scrollbar-width: none;
+  }
+  /* 旧 WebKit(Safari < 18.2 等不支持 scrollbar-width)分支 */
+  .toc::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
   .toc-header {
     display: flex;
     align-items: center;
     gap: var(--spacing-2xs);
-    margin: 0 0 var(--spacing-2xs);
-    padding-bottom: var(--spacing-2xs);
-    border-bottom: 1px solid var(--color-border);
+    /* 表头与竖轨齐平(条目文字再向内缩 16px),表头下不再画分隔线 */
+    margin: 0 0 var(--spacing-xs);
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-text);
   }
   .toc-list {
+    position: relative;
     list-style: none;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3xs);
+    /* 行节奏对齐参考稿:条目节距 34px = 行高 28px + 条目间隙 6px */
+    gap: 6px;
   }
-  .toc-item-h3 {
-    padding-left: var(--spacing-sm);
+  /* 竖轨:贯穿整个列表(表头不含在内),两端与首末条目对齐 */
+  .toc-list::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 1px;
+    background: var(--color-border);
   }
   .toc-link {
+    position: relative;
     display: block;
-    padding: var(--spacing-2xs);
-    border-left: 2px solid transparent;
+    /* 左内边距 = 竖轨到文字的距离(参考稿实测 16px);竖向由行盒撑满条目高度 */
+    padding: 0 var(--spacing-2xs) 0 var(--spacing-xs);
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: var(--text-xs);
-    line-height: 1.5;
-    transition:
-      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
-      border-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
-      background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+    /* 参考稿折行节距实测 28px(3 行条目 613→641→670)= 14px 字号的 2.0 倍 */
+    line-height: 2;
+    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+  }
+  /* h3 缩进必须落在 link 的 padding 上,不能留在 li 上:
+     li 加内边距会把 link 盒整体推离竖轨,指示段就对不齐轨道了 */
+  .toc-item-h3 .toc-link {
+    padding-left: calc(var(--spacing-xs) + var(--spacing-sm));
   }
   .toc-link:hover {
     color: var(--color-text);
@@ -106,7 +119,17 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   .toc-link-active {
     color: var(--color-accent);
     font-weight: 600;
-    border-left-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+  /* 当前项指示段:与竖轨同列(left:0 即轨道位置),
+     上下各内缩 4px → 单行条目实测 20px,与参考稿一致;多行条目按条目高度拉伸 */
+  .toc-link-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--color-accent);
   }
 </style>

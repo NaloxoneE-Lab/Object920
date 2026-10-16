@@ -94,4 +94,44 @@ describe('rehypeCodeblock', () => {
     expect(t.children[0].tagName).toBe('pre');
     expect(t.children[0].properties.dataCodeBlock).toBeUndefined();
   });
+
+  it('wraps pre nested in list items and blockquotes (递归全树)', () => {
+    const t = run({
+      type: 'root',
+      children: [
+        {
+          type: 'element',
+          tagName: 'blockquote',
+          properties: {},
+          children: [
+            {
+              type: 'element',
+              tagName: 'ul',
+              properties: {},
+              children: [
+                {
+                  type: 'element',
+                  tagName: 'li',
+                  properties: {},
+                  children: [pre(code(['language-bash'], 'pnpm install'))],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const li = t.children[0].children[0].children[0];
+    expect(li.children[0].tagName).toBe('div');
+    expect(li.children[0].properties.dataCodeBlock).toBe('');
+    expect(li.children[0].children[0].children[0].children[0].value).toBe('BASH');
+    expect(li.children[0].children[1].tagName).toBe('pre');
+  });
+
+  it('is idempotent — never double-wraps on a second pass', () => {
+    const once = run({ type: 'root', children: [pre(code(['language-ts'], 'x'))] });
+    const twice = run(once);
+    expect(twice.children[0].properties.dataCodeBlock).toBe('');
+    expect(twice.children[0].children[1].tagName).toBe('pre');
+  });
 });

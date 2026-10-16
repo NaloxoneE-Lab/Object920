@@ -43,53 +43,71 @@ function langOf(preEl: HastNode, codeEl: HastNode): string | null {
   return langFromCode(codeEl);
 }
 
+// 把 pre/code 包成 .code-block 卡片(语言标签 + 复制按钮)。
+// 递归全树:此前只处理根级子节点,于是「列表项里的代码块」「引用块里的代码块」会漏掉卡片,
+// 与根级代码块长得不一样(样张 9.8 / 10.x 直接暴露)。卡片对嵌套层级是安全的:
+// li / blockquote 里放 div 都是合法结构。
+function wrapPre(preNode: HastNode): HastNode | null {
+  const codeEl = (preNode.children ?? []).find(
+    (c) => isElement(c) && (c as Element).tagName === 'code',
+  ) as HastNode | undefined;
+  if (!codeEl) return null;
+
+  const lang = langOf(preNode, codeEl);
+  // 块级公式($$)在未经 rehype-katex 处理时也是 pre>code.language-math,
+  // 不套代码块卡片(无语言标签/复制按钮语义)
+  if (lang === 'math') return null;
+  const raw = extractText(codeEl);
+  const header: HastNode = {
+    type: 'element',
+    tagName: 'div',
+    properties: { className: ['code-block-header'] },
+    children: [
+      {
+        type: 'element',
+        tagName: 'span',
+        properties: { className: ['code-block-lang'] },
+        children: [{ type: 'text', value: langLabel(lang) }],
+      },
+      {
+        type: 'element',
+        tagName: 'button',
+        properties: {
+          className: ['code-block-copy'],
+          dataCopyButton: '',
+          'aria-label': '复制代码',
+          dataCode: raw,
+        },
+        children: [{ type: 'text', value: '复制' }],
+      },
+    ],
+  };
+  return {
+    type: 'element',
+    tagName: 'div',
+    properties: { className: ['code-block'], dataCodeBlock: '' },
+    children: [header, preNode],
+  };
+}
+
+function isCodeBlockWrapper(node: HastNode): boolean {
+  return isElement(node) && node.tagName === 'div' && node.properties?.dataCodeBlock !== undefined;
+}
+
+function walk(node: HastNode): void {
+  if (!node.children?.length) return;
+  if (isCodeBlockWrapper(node)) return; // 幂等:已经包过就不再往里套
+  node.children = node.children.map((child) => {
+    if (!isElement(child)) return child;
+    if (child.tagName === 'pre') return wrapPre(child) ?? child;
+    walk(child);
+    return child;
+  });
+}
+
 export function rehypeCodeblock() {
   return (tree: Root) => {
-    const root = tree as unknown as HastNode;
-    root.children = (root.children ?? []).map((node) => {
-      if (!isElement(node) || node.tagName !== 'pre') return node;
-      const preNode = node as unknown as HastNode;
-      const codeEl = (preNode.children ?? []).find(
-        (c) => isElement(c) && (c as Element).tagName === 'code',
-      ) as HastNode | undefined;
-      if (!codeEl) return node;
-
-      const lang = langOf(preNode, codeEl);
-      // 块级公式($$)在未经 rehype-katex 处理时也是 pre>code.language-math,
-      // 不套代码块卡片(无语言标签/复制按钮语义)
-      if (lang === 'math') return node;
-      const raw = extractText(codeEl);
-      const header: HastNode = {
-        type: 'element',
-        tagName: 'div',
-        properties: { className: ['code-block-header'] },
-        children: [
-          {
-            type: 'element',
-            tagName: 'span',
-            properties: { className: ['code-block-lang'] },
-            children: [{ type: 'text', value: langLabel(lang) }],
-          },
-          {
-            type: 'element',
-            tagName: 'button',
-            properties: {
-              className: ['code-block-copy'],
-              dataCopyButton: '',
-              'aria-label': '复制代码',
-              dataCode: raw,
-            },
-            children: [{ type: 'text', value: '复制' }],
-          },
-        ],
-      };
-      return {
-        type: 'element',
-        tagName: 'div',
-        properties: { className: ['code-block'], dataCodeBlock: '' },
-        children: [header, node],
-      } as unknown as Element;
-    });
+    walk(tree as unknown as HastNode);
     return tree;
   };
 }

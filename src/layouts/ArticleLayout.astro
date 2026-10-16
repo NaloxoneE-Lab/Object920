@@ -12,6 +12,7 @@ import { defaultLocale, type Locale, type ContentLocale } from '@i18n/config';
 import { siteConfig } from '@config/site';
 import { buildHreflang, pickXDefault } from '@lib/seo';
 import { getLocalizedEntryPath, slugOf, type TranslationGroup } from '@lib/i18n';
+import { tocHeadings } from '@lib/toc';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -26,9 +27,10 @@ interface Props {
 }
 const { locale, mode, contentLocale, entry, group, routeSegment, Content, headings } = Astro.props;
 
-// Toc 组件只在有 h2/h3 时渲染(组件内部过滤)。网格是 220px 1fr 两列,
-// 无小标题时若仍按两列排,正文会掉进 220px 的 Toc 空列——退化为单列。
-const hasToc = (headings ?? []).some((h) => h.depth === 2 || h.depth === 3);
+// Toc 组件只在有 h2/h3 时渲染(组件内部过滤)。网格是「正文 | 目录」两列,
+// 无小标题时若仍按两列排,正文会掉进目录那条空列——退化为单列。
+// 判据与 Toc 组件共用 tocHeadings:脚注区的隐藏标题(sr-only "Footnotes")不算目录项。
+const hasToc = tocHeadings(headings).length > 0;
 
 const renderLocales = (['zh', 'en'] as const).filter((l) => group[l]);
 const alternates = renderLocales.map((l) => ({
@@ -136,17 +138,29 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     padding: var(--spacing-md);
   }
   .article-grid {
+    /* 文章页阅读列宽:局部覆盖站点 token(要让全站阅读页一起变宽,把这行搬进 tokens.css) */
+    --container-prose: 780px;
+    /* 目录列宽 */
+    --article-toc: 320px;
+    /* 正文↔目录的可见间隙(注意:目录无卡片内边距,轨道到目录文字另有 16px,
+       所以文字↔文字的实际间距 = 本值 + 16px) */
+    --article-gap: var(--spacing-md);
     display: grid;
-    /* 正文左、目录右:280px ≈ 参考稿约 22% 的侧栏占比 */
-    grid-template-columns: 1fr 280px;
-    gap: var(--spacing-lg);
+    /* 正文左、目录右。两列都取确定宽度、整块限宽居中:此前 1fr 列里的 prose 还会再居中一次,
+       多出 (888-720)/2 = 84px 的隐形空隙,把「正文↔目录」的可见间隙撑到 132px,且左右留白差 84px。
+       现在可见间距 = 真实间距 = grid gap。
+       三个宽度只在这里声明一次,改任一个都不会漏掉限宽计算。 */
+    grid-template-columns: minmax(0, var(--container-prose)) var(--article-toc);
+    gap: var(--article-gap);
+    max-width: calc(var(--container-prose) + var(--article-gap) + var(--article-toc));
+    margin-inline: auto;
   }
   .article-title {
     font-size: var(--text-3xl);
     font-weight: 700;
     margin-bottom: var(--spacing-xs);
   }
-  /* 无小标题的文章:Toc 不渲染,网格退化为单列(否则正文掉进 220px 空列) */
+  /* 无小标题的文章:Toc 不渲染,网格退化为单列(否则正文掉进目录那条空列) */
   .article-grid--no-toc {
     grid-template-columns: 1fr;
   }
