@@ -1,12 +1,52 @@
-/* src/styles/prose.css — 文章 prose 排版微调(@tailwindcss/typography 基础之上) */
+/* src/styles/prose.css — 文章排版:插件作基底,本文件只留站点决策 + token 适配
+ *
+ * 2026-10-17 起 @tailwindcss/typography 真正接入(注册在 tokens.css 的 @plugin,
+ * 此前 package.json 有依赖、注释也写着「在其基础之上」,但从未接上)。本文件不再自己
+ * 实现整套排版,只保留三类内容:
+ *   ① token 适配层:把插件的 --tw-prose-* 全部指向站点 token,明暗主题自动跟随,
+ *      所以不需要(也不该用)prose-invert 类
+ *   ② 插件没有意见、或站点另有硬约束的部分:阅读列宽、标题阶梯、h5/h6、宽表滚动
+ *      容器、代码块卡片、Shiki 双主题、KaTeX
+ *   ③ 与站点既有决策冲突的插件默认值(逐处注明,都是可以一行删掉的显式覆盖)
+ *
+ * 为什么下面的覆盖不需要 !important:插件产出落在 @layer utilities 里,而本文件
+ * 未分层。按 CSS 层叠规则,未分层的普通声明一律压过分层声明,与选择器权重、书写
+ * 顺序都无关。本文件的选择器权重也与插件的 .prose :where(...) 相同(0,1,0)。
+ */
 .prose {
+  /* ① 插件颜色变量 → 站点 token。插件默认是 gray/slate 灰阶(正文 gray-700、
+     标题 gray-900、列表标记 gray-300、引用块边框 gray-200),直接生效会在暗色主题
+     下变成深底深字;映射到 token 后,明暗两套主题共用同一份规则。
+     注:站点不用 prose-invert(暗色靠 data-theme 切 token),故 invert 组刻意不映射;
+     将来若有人加 .prose-invert,颜色会掉回插件灰阶,届时在此补 invert 组即可 */
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-lead: var(--color-text-muted);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-counters: var(--color-text-muted);
+  --tw-prose-bullets: var(--color-text-subtle);
+  --tw-prose-hr: var(--color-border);
+  --tw-prose-quotes: var(--color-text-muted);
+  --tw-prose-quote-borders: var(--color-accent);
+  --tw-prose-captions: var(--color-text-muted);
+  --tw-prose-kbd: var(--color-text);
+  --tw-prose-kbd-shadows: color-mix(in srgb, var(--color-text) 10%, transparent);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-surface);
+  --tw-prose-th-borders: var(--color-border-strong);
+  --tw-prose-td-borders: var(--color-border);
+
+  /* ② 阅读列宽是硬约束(插件默认 65ch ≈ 550px,会窄掉一大截) */
   max-width: var(--container-prose);
   margin-inline: auto;
-  color: var(--color-text);
+  /* 正文基准 18px。插件默认 16px,而它的字号与间距几乎全是 em——把基准定在这里,
+     段落节奏、列表缩进、引用块内边距都会跟着这个值缩放 */
   font-size: var(--text-md);
   line-height: var(--leading-prose);
-  /* 阅读列宽是硬约束:没有断行机会的长 token(URL、SHA、长数字、破折号串、超长标题)
-     在默认 overflow-wrap: normal 下会顶破列宽,盖到目录列上,并给整页制造横向滚动
+  /* 没有断行机会的长 token(URL、SHA、长数字、破折号串、超长标题)在默认
+     overflow-wrap: normal 下会顶破列宽,盖到目录列上,并给整页制造横向滚动
      (压力测试样张实测最宽溢出 1092px / 整页横向滚动 538px)。anywhere 只是「没有
      其他断行机会时才在任意位置断」,正常文本的折行结果不变;选 anywhere 而不是
      break-word,是因为它同时收缩 min-content 宽度,表格单元格里的长 token 才能参与
@@ -14,11 +54,12 @@
   overflow-wrap: anywhere;
 }
 
-/* h4 以下此前没有定义,落到浏览器默认值:h4 = 1em(与正文同号)、h5 = 0.83em、
-   h6 = 0.67em——h5/h6 比正文还小,层级倒挂(样张 3.1.2/3.1.3 直接暴露)。
-   这里把 h2~h6 补成同一条阶梯:30 / 24 / 20 / 18 / 16px。
-   scroll-margin-top 一并补到 h5/h6:此前只有 h2/h3/h4 有,
-   点目录跳五级标题会被顶栏压住(样张 12.5 在测这个) */
+/* ② 标题阶梯:整条归站点(2026-10-17 拍板)。插件的默认阶梯是 h1 2.25em / h2 1.5em /
+   h3 1.25em / h4 与正文同号,而且完全没有 h5、h6 的定义——按它走,h4 会退回
+   「与正文同号」(2026-10-16 刚判定为层级倒挂的问题),h5/h6 更会直接落回浏览器默认
+   值(0.83em / 0.67em,比正文还小)。这里保持 30 / 24 / 20 / 18 / 16px 一条连续阶梯;
+   插件对 h1~h4 的字重仍然生效,颜色已被上面的 headings token 接管。
+   scroll-margin-top:插件完全不定义这条,而站点顶栏是 sticky,六级标题都要留避让距离 */
 .prose :where(h2, h3, h4, h5, h6) {
   color: var(--color-text);
   font-weight: 600;
@@ -52,66 +93,26 @@
   color: var(--color-text-muted);
 }
 
-.prose :where(p) {
-  margin-top: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
-}
-
-.prose :where(a) {
-  color: var(--color-accent);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.prose a:hover {
-  color: var(--color-accent-hover);
-}
-
-.prose :where(strong) {
-  font-weight: 600;
-}
-
-.prose :where(blockquote) {
-  border-left: 3px solid var(--color-accent);
-  padding-left: var(--spacing-md);
-  color: var(--color-text-muted);
-  font-style: italic;
-  margin: var(--spacing-md) 0;
-}
-
-/* 列表标记:站点从未接入 @tailwindcss/typography,而 Tailwind preflight 明确写着
-   `ol, ul, menu { list-style: none }`——于是文章里的无序列表没有圆点、有序列表没有
-   编号、脚注区也没有序号(样张 9.1/9.2/9.4 与 11.9 直接暴露)。这里按嵌套层级补回:
-   一级 disc / 二级 circle / 三级及更深 square,有序列表统一 decimal。
-   标记用 outside(初始值)留在 padding-left 的 32px 缩进里,不占正文列宽 */
-.prose :where(ul) {
-  list-style-type: disc;
-}
+/* ② 列表:一级标记(ul 圆点 / ol 编号)与缩进、项间距都交给插件了,这里只补它不管的
+   两件事。插件对 'ul ul, ul ol, ol ul, ol ol' 只调外边距、不换标记,六层嵌套会全是
+   圆点;层级标记按站点决策保留:一级 disc / 二级 circle / 三级及更深 square */
 .prose :where(ul ul) {
   list-style-type: circle;
 }
 .prose :where(ul ul ul) {
   list-style-type: square;
 }
-.prose :where(ol) {
-  list-style-type: decimal;
-}
-/* GFM 任务列表:复选框自己就是标记,不要再叠一个圆点 */
+/* GFM 任务列表:复选框自己就是标记,不要再叠一个圆点(插件不认识 task-list-item) */
 .prose :where(li.task-list-item) {
   list-style: none;
 }
-.prose :where(ul, ol) {
-  padding-left: var(--spacing-md);
-  margin: var(--spacing-sm) 0;
-}
-.prose li {
-  margin-top: var(--spacing-2xs);
-}
 
+/* ② 表格:插件只给骨架(width / table-layout / 外边距 / thead 与 tbody 的行线 /
+   vertical-align / th,td 的 text-align:start),站点的网格边框与单元格内边距保留——
+   列数一多,行线不足以横向对齐阅读(压力测试样张第 4 节专测这个)。
+   border-collapse 必须留着:插件走的是默认的 separate,1px 的单元格边框会双双显示 */
 .prose :where(table) {
-  width: 100%;
   border-collapse: collapse;
-  margin: var(--spacing-md) 0;
-  font-size: var(--text-sm);
 }
 /* 表格横向滚动容器(rehype-table-scroll 注入):宽表只在自己这一行里滚动,
    阅读列宽仍然是硬约束。表格外边距移到容器上——留在表上会变成滚动区内的空白,
@@ -141,49 +142,54 @@
 .prose td {
   border: 1px solid var(--color-border);
   padding: var(--spacing-2xs) var(--spacing-xs);
-  text-align: left;
 }
 .prose th {
   background: var(--color-surface);
-  font-weight: 600;
 }
 
-.prose :where(figure) {
-  margin: var(--spacing-md) 0;
-}
-.prose :where(figcaption) {
-  text-align: center;
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  margin-top: var(--spacing-2xs);
-}
-
+/* ② 行内代码:芯片外观(底色/内边距/圆角/等宽字体)是站点决策,字号与字重交给插件
+   (0.875em / 600),颜色由 --tw-prose-code 映射为正文墨色 */
 .prose :where(code) {
   font-family: var(--font-mono);
-  font-size: 0.9em;
   background: var(--color-surface);
   padding: 0.15em 0.35em;
   border-radius: var(--radius-sm);
 }
+/* 代码块另行处理(preflight 的等宽字体栈不是站点的 JetBrains Mono;内边距、字号、
+   行高、外边距都由插件给) */
 .prose pre {
   font-family: var(--font-mono);
-  margin: var(--spacing-md) 0;
   border-radius: var(--radius-md);
   overflow-x: auto;
 }
 
-.prose hr {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: var(--spacing-lg) 0;
-}
-
+/* ② 图片与图注:外边距归插件(figure > * 已被它归零,裸图会拿到 2em 上下边距),
+   圆角、图注字号与居中是站点决策 */
 .prose img {
   border-radius: var(--radius-md);
   height: auto;
 }
+.prose :where(figcaption) {
+  text-align: center;
+  font-size: var(--text-xs);
+  margin-top: var(--spacing-2xs);
+}
 
-/* Shiki 双主题切换(markdown.shikiConfig themes: { light, dark }) */
+/* ③ 链接:颜色(→ --color-accent)、下划线、字重由插件负责,这里只补它没有的两件事 */
+.prose :where(a) {
+  text-underline-offset: 2px;
+}
+.prose a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* ② Shiki 双主题切换(markdown.shikiConfig themes: { light, dark })。
+   Shiki 把 background-color / color 直接写在 pre 和每个 token span 的行内 style 上
+   (span 形如 style="color:#D73A49;--shiki-dark:#F97583"),行内样式压过任何选择器,
+   所以暗色那两条必须带 !important,否则暗色主题里代码块仍是白底、token 仍是亮色主题
+   的几个颜色(2026-10-17 修的就是这个:改前 .cache/prose-after-dark-codeblock.png)。
+   亮色主题刻意不加 !important:亮色下 Astro 只输出 --shiki-dark*、没有 --shiki-light*,
+   var() 会失效,一旦强制反而让颜色回退成继承值、把语法高亮整个弄没 */
 .astro-code,
 .astro-code span {
   color: var(--shiki-light);
@@ -191,18 +197,18 @@
 }
 :root[data-theme='dark'] .astro-code,
 :root[data-theme='dark'] .astro-code span {
-  color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .astro-code,
   :root:not([data-theme]) .astro-code span {
-    color: var(--shiki-dark);
-    background-color: var(--shiki-dark-bg);
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
   }
 }
 
-/* 代码块包裹(由 rehype-codeblock 注入) */
+/* ② 代码块包裹(由 rehype-codeblock 注入):卡片边框与语言标签栏是站点决策 */
 .code-block {
   position: relative;
   margin: var(--spacing-md) 0;
@@ -243,8 +249,8 @@
   border-radius: 0;
 }
 
-/* KaTeX 数学公式:行内公式继承正文字色(深浅主题自适应);
-   块级公式超宽时横向滚动,避免撑破 720px 阅读列 */
+/* ② KaTeX 数学公式:行内公式继承正文字色(深浅主题自适应);
+   块级公式超宽时横向滚动,避免撑破阅读列 */
 .prose .katex-display {
   overflow-x: auto;
   overflow-y: hidden;

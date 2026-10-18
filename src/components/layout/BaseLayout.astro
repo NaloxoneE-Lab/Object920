@@ -43,11 +43,24 @@ const wallpaper = siteConfig.background;
   </head>
   <body class:list={[{ 'page-home': home, 'has-site-bg': !!wallpaper }]}>
     <!-- 全站统一壁纸层:fixed 铺满视口,内容与顶栏都浮在其上(z-index:-1 垫底,
-         不参与命中)。配置为空时整层不渲染,回退主题底色 -->
+         不参与命中)。配置为空时整层不渲染,回退主题底色。
+         亮/暗两张图都常驻 DOM(不按主题卸载):这样切主题是纯 CSS 显隐、零请求零解码,
+         主题切换覆盖层才能直接引用它的 src。data-wallpaper-* 供 theme-wipe 读取 -->
     {
       wallpaper && (
-        <div class="site-bg" aria-hidden="true">
-          <img src={wallpaper} alt="" fetchpriority="high" />
+        <div
+          class="site-bg"
+          aria-hidden="true"
+          data-wallpaper-light={wallpaper.light}
+          data-wallpaper-dark={wallpaper.dark}
+        >
+          <img
+            class="site-bg-img site-bg-img--light"
+            src={wallpaper.light}
+            alt=""
+            fetchpriority="high"
+          />
+          <img class="site-bg-img site-bg-img--dark" src={wallpaper.dark} alt="" decoding="async" />
           <div class="site-bg-overlay" />
         </div>
       )
@@ -99,9 +112,22 @@ const wallpaper = siteConfig.background;
         pointer-events: none;
       }
       .site-bg img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+      /* 主题决定显隐,不做 transition:两组图的交接由 theme-wipe 覆盖层负责,
+         自己再淡入一次会和覆盖层叠出双重过渡 */
+      .site-bg-img--dark {
+        opacity: 0;
+      }
+      [data-theme='dark'] .site-bg-img--light {
+        opacity: 0;
+      }
+      [data-theme='dark'] .site-bg-img--dark {
+        opacity: 1;
       }
       .site-bg-overlay {
         position: absolute;
@@ -109,10 +135,11 @@ const wallpaper = siteConfig.background;
         background: transparent;
       }
       /* 深色主题下压暗壁纸,否则壁纸仍是亮色、而正文已切到浅色文字(浅底浅字不可读)。
+         遮罩真值在 tokens.css 的 --wallpaper-tint-dark,theme-wipe 与首页磨砂层共用。
          注意:这里在 <style is:global> 里,不能写 :global(...)——那层包装只在 scoped
          style 里会被 Astro 处理,全局块里会原样输出成非法选择器,整条规则被浏览器丢弃 */
       [data-theme='dark'] .site-bg-overlay {
-        background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
+        background: var(--wallpaper-tint-dark);
       }
       /* 常驻顶栏为 fixed,不占文档流:非首页内容下移让出顶栏高度;
          首页第一屏 Hero 从视口顶开始,顶栏悬浮其上 */

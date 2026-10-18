@@ -51,6 +51,8 @@ const themes = [
 </div>
 
 <script>
+  import { wipeToTheme, primeWallpapers, type Theme } from '@lib/theme-wipe';
+
   // 主题应用:与旧 ThemeToggle 保持同一事件契约(theme-change,giscus 依赖它同步暗色)
   function currentTheme(): string {
     return document.documentElement.getAttribute('data-theme') ?? 'light';
@@ -59,6 +61,17 @@ const themes = [
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
     document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme } }));
+  }
+  // 切换走覆盖层圆扩散:圆铺满后 commit 翻主题色,然后揭层。
+  // 菜单高亮放进 commit —— 主题真正落定的时刻才更新,而不是点击的瞬间
+  function applyThemeWithWipe(theme: string, event: MouseEvent) {
+    void wipeToTheme(theme as Theme, {
+      commit: () => {
+        applyTheme(theme);
+        syncMenus();
+      },
+      event,
+    });
   }
   function syncMenus() {
     const cur = currentTheme();
@@ -92,8 +105,7 @@ const themes = [
       menu.addEventListener('click', (e) => {
         const opt = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-theme-option]');
         if (!opt) return;
-        applyTheme(opt.dataset.themeOption as string);
-        syncMenus();
+        applyThemeWithWipe(opt.dataset.themeOption as string, e);
         setWrapOpen(wrap, false);
         btn.focus();
       });
@@ -121,7 +133,12 @@ const themes = [
       });
     });
   }
-  document.addEventListener('astro:page-load', initThemeSwitches);
+  // 主动解码两张壁纸:覆盖层引用同一 URL,解码缓存命中圆扩散第一帧才不是空白。
+  // 每次导航都跑一次(ClientRouter 换页后图片元素是新的)
+  document.addEventListener('astro:page-load', () => {
+    initThemeSwitches();
+    primeWallpapers();
+  });
 </script>
 
 <style>

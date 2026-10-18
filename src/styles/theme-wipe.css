@@ -1,0 +1,59 @@
+/* src/styles/theme-wipe.css — 主题切换的圆形扩散覆盖层
+   覆盖层 = 「目标主题的壁纸 + 目标主题的压暗遮罩」的视口定层,只用 clip-path: circle()
+   从触发点扩散出可见区域;元素由 src/lib/theme-wipe.ts 创建、挂载、移除。
+
+   两个刻意的选择:
+   1) 不用 View Transition 快照。那需要在动画开始前把旧/新两份渲染各拍一张整视口位图,
+      重页实测要等 300ms 以上才开始动,过渡期间页面还整个冻住;覆盖层零快照、
+      点击即动,动画期间主线程几乎空闲。代价是圆内只有背景,内容是铺满后一起翻的。
+   2) 用 clip-path 而不是 transform: scale()。scale 会把层内壁纸一起放大,
+      与页面壁纸逐像素错位(层是 2r 见方的盒子,cover 是相对这个盒子的);
+      clip-path 的层始终是视口尺寸、壁纸按视口 cover 静止不动,只变可见区域。 */
+.theme-wipe {
+  position: fixed;
+  inset: 0;
+  /* 高于顶栏(40)与阅读进度条等所有常驻层:覆盖层必须盖住正文,
+     因为主题色是在被盖住的那一刻翻转的 */
+  z-index: 100;
+  pointer-events: none;
+  clip-path: circle(0 at var(--wipe-x, 50%) var(--wipe-y, 50%));
+  /* 时长用 --duration-wipe 而不是 --duration-slow × --motion-scale:
+     这个效果被拍板为即使在 prefers-reduced-motion: reduce 下也照播。
+     缓动用 --ease-wipe(先快后慢),不是站点的 --ease-out(那条太前倾,几乎看不见减速) */
+  transition: clip-path var(--duration-wipe) var(--ease-wipe);
+  will-change: clip-path;
+}
+
+.theme-wipe.is-open {
+  clip-path: circle(var(--wipe-r, 100vmax) at var(--wipe-x, 50%) var(--wipe-y, 50%));
+}
+
+.theme-wipe-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 压暗遮罩必须跟壁纸一起进覆盖层:只放图不放遮罩的话,圆铺满、覆盖层揭掉的那一刻
+   遮罩会「啪」地出现一次。真值与站壁纸层共用 tokens.css 的 --wallpaper-tint-dark */
+.theme-wipe-tint {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+}
+
+.theme-wipe--to-dark .theme-wipe-tint {
+  background: var(--wallpaper-tint-dark);
+}
+
+/* 刻意的交互例外(2026-10-17 用户拍板):主题切换的圆形扩散在 reduce 下也播。
+   global.css 的降级块对 * 下了 transition-duration: 0.01ms !important,这里用
+   更高优先级的类选择器把它顶回来——同为 !important 时 specificity 决定胜负
+   (0,1,0) > (0,0,0)。站内其余动效仍然照 reduce 降级 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-wipe {
+    transition-duration: var(--duration-wipe) !important;
+  }
+}

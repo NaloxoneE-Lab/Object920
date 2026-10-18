@@ -13,13 +13,36 @@ interface Props {
   locale: Locale;
 }
 const { locale } = Astro.props;
-// 预糊壁纸(generate-frost-wallpaper 构建期产物);未配置壁纸时磨砂层退化为纯着色
-const frostWallpaper = siteConfig.background ? '/generated-frost/frost-wallpaper.webp' : null;
+// 预糊壁纸(generate-frost-wallpaper 构建期产物,亮/暗各一张);
+// 未配置壁纸时磨砂层退化为纯着色
+const frostWallpaper = siteConfig.background
+  ? {
+      light: '/generated-frost/frost-wallpaper-light.webp',
+      dark: '/generated-frost/frost-wallpaper-dark.webp',
+    }
+  : null;
 ---
 
 <div class="home-panel" data-home-panel>
   <div class:list={['home-panel-frost', { 'has-img': !!frostWallpaper }]} aria-hidden="true">
-    {frostWallpaper && <img src={frostWallpaper} alt="" decoding="async" />}
+    {
+      frostWallpaper && (
+        <>
+          <img
+            class="home-panel-frost-img home-panel-frost-img--light"
+            src={frostWallpaper.light}
+            alt=""
+            decoding="async"
+          />
+          <img
+            class="home-panel-frost-img home-panel-frost-img--dark"
+            src={frostWallpaper.dark}
+            alt=""
+            decoding="async"
+          />
+        </>
+      )
+    }
   </div>
   <HomeSections locale={locale} />
 </div>
@@ -68,13 +91,24 @@ const frostWallpaper = siteConfig.background ? '/generated-frost/frost-wallpaper
     height: 100%;
     object-fit: cover;
   }
-  /* 暗色压暗:复刻 BaseLayout 站壁纸暗色 overlay(仅糊图存在时有意义) */
+  /* 亮/暗两张糊图都常驻,按主题显隐(与 BaseLayout 站壁纸层同构,不做 transition:
+     交接由主题切换覆盖层负责) */
+  .home-panel-frost-img--dark {
+    opacity: 0;
+  }
+  :global([data-theme='dark']) .home-panel-frost-img--light {
+    opacity: 0;
+  }
+  :global([data-theme='dark']) .home-panel-frost-img--dark {
+    opacity: 1;
+  }
+  /* 暗色压暗:与 BaseLayout 站壁纸暗色 overlay 共用 --wallpaper-tint-dark(仅糊图存在时有意义) */
   :global([data-theme='dark']) .home-panel-frost.has-img::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
+    background: var(--wallpaper-tint-dark);
   }
   /* 着色(常驻):与旧 backdrop-filter 磨砂同色,压糊图提高内容可读性 */
   .home-panel-frost::after {

@@ -1,5 +1,9 @@
 /* src/styles/tokens.css — 设计 token 单一真相源 */
 @import 'tailwindcss';
+/* 文章排版插件(Tailwind v4 的 CSS 优先注册方式)。必须写在 Tailwind root 里——
+   @plugin 只在含 @import 'tailwindcss' 的那张表里生效,写进 prose.css 不会注册。
+   代价:它产出的 .prose 规则会进全站 CSS(约 +1.7KB gzip),而 prose.css 只在文章页加载 */
+@plugin '@tailwindcss/typography';
 
 /* Tailwind v4 @theme:声明后自动生成 utility */
 @theme {
@@ -76,6 +80,11 @@
   --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 主题切换圆扩散专用缓动:先快后慢。
+     站点的 --ease-out(0.16,1,0,1)太前倾——25% 时间点半径已走完 93%,
+     看起来是"一下铺满 + 剩下空等",没有可感知的减速。这条在 25% 时约 68%、
+     50% 时约 94%,减速段是看得见的。要更快收尾就把第 3/4 个参数往 0.3/1 推 */
+  --ease-wipe: cubic-bezier(0.25, 1, 0.5, 1);
 
   /* z-index(内部 token,非 Tailwind namespace,但值被 utility 直接引用) */
   --z-base: 1;
@@ -100,6 +109,11 @@
      时间轴,改这边记得同步改 JS(咨询定稿:"磨砂成形"和"内容落位"读成一件事) */
   --duration-slower: 600ms;
   --motion-scale: 1;
+  /* 主题切换圆形扩散的时长。刻意不挂 --motion-scale、也不在 global.css 的
+     prefers-reduced-motion 块里归零:2026-10-17 用户拍板这个效果即使在 reduce
+     下也照播(例外理由与选择器见 theme-wipe.css)。改这里记得同步
+     theme-wipe.ts 的 WIPE_FALLBACK_MS */
+  --duration-wipe: 400ms;
   /* 壁纸墨色:全站统一壁纸之上的前景墨色(RGB 分量便于透明度组合)。
      亮 26 26 29 / 暗 232 232 234;常驻顶栏与首页 Hero 菜单共用 */
   --hero-ink: 26 26 29;
@@ -107,6 +121,10 @@
      底色引用 --color-bg,暗色主题自动跟随 */
   --frost-bg: color-mix(in srgb, var(--color-bg) 31%, transparent);
   --frost-blur: 8px;
+  /* 壁纸压暗:暗色主题压在壁纸上的遮罩。没有它,亮壁纸配浅色正文就是浅底浅字。
+     三个消费点共用这一处真值:BaseLayout 站壁纸层、主题切换覆盖层(theme-wipe)、
+     首页磨砂层(HomePanel)。要调深浅只改这一行 */
+  --wallpaper-tint-dark: linear-gradient(to bottom, rgb(10 10 14 / 78%), rgb(10 10 14 / 88%));
 }
 
 /* 暗色模式:仅覆盖颜色 token */

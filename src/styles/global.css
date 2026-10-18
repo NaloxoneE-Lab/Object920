@@ -1,6 +1,7 @@
 /* src/styles/global.css */
 @import './tokens.css';
 @import './animations.css';
+@import './theme-wipe.css';
 
 /* Reset(精简版) */
 *,
