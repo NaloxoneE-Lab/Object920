@@ -55,8 +55,10 @@
   --font-sans:
     'Inter', -apple-system, 'Segoe UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Hiragino Sans',
     'Yu Gothic', 'Noto Sans CJK JP', sans-serif;
+  /* 代码字体:2026-10-21 按用户要求 Consolas 优先。Windows 自带;macOS/Linux 需自行安装,
+     没有就落到自托管的 JetBrains Mono(它仍在栈里,不会因此掉到系统默认等宽字体) */
   --font-mono:
-    'JetBrains Mono', 'Fira Code', ui-monospace, 'SFMono-Regular', 'Consolas', 'Microsoft YaHei',
+    'Consolas', 'JetBrains Mono', 'Fira Code', ui-monospace, 'SFMono-Regular', 'Microsoft YaHei',
     'Noto Sans CJK SC', monospace;
 
   /* 字号(--text-* namespace → text-* utility) */

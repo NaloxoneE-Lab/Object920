@@ -1,17 +1,19 @@
 /* src/styles/prose.css — 文章排版:插件作基底,本文件只留站点决策 + token 适配
  *
- * 2026-10-17 起 @tailwindcss/typography 真正接入(注册在 tokens.css 的 @plugin,
- * 此前 package.json 有依赖、注释也写着「在其基础之上」,但从未接上)。本文件不再自己
- * 实现整套排版,只保留三类内容:
- *   ① token 适配层:把插件的 --tw-prose-* 全部指向站点 token,明暗主题自动跟随,
+ * 2026-10-17 起 @tailwindcss/typography 真正接入(注册在 tokens.css 的 @plugin)。
+ * 2026-10-21 按用户指定的参考站(blog.junce.net)重做视觉语言:强调色不止用在链接,
+ * 而是贯穿标题、加粗、列表标记、引用块、行内代码——它和我们是同一支蓝(它的
+ * --c-primary = hsl(215 100% 54%),我们的 --color-accent = #3b82f6),差别不在配色
+ * 而在「用在哪」。技术栈不变:插件仍是基底,本文件仍只做三件事:
+ *   ① token 适配层:把插件的 --tw-prose-* 指向站点 token,明暗主题自动跟随,
  *      所以不需要(也不该用)prose-invert 类
  *   ② 插件没有意见、或站点另有硬约束的部分:阅读列宽、标题阶梯、h5/h6、宽表滚动
- *      容器、代码块卡片、Shiki 双主题、KaTeX
- *   ③ 与站点既有决策冲突的插件默认值(逐处注明,都是可以一行删掉的显式覆盖)
+ *      容器、代码块外观、Shiki 双主题、KaTeX
+ *   ③ 与插件默认冲突的显式覆盖(逐处注明,都是可以一行删掉的)
  *
  * 为什么下面的覆盖不需要 !important:插件产出落在 @layer utilities 里,而本文件
  * 未分层。按 CSS 层叠规则,未分层的普通声明一律压过分层声明,与选择器权重、书写
- * 顺序都无关。本文件的选择器权重也与插件的 .prose :where(...) 相同(0,1,0)。
+ * 顺序都无关。
  */
 .prose {
   /* ① 插件颜色变量 → 站点 token。插件默认是 gray/slate 灰阶(正文 gray-700、
@@ -24,8 +26,8 @@
   --tw-prose-lead: var(--color-text-muted);
   --tw-prose-links: var(--color-accent);
   --tw-prose-bold: var(--color-text);
-  --tw-prose-counters: var(--color-text-muted);
-  --tw-prose-bullets: var(--color-text-subtle);
+  --tw-prose-counters: var(--color-accent);
+  --tw-prose-bullets: var(--color-accent);
   --tw-prose-hr: var(--color-border);
   --tw-prose-quotes: var(--color-text-muted);
   --tw-prose-quote-borders: var(--color-accent);
@@ -35,16 +37,22 @@
   --tw-prose-code: var(--color-text);
   --tw-prose-pre-code: var(--color-text);
   --tw-prose-pre-bg: var(--color-surface);
-  --tw-prose-th-borders: var(--color-border-strong);
+  --tw-prose-th-borders: var(--color-border);
   --tw-prose-td-borders: var(--color-border);
 
-  /* ② 阅读列宽是硬约束(插件默认 65ch ≈ 550px,会窄掉一大截) */
+  /* 由强调色派生的浅底(参考站是 primary 的 12% 透明叠色)。用 color-mix 而不是写死
+     色值:明暗两套主题各自取自己的 accent,自动跟随 */
+  --prose-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
+
+  /* ② 阅读列宽是硬约束(插件默认 65ch ≈ 550px;参考站那 553px 是三栏布局挤出来的
+     结果,不是刻意设定的量宽,所以不跟) */
   max-width: var(--container-prose);
   margin-inline: auto;
   /* 正文基准 18px。插件默认 16px,而它的字号与间距几乎全是 em——把基准定在这里,
      段落节奏、列表缩进、引用块内边距都会跟着这个值缩放 */
   font-size: var(--text-md);
-  line-height: var(--leading-prose);
+  /* 参考站行高 1.8(插件默认 1.75),正文明显更松 */
+  line-height: 1.8;
   /* 没有断行机会的长 token(URL、SHA、长数字、破折号串、超长标题)在默认
      overflow-wrap: normal 下会顶破列宽,盖到目录列上,并给整页制造横向滚动
      (压力测试样张实测最宽溢出 1092px / 整页横向滚动 538px)。anywhere 只是「没有
@@ -54,63 +62,105 @@
   overflow-wrap: anywhere;
 }
 
-/* ② 标题阶梯:整条归站点(2026-10-17 拍板)。插件的默认阶梯是 h1 2.25em / h2 1.5em /
-   h3 1.25em / h4 与正文同号,而且完全没有 h5、h6 的定义——按它走,h4 会退回
-   「与正文同号」(2026-10-16 刚判定为层级倒挂的问题),h5/h6 更会直接落回浏览器默认
-   值(0.83em / 0.67em,比正文还小)。这里保持 30 / 24 / 20 / 18 / 16px 一条连续阶梯;
-   插件对 h1~h4 的字重仍然生效,颜色已被上面的 headings token 接管。
-   scroll-margin-top:插件完全不定义这条,而站点顶栏是 sticky,六级标题都要留避让距离 */
-.prose :where(h2, h3, h4, h5, h6) {
-  color: var(--color-text);
+/* ② 标题:参考站把整条标题阶梯都染成强调色,600 字重、行高 1.35、上下边距 2rem/.75rem。
+   字号不照抄它的 px(它是 16px 正文,我们是 18px),而是取它的 em 比例:
+   h2 1.5em / h3 1.25em / h4 1.1em —— 这样 18px 基准下是 27 / 22.5 / 19.8px。
+   h5/h6 它完全没定义(会退化成正文大小),这里保留 18 / 16px:层级不能断。
+   scroll-margin-top:插件不定义,站点顶栏是 sticky,六级标题都要留避让距离 */
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--color-accent);
   font-weight: 600;
+  line-height: 1.35;
+  margin: 2rem 0 0.75rem;
   scroll-margin-top: var(--spacing-2xl);
 }
 .prose h2 {
-  font-size: var(--text-2xl);
-  margin-top: var(--spacing-xl);
-  margin-bottom: var(--spacing-sm);
+  font-size: 1.5em;
 }
 .prose h3 {
-  font-size: var(--text-xl);
-  margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-xs);
+  font-size: 1.25em;
 }
 .prose h4 {
-  font-size: var(--text-lg);
-  margin-top: var(--spacing-md);
-  margin-bottom: var(--spacing-2xs);
+  font-size: 1.1em;
 }
-/* h5 与正文同号,靠字重和更紧的上边距保持层级;h6 再降一档并转次级色 */
 .prose h5 {
   font-size: var(--text-md);
-  margin-top: var(--spacing-md);
-  margin-bottom: var(--spacing-3xs);
 }
 .prose h6 {
   font-size: var(--text-sm);
-  margin-top: var(--spacing-sm);
-  margin-bottom: var(--spacing-3xs);
-  color: var(--color-text-muted);
 }
 
-/* ② 列表:一级标记(ul 圆点 / ol 编号)与缩进、项间距都交给插件了,这里只补它不管的
-   两件事。插件对 'ul ul, ul ol, ol ul, ol ol' 只调外边距、不换标记,六层嵌套会全是
-   圆点;层级标记按站点决策保留:一级 disc / 二级 circle / 三级及更深 square */
-.prose :where(ul ul) {
-  list-style-type: circle;
+/* ② 段落:参考站 p 是 1rem 外边距 + 行高 1.8(插件默认 1.25em,松紧不同) */
+.prose :where(p) {
+  margin: 1rem 0;
+  line-height: 1.8;
 }
-.prose :where(ul ul ul) {
-  list-style-type: square;
+
+/* ② 加粗也用强调色(参考站 a 与 strong 同色)。插件把 strong 映射成正文墨色,
+   这里改回 accent;字重保持插件给的 600 */
+.prose :where(strong) {
+  color: var(--color-accent);
 }
-/* GFM 任务列表:复选框自己就是标记,不要再叠一个圆点(插件不认识 task-list-item) */
-.prose :where(li.task-list-item) {
+
+/* ② 列表:参考站不用圆点,每项前面是一个 accent 色的短横「-」,靠 li 的左内边距
+   把折行文本挂住(li padding-left + ::before 的负 margin)。有序列表仍是编号,
+   但 marker 也染成 accent。
+   注意:插件对 ul/ol 的 list-style、缩进、标记颜色都有一套,这里整体接管 */
+.prose :where(ul) {
   list-style: none;
+  margin: 1rem 0;
+  padding-left: 1rem;
+}
+.prose :where(ul > li) {
+  padding-left: 0.75rem;
+}
+.prose :where(ul > li)::before {
+  content: '-';
+  display: inline-block;
+  width: 0.75rem;
+  margin-left: -0.75rem;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+/* GFM 任务列表:复选框自己就是标记,不要再叠一个短横 */
+.prose :where(li.task-list-item)::before {
+  content: none;
+}
+.prose :where(ol) {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+.prose :where(ol > li)::marker {
+  color: var(--color-accent);
+}
+.prose :where(li) {
+  margin: 0.35rem 0;
+  line-height: 1.7;
 }
 
-/* ② 表格:插件只给骨架(width / table-layout / 外边距 / thead 与 tbody 的行线 /
-   vertical-align / th,td 的 text-align:start),站点的网格边框与单元格内边距保留——
-   列数一多,行线不足以横向对齐阅读(压力测试样张第 4 节专测这个)。
-   border-collapse 必须留着:插件走的是默认的 separate,1px 的单元格边框会双双显示 */
+/* ② 引用块:参考站是 3px accent 左边框 + accent 12% 浅底 + 右侧圆角,
+   文字用次级色、不用斜体(插件默认 500 字重 + 斜体 + 首尾弯引号,全部压掉) */
+.prose :where(blockquote) {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-inline-start: 3px solid var(--color-accent);
+  border-radius: 0 0.375rem 0.375rem 0;
+  background: var(--prose-soft);
+  color: var(--color-text-muted);
+  font-style: normal;
+  font-weight: 400;
+}
+.prose :where(blockquote p) {
+  margin: 0.35rem 0;
+  line-height: 1.8;
+}
+.prose :where(blockquote p:first-of-type)::before,
+.prose :where(blockquote p:last-of-type)::after {
+  content: none;
+}
+
+/* ② 表格:插件只给骨架,单元格网格线保留;参考站表头没有底色、内边距 .5rem .75rem。
+   border-collapse 必须留着:插件走默认 separate,1px 的单元格边框会双双显示 */
 .prose :where(table) {
   border-collapse: collapse;
 }
@@ -141,33 +191,135 @@
 .prose th,
 .prose td {
   border: 1px solid var(--color-border);
-  padding: var(--spacing-2xs) var(--spacing-xs);
-}
-.prose th {
-  background: var(--color-surface);
+  padding: 0.5rem 0.75rem;
 }
 
-/* ② 行内代码:芯片外观(底色/内边距/圆角/等宽字体)是站点决策,字号与字重交给插件
-   (0.875em / 600),颜色由 --tw-prose-code 映射为正文墨色 */
+/* ② 行内代码:字号 .875em、等宽、不加粗、无两侧反引号(2026-10-21 用户拍板去掉)。
+   底色按用户要求改为透明——需要恢复 accent 浅底时,把 background 换成
+   color-mix(in srgb, var(--color-accent) 14%, transparent) 即可 */
+.prose :where(code)::before,
+.prose :where(code)::after {
+  content: none;
+}
 .prose :where(code) {
   font-family: var(--font-mono);
-  background: var(--color-surface);
-  padding: 0.15em 0.35em;
+  font-size: 0.875em;
+  font-weight: 400;
+  background: transparent;
+  padding: 0.15em 0.4em;
   border-radius: var(--radius-sm);
 }
-/* 代码块另行处理(preflight 的等宽字体栈不是站点的 JetBrains Mono;内边距、字号、
-   行高、外边距都由插件给) */
+/* 代码块另行处理(preflight 的等宽字体栈不是站点的代码字体,现为 Consolas 优先)。
+   透明底之后不再需要内边距:留着会把代码整体右移,和正文左边缘对不齐。
+   默认 white-space: pre(不折行、横向滚动);「自动换行」开关切 [data-wrap] 改这条 */
 .prose pre {
   font-family: var(--font-mono);
+  padding: 0;
   border-radius: var(--radius-md);
   overflow-x: auto;
+  white-space: pre;
+  /* 透明底(2026-10-21 用户要求):插件会给 pre 一层 --tw-prose-pre-bg,
+     defaultColor:false 之后 Shiki 不再写行内底色,于是这层会露出来——这里显式压掉 */
+  background: transparent;
+}
+.prose .code-block[data-wrap='true'] pre {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-/* ② 图片与图注:外边距归插件(figure > * 已被它归零,裸图会拿到 2em 上下边距),
-   圆角、图注字号与居中是站点决策 */
+/* ② 代码块两列(2026-10-21 重构):gutter 在横向滚动容器外,代码列自己滚。
+   数字不参与滚动 → 不需要 sticky,也就不需要任何遮罩底色(旧实现那块实色小底
+   在玻璃/壁纸背景上必然偏色,这是它难看的根)。
+   行号列的每行先由 1lh 撑高;折行时行高不再统一,由 codeGutter.ts 按实测高度回填。 */
+.prose .code-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  /* 细分隔线与代码之间留一点气,行号与线之间靠 gutter 的 padding 控制 */
+  column-gap: var(--code-gutter-gap);
+}
+.prose .code-body pre {
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+}
+.prose .code-gutter {
+  counter-reset: code-line;
+  padding-inline-end: 1.25ch;
+  /* 数字与代码之间一条弱分隔线;颜色按主题从字色派生,不写死 */
+  border-inline-end: 1px solid color-mix(in srgb, var(--color-text-subtle) 30%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.prose .code-gutter i {
+  display: block;
+  height: 1lh;
+  font-style: normal;
+  text-align: right;
+  counter-increment: code-line;
+}
+.prose .code-gutter i::before {
+  content: counter(code-line);
+}
+/* 行内代码的内边距不能带进代码块:0.15em 的纵向内边距会让整块代码相对行号下移 */
+/* 滚动条:Chromium/Safari 走 ::-webkit-scrollbar,压到 4px 并去掉两端箭头按钮。
+   注意不能同时写 scrollbar-width —— 标准属性一旦非 auto,Chromium 会忽略下面这些伪元素样式 */
+.prose .code-body pre::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.prose .code-body pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.prose .code-body pre::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+.prose .code-body pre::-webkit-scrollbar-button {
+  display: none;
+}
+/* Firefox 没有 ::-webkit-scrollbar,只能退回标准属性(Firefox 本来就没有箭头按钮) */
+@supports (-moz-appearance: none) {
+  .prose .code-body pre {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+}
+.prose .code-body pre code {
+  padding: 0;
+  /* 行内代码的 .875em 不能在这里再缩一层,否则每一行的盒高都比 gutter 行矮一截 */
+  font-size: 1em;
+  line-height: inherit;
+}
+/* 块级化后 span 之间的换行符会变成空行,这里吃掉 */
+.prose .astro-code code {
+  display: block;
+  white-space: normal;
+}
+.prose .astro-code .line {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  white-space: pre;
+}
+/* 自动换行模式:行要按容器宽度折,不能再 max-content,否则永远不折 */
+.prose .code-block[data-wrap='true'] .astro-code .line {
+  width: auto;
+  white-space: pre-wrap;
+}
+
+/* ② 图片与图注:参考站裸图 8px 圆角 + 1.5rem 上下边距(左右 auto 居中)。
+   只作用于「段落里的裸图」——figure 里的图由插件把外边距归零,图注才不会贴不住 */
 .prose img {
   border-radius: var(--radius-md);
   height: auto;
+}
+.prose :where(p > img) {
+  margin: 1.5rem auto;
 }
 .prose :where(figcaption) {
   text-align: center;
@@ -183,66 +335,140 @@
   color: var(--color-accent-hover);
 }
 
-/* ② Shiki 双主题切换(markdown.shikiConfig themes: { light, dark })。
-   Shiki 把 background-color / color 直接写在 pre 和每个 token span 的行内 style 上
-   (span 形如 style="color:#D73A49;--shiki-dark:#F97583"),行内样式压过任何选择器,
-   所以暗色那两条必须带 !important,否则暗色主题里代码块仍是白底、token 仍是亮色主题
-   的几个颜色(2026-10-17 修的就是这个:改前 .cache/prose-after-dark-codeblock.png)。
-   亮色主题刻意不加 !important:亮色下 Astro 只输出 --shiki-dark*、没有 --shiki-light*,
-   var() 会失效,一旦强制反而让颜色回退成继承值、把语法高亮整个弄没 */
+/* ② 分隔线:参考站 1px、上下 2rem(插件给 3em ≈ 54px) */
+.prose hr {
+  margin: 2rem 0;
+}
+
+/* ② Shiki 双主题:defaultColor: false 之后,Shiki 只往元素上写 CSS 变量
+   (--shiki-light / --shiki-dark),不再有行内 color / background-color,
+   所以这里不需要任何 !important,主题切换纯 CSS(2026-10-21 改) */
 .astro-code,
 .astro-code span {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
 }
 :root[data-theme='dark'] .astro-code,
 :root[data-theme='dark'] .astro-code span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
+  color: var(--shiki-dark);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .astro-code,
   :root:not([data-theme]) .astro-code span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
+    color: var(--shiki-dark);
   }
 }
 
-/* ② 代码块包裹(由 rehype-codeblock 注入):卡片边框与语言标签栏是站点决策 */
+/* ② 代码块卡片(rehype-codeblock 注入):文件名(可选) + 语言标签 + 操作区 + 折叠条。
+   行号列在 pre 外、不参与滚动,所以这里不再有 scroll container 的顾虑 */
 .code-block {
   position: relative;
-  margin: var(--spacing-md) 0;
+  margin: 1.25rem 0;
   border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
+  /* 代码块的字体度量只在这里定义一次:语言标签、gutter 与代码列共用同一组值,
+     1lh 才严格等于一行代码。0.765625em = 0.875(pre) × 0.875(行内代码规则) */
+  --code-font-size: 0.765625em;
+  --code-line-height: 1.7142857;
+  /* gutter 与代码列之间的间距;header 的占位槽也用它,两边才对得上 */
+  --code-gutter-gap: 0.6rem;
+}
+/* 顶层代码块与正文错开两个中文字符(2em = 2 × 正文 1em) */
+.prose > .code-block {
+  margin-inline-start: 2em;
 }
 .code-block-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-2xs) var(--spacing-xs);
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--text-xs);
+  padding: 0.4rem 0 0.15rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-subtle);
+}
+/* 行号槽占位:与 gutter 同一套字号/内边距/边框宽度,文字透明只用来撑宽。
+   末尾的 margin 必须等于 .code-body 的 column-gap,语言标签才与代码首字符对齐 */
+.code-block-pad {
+  flex: none;
+  padding-inline-end: 1.25ch;
+  border-inline-end: 1px solid transparent;
+  margin-inline-end: var(--code-gutter-gap);
+  font-size: var(--code-font-size);
+  line-height: var(--code-line-height);
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.code-block-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-width: 0;
+  margin-inline-start: 0.75rem;
+}
+.code-block-name {
+  font-size: var(--code-font-size);
+  overflow: hidden;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .code-block-lang {
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--code-font-size);
+  letter-spacing: 0.04em;
 }
-.code-block-copy {
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
+.code-block-ops {
+  display: inline-flex;
+  gap: 0.75rem;
+  font-size: var(--code-font-size);
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+}
+.code-block:hover .code-block-ops,
+.code-block:focus-within .code-block-ops {
+  opacity: 1;
+}
+/* 触摸设备没有 hover:常显,否则按钮永远点不到 */
+@media (hover: none) {
+  .code-block-ops {
+    opacity: 1;
+  }
+}
+.code-block-op {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-  font-size: var(--text-xs);
-  padding: var(--spacing-3xs) var(--spacing-2xs);
-  border-radius: var(--radius-sm);
   transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
 }
-.code-block-copy:hover {
-  color: var(--color-text);
+.code-block-op:hover,
+.code-block-op:focus-visible {
+  color: var(--color-accent);
+}
+/* 折叠:长块默认收起,底部一条「展开 N 行」;遮罩暗示还有下文。
+   裁切落在两列的父容器上——只裁 pre 的话,行号列不会跟着缩短,折叠线会穿帮。
+   高度按「代码行高 × 12 行」算(行高 = 正文 1.8 × 代码 0.875em),保证切在行边界 */
+.code-block[data-collapsed] .code-body {
+  max-height: calc(var(--code-line-height) * var(--code-font-size) * 12);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 65%, transparent 100%);
+}
+.code-block-more {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-align: center;
+  cursor: pointer;
+}
+.code-block-more:hover,
+.code-block-more:focus-visible {
+  color: var(--color-accent);
 }
 .code-block pre {
   margin: 0;

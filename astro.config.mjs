@@ -10,6 +10,19 @@ import { rehypeTableScroll } from './src/lib/rehype-table-scroll.ts';
 import { remarkDefaultLang } from './src/lib/remark-default-lang.ts';
 import tailwindcss from '@tailwindcss/vite';
 
+// 把围栏 meta 里的文件名搬到 pre 上(如 ```ts title="src/a.ts")。
+// 为什么必须在 Shiki 这一层做:Shiki 会整块替换 pre,remark 阶段写在 hProperties 上的
+// 属性会被丢掉;而 meta 字符串只有 transformer 能拿到(this.options.meta.__raw)。
+// rehype-codeblock 再读 pre 的 data-filename 决定显示图标 + 文件名。
+const codeMetaTransformer = {
+  name: 'code-meta-filename',
+  pre(node) {
+    const raw = this.options?.meta?.__raw ?? '';
+    const m = raw.match(/(?:title|filename)=["']([^"']+)["']/);
+    if (m) node.properties.dataFilename = m[1];
+  },
+};
+
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL ?? 'https://example.com',
   output: 'static',
@@ -51,7 +64,15 @@ export default defineConfig({
     }),
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },
-      wrap: true,
+      // defaultColor: false —— Shiki 只输出 --shiki-light / --shiki-dark 两个变量,
+      // 不再往元素上写内联 color / background-color。主题切换纯 CSS,
+      // 也就不再需要 !important 去压行内样式(2026-10-21)
+      defaultColor: false,
+      // wrap 关掉:代码块默认横向滚动,长行不折;「自动换行」改由代码块上的开关控制。
+      // 开着 wrap 时 Shiki 会把 white-space: pre-wrap 写成内联样式,那会压过类切换
+      wrap: false,
+      // 围栏里的文件名(```ts title="src/a.ts")→ pre[data-filename]
+      transformers: [codeMetaTransformer],
     },
   },
   vite: {

@@ -81,6 +81,7 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
               </figure>
             )}
             <h1 class="article-title">{entry?.data.title}</h1>
+            {entry?.data.excerpt && <p class="article-subtitle">{entry.data.excerpt}</p>}
             <div class="article-meta">
               {entry?.data.pubDate && (
                 <span class="article-meta-item">
@@ -155,10 +156,21 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     max-width: calc(var(--container-prose) + var(--article-gap) + var(--article-toc));
     margin-inline: auto;
   }
+  /* 2026-10-21 起照参考站:标题 30px,副标题(摘要)14px / 55% 墨色,
+     元信息 12px / 55% 墨色。标题颜色按用户要求保持墨色(不跟随 accent) */
   .article-title {
-    font-size: var(--text-3xl);
+    font-size: 1.875rem;
     font-weight: 700;
-    margin-bottom: var(--spacing-xs);
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+  }
+  .article-subtitle {
+    margin: 0 auto 0.5rem;
+    font-size: var(--text-xs);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
+    /* 摘要取自 frontmatter,可能自带换行(样张 excerpt 就是两行) */
+    white-space: pre-line;
   }
   /* 无小标题的文章:Toc 不渲染,网格退化为单列(否则正文掉进目录那条空列) */
   .article-grid--no-toc {
@@ -202,8 +214,8 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     position: relative;
     margin-top: -120px;
   }
-  /* 标题/元信息行与正文同轴:约束到 prose 列宽(hero 保持全宽横幅) */
-  .article-main :is(.article-title, .article-meta) {
+  /* 标题/副标题/元信息行与正文同轴:约束到 prose 列宽(hero 保持全宽横幅) */
+  .article-main :is(.article-title, .article-subtitle, .article-meta) {
     max-width: var(--container-prose);
     margin-inline: auto;
   }
@@ -214,8 +226,8 @@ const placeholderLang = t(locale, 'langswitch.' + locale); // {lang} = 当前页
     align-items: center;
     gap: 8px 20px;
     margin-bottom: var(--spacing-md);
-    font-size: var(--text-xs);
-    color: var(--color-text-subtle);
+    font-size: var(--text-2xs);
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
   }
   .article-meta-item {
     display: inline-flex;
