@@ -4,8 +4,10 @@
 // 几何规格与首页 Hero 顶栏一致(docs/design/hero-home-spec.md §3):
 // 高 64px、logo 24px/400 距左 40px、34px 按钮圆心距 44px、搜索光学 -2px。
 // 取色用壁纸墨色 --hero-ink(壁纸全局铺底,与首页第一屏同观感)。
-// - 首页第一屏:中间跳转按钮隐藏(body.home-at-panel 出现时随切换动画淡入);
-//   顶栏本体全程不动、全程无底色。
+// 顶栏本体无底色;唯一的一层磨砂是导航链接背后那枚胶囊(.header-nav::before,
+// 长度跟随链接组、几何由 --nav-pill-* 控制)。
+// - 首页第一屏:中间跳转按钮与磨砂一起淡出(body.home-at-panel 出现时淡入);
+//   顶栏本体全程不动。
 import { t } from '@i18n/utils';
 import { siteConfig } from '@config/site';
 import type { Locale } from '@i18n/config';
@@ -73,19 +75,72 @@ const { locale } = Astro.props;
   .header-nav {
     /* 绝对居中:不论 logo/图标组宽度,链接组恒在顶栏正中 */
     position: absolute;
+    top: 0;
     left: 50%;
     translate: -50% 0;
+    height: 64px;
     display: flex;
+    align-items: center;
     gap: var(--spacing-sm);
-    transition:
-      opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
-      visibility 0s linear;
+    /* 导航磨砂的占位:调大小只改这两个值 */
+    --nav-pill-h: 64px; /* 胶囊高度(垂直居中于 64px 顶栏) */
+    --nav-pill-pad: 32px; /* 左右各超出链接组多少 → 决定占位长度 */
+  }
+  /* 导航磨砂:背景层比链接组大一圈、做成胶囊,blur + saturate 磨砂,四周羽化到 alpha=0。
+     遮罩用「胶囊等距衰减」而不是横/纵线性渐变取交集:中段按 y 衰减、两端按半径衰减,
+     三层 mask 用 mask-size/position 拼成(中段 + 两个半圆),所以淡出长度可以给得很短
+     (--nav-glow-f),轮廓仍然是圆弧而不是竖直线段 */
+  .header-nav::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: calc((64px - var(--nav-pill-h)) / 2);
+    left: calc(-1 * var(--nav-pill-pad));
+    right: calc(-1 * var(--nav-pill-pad));
+    height: var(--nav-pill-h);
+    border-radius: 999px;
+    pointer-events: none;
+    background: var(--frost-bg);
+    backdrop-filter: blur(18px) saturate(115%);
+    --nav-glow-r: calc(var(--nav-pill-h) / 2);
+    --nav-glow-f: 20px; /* 离胶囊实心边到 alpha=0 的过渡长度,四周一致 */
+    mask-image:
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        #000 var(--nav-glow-f),
+        #000 calc(100% - var(--nav-glow-f)),
+        transparent 100%
+      ),
+      radial-gradient(
+        circle var(--nav-glow-r) at 100% 50%,
+        #000 calc(100% - var(--nav-glow-f)),
+        transparent 100%
+      ),
+      radial-gradient(
+        circle var(--nav-glow-r) at 0% 50%,
+        #000 calc(100% - var(--nav-glow-f)),
+        transparent 100%
+      );
+    mask-size:
+      calc(100% - 2 * var(--nav-glow-r)) 100%,
+      var(--nav-glow-r) 100%,
+      var(--nav-glow-r) 100%;
+    mask-position:
+      var(--nav-glow-r) 0,
+      0 0,
+      100% 0;
+    mask-repeat: no-repeat;
+    transition: opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out);
   }
   .header-nav-link {
     color: var(--color-text-muted);
     text-decoration: none;
     font-size: var(--text-sm);
-    transition: color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+    transition:
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
+      visibility 0s linear;
   }
   .header-nav-link:hover {
     color: var(--color-text);
@@ -111,13 +166,18 @@ const { locale } = Astro.props;
     translate: 0 -2px;
   }
   /* 首页双屏切换:第一屏无中间跳转按钮(原 Hero 顶栏形态),
-     切到第二屏时按钮随动画淡入;顶栏本体全程不动 */
-  :global(body.page-home:not(.home-at-panel)) .header-nav {
+     切到第二屏时链接与磨砂随动画一起淡入;顶栏本体全程不动。
+     注意:opacity 不能加在 .header-nav 上——那会让它成为 backdrop root,
+     过渡期间 ::before 的 backdrop-filter 取不到页面内容,只剩一层底色 */
+  :global(body.page-home:not(.home-at-panel)) .header-nav-link {
     opacity: 0;
     visibility: hidden;
     transition:
       opacity calc(var(--duration-slow) * var(--motion-scale)) var(--ease-out),
       visibility 0s linear calc(var(--duration-slow) * var(--motion-scale));
+  }
+  :global(body.page-home:not(.home-at-panel)) .header-nav::before {
+    opacity: 0;
   }
   @media (max-width: 768px) {
     .header-nav,

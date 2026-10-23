@@ -42,16 +42,16 @@
 
 ### 2.2 全站常驻透明顶栏
 
-- `Header.astro` 改 `position: fixed` **恒透明**(任何页面任何滚动位置无底色、无磨砂、无边框——用户明确要求;曾加过滚动磨砂底后按需求整体移除)
-- 首页第一屏:中间跳转按钮经 `body.page-home:not(.home-at-panel) .header-nav` 隐藏(opacity+visibility,不占焦),切到第二屏随切换动画淡入;**顶栏本体全程不动**(动画设计的硬前提)
+- `Header.astro` 改 `position: fixed` **本体无底色、无边框**(任何页面任何滚动位置;曾加过滚动磨砂底后按需求整体移除)。唯一的一层磨砂是导航链接背后的胶囊(见 2.3)
+- 首页第一屏:中间跳转按钮经 `body.page-home:not(.home-at-panel) .header-nav-link` 隐藏(opacity+visibility,不占焦),切到第二屏随切换动画淡入;**顶栏本体全程不动**(动画设计的硬前提)。opacity 不能加在 `.header-nav` 上——那会让它成为 backdrop root,过渡期间导航磨砂的 `backdrop-filter` 取不到页面内容
 - 布局:导航绝对居中(`left:50%`+translate),图标组 `margin-left:auto` 贴右——**不能用 space-between**:末尾 0 宽的 MobileNav 包装层会吃掉一个间隙槽,把图标组顶离右缘 ~300px
 - Hero 自绘顶栏与背景整体移除,透明浮于壁纸之上,第一屏观感不变
 
-### 2.3 全站统一壁纸 + 内容磨砂 + 穿越带
+### 2.3 全站统一壁纸 + 内容磨砂 + 导航磨砂
 
 - **壁纸**:`siteConfig.background`(原 heroBackground 升级,语义="网站有一张统一背景图",当前临时取首页雪景图验证);BaseLayout 输出 `.site-bg` fixed 层(z-index:-1、暗色 78–88% 压暗遮罩)。**可见性前提:html 无背景时 body 背景传播为画布底**,z:-1 层才能露出
 - **内容磨砂**:`--frost-bg`(color-mix 31%)/ `--frost-blur`(8px)token 化,用户多轮视觉调参定稿;非首页挂 **`main::before` 视口 fixed 层**——必须用伪元素,backdrop-filter 挂 main 本体会把 main 变成 fixed 后代(阅读进度条)的包含块破坏其视口定位(实测验证);首页第二屏为面板磨砂板 + Footer 同规格;首页第一屏恒为壁纸原样
-- **顶栏内容穿越带**(`.top-fade`,fixed 72px):blur(6px) + `--frost-bg` 浅色磨砂底,内容滚过顶栏时被虚化提浅,消除与顶栏文字的相撞;无渐变;非首页常开、首页第一屏隐藏、第二屏随切换淡入
+- **导航磨砂**(原 `.top-fade` 全宽 72px 穿越带):只覆盖正中的 6 个导航链接,**一枚看不见边的胶囊**——背景层比链接组大一圈(左右各 32px、高 64px 占满顶栏、`border-radius: 999px`),`background: var(--frost-bg)` + `backdrop-filter: blur(18px) saturate(115%)`;遮罩是**胶囊等距衰减**(中段纵向渐变 + 两端径向渐变,三层 mask 用 `mask-size`/`mask-position` 拼成),`--nav-glow-f: 20px` 一处控制四周的淡出长度 —— 为什么不用「横/纵线性渐变取交集」:那种遮罩的形状由直线决定,横向淡出一旦短于半圆半径,两端就退化成竖直线段、失去圆弧感(2026-10-23 实测)。内容(链接)直接浮在背景层上,`home` 第一屏整体透明度淡出。几何在 `--nav-pill-*` 与 `--nav-glow-f`。(演进:全宽 `.top-fade` → 柔边梯形 → 硬边胶囊 → filter 羽化 → 径向椭圆 → 三层 SDF 胶囊 → 4 层渐进模糊 → 参考方案的胶囊背景层 → 回到 SDF 遮罩 + 短羽化)
 
 ### 2.4 术曲专辑卡 + 菜单比例
 
@@ -91,7 +91,7 @@
 |---|---|---|
 | `siteConfig.background` | src/config/site.ts | 全站统一壁纸;置 undefined 回退主题底色 |
 | `--hero-ink` / `--frost-bg` / `--frost-blur` | src/styles/tokens.css | 壁纸墨色(亮/暗)、磨砂底色与模糊半径 |
-| `.top-fade` 参数 | BaseLayout 全局样式 | 穿越带高度/blur/底色 |
+| `--nav-pill-*` 参数 | Header.astro 的 `.header-nav` | 导航磨砂胶囊:高度 / 左右外扩 |
 | `.github/workflows/sync-vocaloid.yml` | 新增 | 术曲每日同步;`NETEASE_PLAYLIST_ID` 带 `.env` 值兜底(vars 优先) |
 | `sync-bangumi.yml` env | 变更 | `BANGUMI_USER` 同上兜底 |
 | secret `CONTENT_GITHUB_TOKEN` | 主仓 Actions secrets | **fine-grained PAT,object920-content + Contents: Read and write**(旧只读 token 已弃用) |
