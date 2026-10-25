@@ -117,6 +117,7 @@ export default {
   'about.copyright': '著作権とライセンス',
   'about.copyrightText': '特記のない限り、コンテンツは CC BY-NC-SA 4.0 の下で提供されます。',
   'common.search.placeholder': '記事を検索...',
+  'common.search.peek-hint': 'もう一度クリックで検索パネルを開く',
   'common.search.unavailable': '検索は現在利用できません',
   'common.search.no-results': '結果が見つかりません',
   'common.search.loading': '検索中...',

@@ -15,7 +15,7 @@ const themes = [
 ];
 ---
 
-<div class="themeswitch">
+<div class="themeswitch" data-hover-panel>
   <button
     type="button"
     class="themeswitch-btn"
@@ -28,7 +28,7 @@ const themes = [
     <Icon name="palette" size={20} />
   </button>
   <div
-    class="themeswitch-menu"
+    class="themeswitch-menu panel-shell"
     data-theme-menu
     hidden
     role="menu"
@@ -39,7 +39,7 @@ const themes = [
         <button
           type="button"
           role="menuitemradio"
-          class="themeswitch-item"
+          class="themeswitch-item panel-shell-item"
           data-theme-option={th.id}
           aria-checked="false"
         >
@@ -102,6 +102,9 @@ const themes = [
         e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
         setWrapOpen(wrap, menu.hidden);
       });
+      // 悬停开合(机制在 src/lib/hover-panels.ts)
+      wrap.addEventListener('hoverpanel:open', () => setWrapOpen(wrap, true));
+      wrap.addEventListener('hoverpanel:close', () => setWrapOpen(wrap, false));
       menu.addEventListener('click', (e) => {
         const opt = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-theme-option]');
         if (!opt) return;
@@ -163,40 +166,20 @@ const themes = [
   .themeswitch-btn[aria-expanded='true'] {
     color: var(--color-accent);
   }
+  /* 材质/圆角/内边距/行样式来自 styles/header-panels.css 的 .panel-shell + .panel-shell-item,
+     这里只管位置与宽度 */
   .themeswitch-menu {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 10px);
     right: 0;
-    min-width: 130px;
+    min-width: 140px;
     display: flex;
     flex-direction: column;
-    padding: var(--spacing-3xs);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    gap: 2px;
     z-index: 10;
   }
   .themeswitch-menu[hidden] {
     display: none;
-  }
-  .themeswitch-item {
-    padding: var(--spacing-3xs) var(--spacing-sm);
-    border: none;
-    background: none;
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    text-align: left;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
-      background calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
-  }
-  .themeswitch-item:hover {
-    color: var(--color-text);
-    background: var(--color-surface-raised);
   }
   .themeswitch-item.active {
     color: var(--color-accent);

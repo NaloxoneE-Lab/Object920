@@ -115,6 +115,7 @@ export default {
   'about.copyright': '版权与协议',
   'about.copyrightText': '除特别注明外,内容采用 CC BY-NC-SA 4.0 协议。',
   'common.search.placeholder': '搜索文章...',
+  'common.search.peek-hint': '再次点击进入搜索面板',
   'common.search.unavailable': '搜索暂不可用',
   'common.search.no-results': '没有找到相关结果',
   'common.search.loading': '搜索中...',

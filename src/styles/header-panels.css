@@ -1,0 +1,86 @@
+/* src/styles/header-panels.css
+   顶栏下拉面板(音乐 / 主题 / 语言)的共用外壳 —— 无描边、玻璃底、柔和投影。
+   位置、宽度、内部结构仍由各组件控制;这里只统一材质、圆角、内边距与内部行的形状,
+   让三块面板看起来是同一套东西(2026-10-25 用户要求「无框风格」)。
+   材质与搜索 peek 面板同源:半透明 + backdrop-filter,不支持时退回不透明底。 */
+.panel-shell {
+  background: color-mix(in srgb, var(--color-surface-raised) 74%, transparent);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.05),
+    0 16px 40px -12px rgb(0 0 0 / 0.28);
+  backdrop-filter: blur(20px) saturate(120%);
+  /* 入场用 transition + @starting-style,不要用 @keyframes:
+     这些面板是 hidden(display:none) 切换显示的,keyframes 动画在切换瞬间
+     可能停在 0% 不前进 —— 面板打开了却 opacity:0,肉眼就是「点了没反应」。
+     @starting-style 不支持时只会直接出现,不会不可见。 */
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  transition:
+    opacity calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+    translate calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+    scale calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+}
+
+@starting-style {
+  .panel-shell {
+    opacity: 0;
+    translate: 0 -4px;
+    scale: 0.98;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .panel-shell {
+    background: var(--color-surface-raised);
+  }
+}
+
+/* 单行条目(主题 / 语言菜单行):左侧预留 6px 圆点位,选中时才点亮,
+   这样选中与未选中的文字起始位置一致 */
+.panel-shell-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2xs);
+  width: 100%;
+  min-height: 34px;
+  padding: 0 12px 0 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+    color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+}
+.panel-shell-item::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  transition: background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+}
+.panel-shell-item:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+.panel-shell-item[aria-current='true'],
+.panel-shell-item[aria-checked='true'] {
+  color: var(--color-text);
+}
+.panel-shell-item[aria-current='true']::before,
+.panel-shell-item[aria-checked='true']::before {
+  background: var(--color-accent);
+}

@@ -2,6 +2,7 @@
 @import './tokens.css';
 @import './animations.css';
 @import './theme-wipe.css';
+@import './header-panels.css';
 
 /* Reset(精简版) */
 *,

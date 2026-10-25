@@ -18,7 +18,7 @@ const provider = enabled ? createSearchProvider() : null;
 
 {
   provider && (
-    <div class="search-box" data-search-box data-initialized="false">
+    <div class="search-box" data-search-box data-hover-panel data-initialized="false">
       <button
         type="button"
         class="search-toggle"
@@ -40,6 +40,9 @@ const provider = enabled ? createSearchProvider() : null;
         </svg>
       </button>
 
+      {/* 全屏虚化遮罩:只在 active(点击后)出现,peek(悬停)不虚化背景 */}
+      <div class="search-backdrop" data-search-backdrop hidden />
+
       <div class="search-panel" data-search-panel hidden>
         <input
           type="search"
@@ -47,6 +50,8 @@ const provider = enabled ? createSearchProvider() : null;
           placeholder={t(locale, 'common.search.placeholder')}
           aria-label={t(locale, 'common.search.label')}
           data-search-input
+          data-placeholder={t(locale, 'common.search.placeholder')}
+          data-peek-hint={t(locale, 'common.search.peek-hint')}
           data-unavailable={t(locale, 'common.search.unavailable')}
           data-no-results={t(locale, 'common.search.no-results')}
           data-loading={t(locale, 'common.search.loading')}
@@ -98,6 +103,53 @@ const provider = enabled ? createSearchProvider() : null;
     box-shadow: var(--shadow-lg);
     padding: var(--spacing-2xs);
     z-index: var(--z-dropdown);
+  }
+  /* 全屏虚化遮罩:只在 active 出现。位于 header 的层叠上下文内,
+     所以盖住的是页面内容 + 顶栏本身(顶栏 z-index: var(--z-header)) */
+  .search-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    /* 不参与命中测试:遮罩只在视觉上盖住页面。若它拦指针,active 期间指针会「停在遮罩上」,
+       收掉遮罩时浏览器补发 pointerenter,悬停机制就会把面板又弹出来(2026-10-25 踩过)。
+       点击穿透到页面上,由 document 的 click 关闭逻辑负责收面板。 */
+    pointer-events: none;
+    background: color-mix(in srgb, var(--color-bg) 45%, transparent);
+    backdrop-filter: blur(16px) saturate(115%);
+  }
+  .search-backdrop[hidden] {
+    display: none;
+  }
+  /* 居中悬浮形态:peek(浅、不虚化)/ active(实底 + 上面那层虚化) */
+  .search-box[data-mode] .search-panel {
+    position: fixed;
+    top: 18vh;
+    left: 50%;
+    right: auto;
+    translate: -50% 0;
+    width: min(40rem, calc(100vw - 3rem));
+    padding: var(--spacing-sm);
+    z-index: var(--z-modal);
+    transition:
+      background-color calc(var(--duration-base) * var(--motion-scale)) var(--ease-out),
+      box-shadow calc(var(--duration-base) * var(--motion-scale)) var(--ease-out);
+  }
+  .search-box[data-mode='peek'] .search-panel {
+    background: color-mix(in srgb, var(--color-surface-raised) 55%, transparent);
+    border-color: color-mix(in srgb, var(--color-border) 55%, transparent);
+    box-shadow: 0 10px 40px rgb(0 0 0 / 0.07);
+  }
+  /* peek 里还没有真正的输入行为,框内文字当提示用:居中显示「点击按钮进入搜索面板」
+     (文案由 JS 在切到 peek 时换 placeholder;见 setMode) */
+  .search-box[data-mode='peek'] .search-input {
+    text-align: center;
+  }
+  .search-box[data-mode='peek'] .search-input::placeholder {
+    text-align: center;
+  }
+  .search-box[data-mode='active'] .search-panel {
+    background: var(--color-surface-raised);
+    box-shadow: 0 24px 80px rgb(0 0 0 / 0.28);
   }
   .search-input {
     width: 100%;
@@ -175,60 +227,110 @@ const provider = enabled ? createSearchProvider() : null;
 
     if (!toggle || !panel || !input || !resultsEl || !statusEl) return;
 
-    async function openPanel() {
-      panel.hidden = false;
-      toggle.setAttribute('aria-expanded', 'true');
-      input.focus();
+    // 面板三态(2026-10-25 起;视觉后续再细抠,这里先把状态机与层级搭起来):
+    //   idle   —— 收起
+    //   peek   —— 鼠标悬停:屏幕中间的浅色悬浮面板;不虚化、导航条仍在、不抢焦点
+    //   active —— 点击/聚焦输入框:全屏虚化遮罩 + 实底面板 + 输入框获得焦点
+    // 顶栏的 hover 机制(src/lib/hover-panels.ts)用 hoverpanel:open/close 驱动 peek。
+    const backdrop = box.querySelector<HTMLElement>('[data-search-backdrop]');
+    let mode: 'idle' | 'peek' | 'active' = 'idle';
 
-      if (!providerReady) {
-        if (!provider) {
-          const { createSearchProvider } = await import('./createSearchProvider');
-          provider = createSearchProvider();
-        }
-        if (!provider) {
-          input.disabled = true;
-          statusEl.textContent = input.dataset.unavailable ?? 'Search unavailable';
-          statusEl.hidden = false;
-          return;
-        }
-        try {
-          await provider.initialize();
-          const ok = await provider.ready();
-          if (ok) {
-            input.disabled = false;
-            providerReady = true;
-          } else {
-            input.disabled = true;
-            statusEl.textContent = input.dataset.unavailable ?? 'Search unavailable';
-            statusEl.hidden = false;
-          }
-        } catch {
+    async function ensureProvider() {
+      if (providerReady) return;
+      if (!provider) {
+        const { createSearchProvider } = await import('./createSearchProvider');
+        provider = createSearchProvider();
+      }
+      if (!provider) {
+        input.disabled = true;
+        statusEl.textContent = input.dataset.unavailable ?? 'Search unavailable';
+        statusEl.hidden = false;
+        return;
+      }
+      try {
+        await provider.initialize();
+        const ok = await provider.ready();
+        if (ok) {
+          input.disabled = false;
+          providerReady = true;
+        } else {
           input.disabled = true;
           statusEl.textContent = input.dataset.unavailable ?? 'Search unavailable';
           statusEl.hidden = false;
         }
+      } catch {
+        input.disabled = true;
+        statusEl.textContent = input.dataset.unavailable ?? 'Search unavailable';
+        statusEl.hidden = false;
       }
     }
 
-    function closePanel() {
-      panel.hidden = true;
-      toggle.setAttribute('aria-expanded', 'false');
-      resultsEl.innerHTML = '';
-      statusEl.hidden = true;
+    function setMode(next: 'idle' | 'peek' | 'active', opts: { focus?: boolean } = {}) {
+      mode = next;
+      // peek 里框内文字当提示语用(居中由 CSS 处理);其它状态还原成正常占位文案
+      const idlePlaceholder = input.dataset.placeholder ?? '';
+      input.placeholder =
+        next === 'peek' ? (input.dataset.peekHint ?? idlePlaceholder) : idlePlaceholder;
+      if (next === 'idle') {
+        box.removeAttribute('data-mode');
+        panel.hidden = true;
+        if (backdrop) backdrop.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        resultsEl.innerHTML = '';
+        statusEl.hidden = true;
+        return;
+      }
+      box.dataset.mode = next;
+      panel.hidden = false;
+      if (backdrop) backdrop.hidden = next !== 'active';
+      toggle.setAttribute('aria-expanded', 'true');
+      // 悬停就预热索引:点下去（active）能直接出结果
+      void ensureProvider();
+      if (opts.focus) input.focus();
     }
 
     toggle.addEventListener('click', () => {
-      if (panel.hidden) openPanel();
-      else closePanel();
+      if (mode === 'active') closeByUser();
+      else setMode('active', { focus: true });
     });
 
+    // 主动收起(Esc / 点按钮 / 点页面)后,要求指针先离开再进入才允许 hover 自动弹:
+    // 收掉全屏遮罩时浏览器会补发一次 pointerenter(指针其实没动),不设这道闸门
+    // 面板会「刚关又弹回来」(2026-10-25 实测)。
+    let hoverNeedsLeave = false;
+    box.addEventListener('pointerleave', () => {
+      hoverNeedsLeave = false;
+    });
+    function closeByUser() {
+      hoverNeedsLeave = true;
+      setMode('idle');
+    }
+
+    // 悬停:进入即 peek,离开由 hover-panels 发 close(active 状态不响应,靠 Esc/点击收起)
+    box.addEventListener('hoverpanel:open', () => {
+      if (hoverNeedsLeave) return;
+      if (mode === 'idle') setMode('peek');
+    });
+    box.addEventListener('hoverpanel:close', (e) => {
+      // force = 别的面板要打开(顶栏同时只开一个),这时连 active 也要让位;
+      // 普通 close(指针离开)只收 peek,active 要用户自己 Esc / 点遮罩收
+      const force = (e as CustomEvent<{ force?: boolean }>).detail?.force === true;
+      if (mode === 'peek' || (mode === 'active' && force)) setMode('idle');
+    });
+    // 在浅色面板上按下(点输入框、点留白)就升级成虚化的 active
+    panel.addEventListener('pointerdown', () => {
+      if (mode === 'peek') setMode('active');
+    });
+    input.addEventListener('focus', () => {
+      if (mode === 'peek') setMode('active');
+    });
     document.addEventListener('click', (e) => {
-      if (!box.contains(e.target as Node)) closePanel();
+      if (!box.contains(e.target as Node) && mode !== 'idle') closeByUser();
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !panel.hidden) {
-        closePanel();
+      if (e.key === 'Escape' && mode !== 'idle') {
+        closeByUser();
         toggle.focus();
       }
     });

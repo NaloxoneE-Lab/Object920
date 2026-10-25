@@ -18,7 +18,7 @@ const defaultPlaylist = playlists[0];
 
 {
   enabled && (
-    <div class="music-widget" data-music-widget>
+    <div class="music-widget" data-music-widget data-hover-panel>
       <button
         type="button"
         class="music-widget-btn"
@@ -30,7 +30,7 @@ const defaultPlaylist = playlists[0];
       >
         <Icon name="music" size={20} />
       </button>
-      <div class="music-panel" data-music-panel hidden>
+      <div class="music-panel panel-shell" data-music-panel hidden>
         <p class="music-playlist-name">{defaultPlaylist?.name}</p>
         <p
           class="music-track"
@@ -147,6 +147,9 @@ const defaultPlaylist = playlists[0];
       e.stopPropagation();
       if (panel) setPanelOpen(widget, panel.hidden);
     });
+    // 悬停开合(机制在 src/lib/hover-panels.ts;只需监听事件,开关复用上面的函数)
+    widget.addEventListener('hoverpanel:open', () => setPanelOpen(widget, true));
+    widget.addEventListener('hoverpanel:close', () => setPanelOpen(widget, false));
     widget.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-music-play]')) {
@@ -272,31 +275,31 @@ const defaultPlaylist = playlists[0];
   .music-widget-btn[aria-expanded='true'] {
     color: var(--color-accent);
   }
+  /* 材质/圆角/内边距来自 styles/header-panels.css 的 .panel-shell,这里只管布局与内部件 */
   .music-panel {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 10px);
     right: 0;
-    min-width: 230px;
+    min-width: 248px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-2xs);
-    padding: var(--spacing-xs);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    gap: 8px;
     z-index: 10;
   }
   .music-panel[hidden] {
     display: none;
   }
+  /* 头部:歌单名(次要)+ 曲名(主角) */
   .music-playlist-name {
+    padding: 2px 8px 0;
     font-size: var(--text-2xs);
     color: var(--color-text-muted);
   }
   .music-track {
-    font-size: var(--text-xs);
-    font-weight: 600;
+    padding: 0 8px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    letter-spacing: -0.01em;
     color: var(--color-text);
     max-width: 100%;
     overflow: hidden;
@@ -307,37 +310,50 @@ const defaultPlaylist = playlists[0];
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-xs);
+    gap: 10px;
+    padding: 2px 0;
   }
   .music-skip-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 30px;
+    height: 30px;
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     background: transparent;
-    color: var(--color-text);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
     cursor: pointer;
-    transition: background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
+    transition:
+      background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .music-skip-btn:hover {
-    background: var(--color-surface-raised);
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    color: var(--color-text);
   }
+  /* 播放键是面板的视觉焦点:accent 实心圆 + 同色投影,hover 轻微放大 */
   .music-play-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
     background: var(--color-accent);
     color: var(--color-text-on-accent);
-    font-size: var(--text-sm);
+    box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--color-accent) 70%, transparent);
+    transition:
+      background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      scale calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .music-play-btn:hover {
     background: var(--color-accent-hover);
+    scale: 1.06;
   }
   .music-volume {
     display: flex;
     align-items: center;
     gap: var(--spacing-2xs);
+    padding: 0 8px;
     font-size: var(--text-2xs);
     color: var(--color-text-muted);
   }
@@ -346,12 +362,14 @@ const defaultPlaylist = playlists[0];
     accent-color: var(--color-accent);
   }
   .music-playlist {
-    margin: 0;
-    padding: 0;
-    list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3xs);
+    gap: 2px;
+    margin: 0;
+    padding: 2px 0 0;
+    list-style: none;
+    max-height: 220px;
+    overflow-y: auto;
   }
   .music-track-btn {
     display: flex;
@@ -359,20 +377,26 @@ const defaultPlaylist = playlists[0];
     align-items: flex-start;
     gap: 1px;
     width: 100%;
-    padding: var(--spacing-3xs) var(--spacing-2xs);
+    padding: 6px 10px;
     border: none;
-    border-radius: var(--radius-sm);
-    background: none;
+    border-radius: var(--radius-md);
+    background: transparent;
     color: var(--color-text-muted);
+    font-family: inherit;
     font-size: var(--text-2xs);
     text-align: left;
     cursor: pointer;
+    transition:
+      background-color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
+      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
   }
   .music-track-btn:hover {
-    background: var(--color-surface-raised);
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    color: var(--color-text);
   }
   .music-track-btn.active {
     color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   }
   .music-track-title {
     font-weight: 600;

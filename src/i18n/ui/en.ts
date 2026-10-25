@@ -117,6 +117,7 @@ export default {
   'about.copyright': 'Copyright & License',
   'about.copyrightText': 'Unless otherwise noted, content is licensed under CC BY-NC-SA 4.0.',
   'common.search.placeholder': 'Search articles...',
+  'common.search.peek-hint': 'Click again to open the search panel',
   'common.search.unavailable': 'Search is currently unavailable',
   'common.search.no-results': 'No results found',
   'common.search.loading': 'Searching...',

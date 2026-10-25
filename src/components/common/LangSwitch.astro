@@ -10,7 +10,7 @@ interface Props {
 const { locale } = Astro.props;
 ---
 
-<div class="langswitch">
+<div class="langswitch" data-hover-panel>
   <button
     type="button"
     class="langswitch-btn"
@@ -21,13 +21,13 @@ const { locale } = Astro.props;
   >
     <Icon name="globe" size={20} />
   </button>
-  <nav class="langswitch-menu" hidden aria-label={t(locale, 'langswitch.label')}>
+  <nav class="langswitch-menu panel-shell" hidden aria-label={t(locale, 'langswitch.label')}>
     {
       locales.map((l) => (
         <a
           href={getLocalizedPath(Astro.url.pathname, l)}
           aria-current={l === locale ? 'true' : undefined}
-          class:list={['langswitch-item', { active: l === locale }]}
+          class:list={['langswitch-item', 'panel-shell-item', { active: l === locale }]}
         >
           {t(locale, `langswitch.${l}`)}
         </a>
@@ -58,6 +58,9 @@ const { locale } = Astro.props;
         e.stopPropagation(); // 防止同一 click 冒泡到 document 立即收起
         setWrapOpen(wrap, menu.hidden);
       });
+      // 悬停开合(机制在 src/lib/hover-panels.ts)
+      wrap.addEventListener('hoverpanel:open', () => setWrapOpen(wrap, true));
+      wrap.addEventListener('hoverpanel:close', () => setWrapOpen(wrap, false));
     });
   }
   document.addEventListener('click', (e) => {
@@ -100,40 +103,19 @@ const { locale } = Astro.props;
   .langswitch-btn[aria-expanded='true'] {
     color: var(--color-accent);
   }
+  /* 材质/圆角/内边距/行样式来自 styles/header-panels.css,这里只管位置与宽度 */
   .langswitch-menu {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 10px);
     right: 0;
-    min-width: 150px;
+    min-width: 160px;
     display: flex;
     flex-direction: column;
-    padding: var(--spacing-3xs);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    gap: 2px;
     z-index: 10;
   }
   .langswitch-menu[hidden] {
     display: none;
   }
-  .langswitch-item {
-    padding: var(--spacing-3xs) var(--spacing-sm);
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
-    transition:
-      color calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out),
-      background calc(var(--duration-fast) * var(--motion-scale)) var(--ease-out);
-  }
-  .langswitch-item:hover {
-    color: var(--color-text);
-    background: var(--color-surface-raised);
-  }
-  .langswitch-item.active {
-    color: var(--color-accent);
-    font-weight: 600;
-  }
+  /* 选中态:accent 圆点 + 文字提亮,由 header-panels.css 的 [aria-current='true'] 负责 */
 </style>

@@ -118,6 +118,7 @@ export default {
   'about.copyrightText':
     'Если не указано иное, контент распространяется по лицензии CC BY-NC-SA 4.0.',
   'common.search.placeholder': 'Поиск статей...',
+  'common.search.peek-hint': 'Нажмите ещё раз, чтобы открыть поиск',
   'common.search.unavailable': 'Поиск временно недоступен',
   'common.search.no-results': 'Ничего не найдено',
   'common.search.loading': 'Поиск...',
